@@ -1,2 +1,7 @@
-export {ApiError, isApiError, UNKNOWN_ERROR_CODE} from './api-error';
+export {
+  ApiError,
+  isApiError,
+  NETWORK_ERROR_CODE,
+  UNKNOWN_ERROR_CODE,
+} from './api-error';
 export {configureApi} from './mutator';

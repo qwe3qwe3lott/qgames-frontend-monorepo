@@ -7,6 +7,20 @@
 import * as zod from 'zod';
 
 /**
+ * Стать игроком или наблюдателем. Только между партиями; игроком — если есть свободное место. Владелец тоже может стать наблюдателем, владение при этом сохраняется.
+ * @summary Сменить роль
+ */
+export const ChangeRoleParams = zod.object({
+  roomId: zod.uuid(),
+});
+
+export const ChangeRoleBody = zod.object({
+  role: zod.enum(['PLAYER', 'SPECTATOR']),
+});
+
+export const ChangeRoleResponse = zod.unknown();
+
+/**
  * Для аккаунта без пароля (например, созданного через Google). Логином становится email аккаунта.
  * @summary Добавить вход по паролю
  */
@@ -35,6 +49,71 @@ export const AddGoogleLoginBody = zod.object({
 export const AddGoogleLoginResponse = zod.unknown();
 
 /**
+ * Создаёт комнату под выбранную игру. Создатель становится владельцем и первым игроком. Ссылку на комнату (её id) можно отправить другим игрокам.
+ * @summary Создать комнату
+ */
+export const CreateRoomBody = zod.object({
+  gameType: zod.enum(['NOTHING']),
+});
+
+export const CreateRoomResponse = zod.unknown();
+
+/**
+ * Стартует партию с текущими игроками комнаты (места — по порядку входа). Только владелец, число игроков должно укладываться в ограничения игры (minPlayers–maxPlayers).
+ * @summary Начать партию
+ */
+export const StartSessionParams = zod.object({
+  roomId: zod.uuid(),
+});
+
+export const StartSessionResponse = zod.unknown();
+
+/**
+ * Завершает идущую партию без результата и возвращает комнату в ожидание. Только владелец.
+ * @summary Отменить партию
+ */
+export const CancelSessionParams = zod.object({
+  roomId: zod.uuid(),
+});
+
+export const CancelSessionResponse = zod.unknown();
+
+/**
+ * Применяет ход по правилам игры. Ходить может только игрок партии, находящийся в комнате. Когда партия заканчивается, комната возвращается в ожидание, а законченная партия остаётся в ответе.
+ * @summary Сделать ход
+ */
+export const MakeMoveParams = zod.object({
+  roomId: zod.uuid(),
+});
+
+export const MakeMoveBody = zod.object({
+  move: zod.record(zod.string(), zod.unknown()),
+  expectedVersion: zod.int().nullish(),
+});
+
+export const MakeMoveResponse = zod.unknown();
+
+/**
+ * Выйти можно всегда. Игрок идущей партии сохраняет место и может вернуться. Если вышел владелец, владение переходит к самому раннему из оставшихся: сначала игроки, затем наблюдатели. Пустая комната удаляется автоматически через 30 минут.
+ * @summary Выйти из комнаты
+ */
+export const LeaveRoomParams = zod.object({
+  roomId: zod.uuid(),
+});
+
+export const LeaveRoomResponse = zod.unknown();
+
+/**
+ * Игрок идущей партии возвращается на своё место. Иначе, если партия не идёт и есть свободное место, пользователь становится игроком, в остальных случаях — наблюдателем. В пустой комнате вошедший становится владельцем. Повторный вход ничего не меняет.
+ * @summary Войти в комнату
+ */
+export const JoinRoomParams = zod.object({
+  roomId: zod.uuid(),
+});
+
+export const JoinRoomResponse = zod.unknown();
+
+/**
  * Подтверждает email и сразу открывает сессию: ставит куки с токенами. Код действует 15 минут, на один код даётся 5 попыток.
  * @summary Подтверждение email кодом из письма
  */
@@ -60,7 +139,7 @@ export const ResendCodeBody = zod.object({
 export const ResendCodeResponse = zod.unknown();
 
 /**
- * Создаёт аккаунт и отправляет на email 6-значный код подтверждения. Сессия не открывается: войти можно после подтверждения email.
+ * Создаёт аккаунт с ником (3–32 символа, не уникален) и аватаром и отправляет на email 6-значный код подтверждения. Сессия не открывается: войти можно после подтверждения email.
  * @summary Регистрация по email и паролю
  */
 export const registerBodyEmailMin = 0;
@@ -69,6 +148,14 @@ export const registerBodyEmailMax = 320;
 export const registerBodyPasswordMin = 8;
 export const registerBodyPasswordMax = 128;
 
+export const registerBodyNicknameMin = 3;
+export const registerBodyNicknameMax = 32;
+
+export const registerBodyNicknameRegExp = new RegExp(
+  '^[^\\s\\p{Cntrl}]([^\\p{Cntrl}]*[^\\s\\p{Cntrl}])?$',
+  'u',
+);
+
 export const RegisterBody = zod.object({
   email: zod.email().min(registerBodyEmailMin).max(registerBodyEmailMax),
   password: zod
@@ -76,6 +163,12 @@ export const RegisterBody = zod.object({
     .min(registerBodyPasswordMin)
     .max(registerBodyPasswordMax)
     .optional(),
+  nickname: zod
+    .string()
+    .min(registerBodyNicknameMin)
+    .max(registerBodyNicknameMax)
+    .regex(registerBodyNicknameRegExp),
+  avatar: zod.enum(['CAT', 'DOG']),
 });
 
 export const RegisterResponse = zod.unknown();
@@ -105,7 +198,7 @@ export const LoginBody = zod.object({
 export const LoginResponse = zod.unknown();
 
 /**
- * Принимает Google ID token из Google Identity Services. Новый Google-аккаунт создаёт аккаунт или привязывается к существующему с тем же email, если email подтверждён и у нас, и в Google.
+ * Принимает Google ID token из Google Identity Services. Новый Google-аккаунт создаёт аккаунт или привязывается к существующему с тем же email, если email подтверждён и у нас, и в Google. Новый аккаунт получает ник вида player-a1b2c3 и аватар CAT — их можно сменить в профиле.
  * @summary Вход через Google
  */
 
@@ -116,7 +209,53 @@ export const LoginWithGoogleBody = zod.object({
 export const LoginWithGoogleResponse = zod.unknown();
 
 /**
+ * Меняет ник и/или аватар: изменяется только переданное. Ник не уникален. В игровых комнатах новый ник появляется через несколько секунд.
+ * @summary Изменить профиль
+ */
+export const updateProfileBodyNicknameMin = 3;
+export const updateProfileBodyNicknameMax = 32;
+
+export const updateProfileBodyNicknameRegExp = new RegExp(
+  '^[^\\s\\p{Cntrl}]([^\\p{Cntrl}]*[^\\s\\p{Cntrl}])?$',
+  'u',
+);
+
+export const UpdateProfileBody = zod.object({
+  nickname: zod
+    .string()
+    .min(updateProfileBodyNicknameMin)
+    .max(updateProfileBodyNicknameMax)
+    .regex(updateProfileBodyNicknameRegExp)
+    .nullish(),
+  avatar: zod
+    .union([zod.literal('CAT'), zod.literal('DOG'), zod.literal(null)])
+    .nullish(),
+});
+
+export const UpdateProfileResponse = zod.unknown();
+
+/**
  * Email, статус его подтверждения и привязанные способы входа. Подходит, чтобы проверить, залогинен ли пользователь.
  * @summary Данные текущего пользователя
  */
 export const GetCurrentUserResponse = zod.unknown();
+
+/**
+ * Участники с ролями, владелец, текущая или последняя партия. Доступно и до входа в комнату — так страница по ссылке показывает комнату перед кнопкой «Войти».
+ * @summary Получить комнату
+ */
+export const GetRoomParams = zod.object({
+  roomId: zod.uuid(),
+});
+
+export const GetRoomResponse = zod.unknown();
+
+/**
+ * Удаляет комнату вместе с историей партий. Только владелец.
+ * @summary Удалить комнату
+ */
+export const DeleteRoomParams = zod.object({
+  roomId: zod.uuid(),
+});
+
+export const DeleteRoomResponse = zod.unknown();

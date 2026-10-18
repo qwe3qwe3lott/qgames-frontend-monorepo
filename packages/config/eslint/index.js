@@ -83,6 +83,19 @@ export function createConfig({
           'error',
           {assertionStyle: 'as', objectLiteralTypeAssertions: 'never'},
         ],
+        // TanStack Router прерывает загрузку маршрута через `throw notFound()` / `throw redirect()`.
+        '@typescript-eslint/only-throw-error': [
+          'error',
+          {
+            allow: [
+              {
+                from: 'package',
+                package: '@tanstack/router-core',
+                name: ['NotFoundError', 'Redirect'],
+              },
+            ],
+          },
+        ],
       },
     },
     ...(react

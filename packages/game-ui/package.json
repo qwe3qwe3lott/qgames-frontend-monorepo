@@ -1,0 +1,27 @@
+{
+  "name": "@qgames/game-ui",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./components/*": "./src/components/*.tsx"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@qgames/ui": "workspace:*",
+    "lucide-react": "catalog:"
+  },
+  "devDependencies": {
+    "@qgames/config": "workspace:*",
+    "@types/react": "catalog:",
+    "eslint": "catalog:",
+    "react": "catalog:",
+    "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "catalog:"
+  }
+}

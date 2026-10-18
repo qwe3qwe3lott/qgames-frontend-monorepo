@@ -4,6 +4,7 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
+import type {RegisterRequestAvatar} from './registerRequestAvatar';
 
 export interface RegisterRequest {
   /**
@@ -16,4 +17,11 @@ export interface RegisterRequest {
    * @maxLength 128
    */
   password?: string;
+  /**
+   * @minLength 3
+   * @maxLength 32
+   * @pattern ^[^\s\p{Cntrl}]([^\p{Cntrl}]*[^\s\p{Cntrl}])?$
+   */
+  nickname: string;
+  avatar: RegisterRequestAvatar;
 }

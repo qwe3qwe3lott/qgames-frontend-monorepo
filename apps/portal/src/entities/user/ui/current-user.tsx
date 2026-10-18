@@ -1,20 +1,13 @@
-import {isApiError} from '@qgames/api';
-import {useGetCurrentUser} from '@qgames/api/gateway';
+import {PlayerAvatar} from '@qgames/game-ui/components/player-avatar';
 
-/** Email текущего пользователя или «гость», если сессии нет. */
-export function CurrentUser() {
-  const {data, error, isPending} = useGetCurrentUser({query: {retry: false}});
+import type {Viewer} from '../model/types';
 
-  if (isPending) {
-    return <span className="text-muted-foreground">Загрузка…</span>;
-  }
-  if (isApiError(error) && error.code === 'UNAUTHENTICATED') {
-    return <span>Гость</span>;
-  }
-  if (error !== null) {
-    return (
-      <span className="text-destructive">Не удалось загрузить профиль</span>
-    );
-  }
-  return <span>{data.email}</span>;
+/** Аватар и ник текущего пользователя. */
+export function CurrentUser({viewer}: {viewer: Viewer}) {
+  return (
+    <span className="flex items-center gap-2 text-sm">
+      <PlayerAvatar avatar={viewer.avatar} />
+      <span className="max-w-40 truncate font-medium">{viewer.nickname}</span>
+    </span>
+  );
 }

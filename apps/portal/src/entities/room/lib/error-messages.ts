@@ -1,0 +1,31 @@
+import {isApiError} from '@qgames/api';
+
+import {errorMessage} from '@/shared/lib';
+
+const ROOM_MESSAGES: Readonly<Record<string, string>> = {
+  ROOM_NOT_FOUND: 'Комнаты нет или она удалена.',
+  NOT_ROOM_MEMBER: 'Сначала войдите в комнату.',
+  NOT_ROOM_OWNER: 'Это может сделать только владелец комнаты.',
+  NOT_SESSION_PLAYER: 'Вы не участвуете в этой партии.',
+  ROOM_NOT_WAITING: 'Идёт партия — дождитесь её окончания.',
+  ROOM_NOT_IN_GAME: 'Партия не идёт.',
+  NO_FREE_SEAT: 'Свободных мест игрока нет.',
+  NOT_ENOUGH_PLAYERS: 'Число игроков не подходит игре.',
+  SESSION_CONFLICT: 'Партия изменилась — состояние обновлено, повторите ход.',
+};
+
+const MOVE_REASONS: Readonly<Record<string, string>> = {
+  NOT_YOUR_TURN: 'Сейчас ход другого игрока.',
+  GAME_FINISHED: 'Партия уже закончилась.',
+};
+
+/** Текст ошибки действия с комнатой или партией. */
+export function roomErrorMessage(error: unknown): string {
+  if (isApiError(error) && error.code === 'MOVE_REJECTED') {
+    return (
+      (error.reason === undefined ? undefined : MOVE_REASONS[error.reason]) ??
+      'Ход не принят по правилам игры.'
+    );
+  }
+  return errorMessage(error, ROOM_MESSAGES);
+}

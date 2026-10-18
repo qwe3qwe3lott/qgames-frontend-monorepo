@@ -25,7 +25,6 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "eslint": "catalog:",
-    "next-rspack": "catalog:",
     "stylelint": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:"

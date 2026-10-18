@@ -1,14 +1,11 @@
 import './styles/index.css';
+// Переменные окружения проверяются при старте; клиент admin-gateway подключится позже.
+import '@/shared/config';
 
-import {configureApi} from '@qgames/api';
 import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 
-import {env} from '@/shared/config';
-
 import {App} from './app';
-
-configureApi({baseUrl: env.PUBLIC_API_URL});
 
 const rootElement = document.getElementById('root');
 if (rootElement === null) {

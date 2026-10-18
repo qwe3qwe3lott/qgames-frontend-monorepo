@@ -1,4 +1,4 @@
-import {ApiError} from './api-error';
+import {ApiError, NETWORK_ERROR_CODE} from './api-error';
 
 const AUTH_PATH = '/api/auth/';
 const REFRESH_PATH = '/api/auth/refresh';
@@ -46,7 +46,15 @@ async function parseBody(response: Response): Promise<unknown> {
  */
 export async function apiFetch<T>(path: string, init: RequestInit): Promise<T> {
   const request = (): Promise<Response> =>
-    fetch(resolveUrl(path), {...init, credentials: 'include'});
+    fetch(resolveUrl(path), {...init, credentials: 'include'}).catch(
+      (error: unknown) => {
+        // Отмену запроса (AbortSignal от TanStack Query) пробрасываем как есть.
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          throw error;
+        }
+        throw new ApiError(0, NETWORK_ERROR_CODE);
+      },
+    );
 
   let response = await request();
   if (response.status === 401 && !path.startsWith(AUTH_PATH)) {

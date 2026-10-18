@@ -4,11 +4,14 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
+import type {UserResponseAvatar} from './userResponseAvatar';
 import type {UserResponseLoginMethodsItem} from './userResponseLoginMethodsItem';
 
 export interface UserResponse {
   id?: string;
   email?: string;
   emailVerified?: boolean;
+  nickname?: string;
+  avatar?: UserResponseAvatar;
   loginMethods?: UserResponseLoginMethodsItem[];
 }

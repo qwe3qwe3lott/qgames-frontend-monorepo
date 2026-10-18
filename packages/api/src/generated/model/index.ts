@@ -5,14 +5,33 @@
  * OpenAPI spec version: v0
  */
 
+export * from './changeRoleRequest';
+export * from './changeRoleRequestRole';
+export * from './createRoomRequest';
+export * from './createRoomRequestGameType';
 export * from './googleIdTokenRequest';
 export * from './loginRequest';
+export * from './moveRequest';
+export * from './moveRequestMove';
 export * from './problemDetail';
 export * from './problemDetailProperties';
 export * from './registerRequest';
+export * from './registerRequestAvatar';
 export * from './registrationResponse';
 export * from './resendCodeRequest';
+export * from './roomMemberResponse';
+export * from './roomMemberResponseAvatar';
+export * from './roomMemberResponseRole';
+export * from './roomResponse';
+export * from './roomResponseGameType';
+export * from './roomResponseStatus';
+export * from './sessionResponse';
+export * from './sessionResponseState';
+export * from './sessionResponseStatus';
 export * from './setPasswordRequest';
+export * from './updateProfileRequest';
+export * from './updateProfileRequestAvatar';
 export * from './userResponse';
+export * from './userResponseAvatar';
 export * from './userResponseLoginMethodsItem';
 export * from './verifyEmailRequest';
