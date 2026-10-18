@@ -1,14 +1,24 @@
 {
   "name": "qgames-frontend-monorepo",
-  "version": "1.0.0",
-  "description": "",
-  "main": "dist/index.js",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.14.0",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "prettier": "@qgames/config/prettier",
   "scripts": {
-    "build": "tsc"
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint lint:styles --continue",
+    "format": "prettier --write .",
+    "api:fetch": "pnpm --filter @qgames/api api:fetch",
+    "api:generate": "pnpm --filter @qgames/api api:generate"
   },
-  "dependencies": {},
   "devDependencies": {
-    "typescript": "^6.0.3"
-  },
-  "private": true
+    "@qgames/config": "workspace:*",
+    "prettier": "catalog:",
+    "turbo": "catalog:"
+  }
 }

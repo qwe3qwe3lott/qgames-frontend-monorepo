@@ -1,0 +1,3 @@
+pnpm-lock.yaml
+packages/api/openapi/
+apps/*/src/app/routeTree.gen.ts

@@ -1,0 +1,17 @@
+{
+  "extends": "@qgames/config/tsconfig/next.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "app",
+    "src",
+    ".next/types/**/*.ts",
+    "*.config.ts",
+    "*.config.js"
+  ]
+}

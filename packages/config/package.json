@@ -1,0 +1,38 @@
+{
+  "name": "@qgames/config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./tsconfig/*": "./tsconfig/*",
+    "./eslint": "./eslint/index.js",
+    "./stylelint": "./stylelint/index.js",
+    "./prettier": "./prettier/index.js"
+  },
+  "scripts": {
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@next/eslint-plugin-next": "catalog:",
+    "@tanstack/eslint-plugin-query": "catalog:",
+    "eslint-import-resolver-typescript": "catalog:",
+    "eslint-plugin-boundaries": "catalog:",
+    "eslint-plugin-react-hooks": "catalog:",
+    "globals": "catalog:",
+    "gts": "catalog:",
+    "stylelint-config-standard": "catalog:",
+    "typescript-eslint": "catalog:"
+  },
+  "devDependencies": {
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "stylelint": "catalog:",
+    "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "stylelint": "catalog:",
+    "typescript": "catalog:"
+  }
+}

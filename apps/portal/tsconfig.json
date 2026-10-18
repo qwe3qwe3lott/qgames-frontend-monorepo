@@ -1,0 +1,10 @@
+{
+  "extends": "@qgames/config/tsconfig/react.json",
+  "compilerOptions": {
+    "types": ["@rsbuild/core/types"],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src", "*.config.ts", "*.config.js"]
+}

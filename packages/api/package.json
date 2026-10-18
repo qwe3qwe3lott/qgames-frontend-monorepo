@@ -1,0 +1,33 @@
+{
+  "name": "@qgames/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./gateway": "./src/generated/gateway.ts",
+    "./gateway/model": "./src/generated/model/index.ts",
+    "./gateway/zod": "./src/generated/gateway.zod.ts"
+  },
+  "scripts": {
+    "api:fetch": "node scripts/fetch-openapi.js",
+    "api:generate": "orval --config orval.config.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@tanstack/react-query": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@qgames/config": "workspace:*",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "orval": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "catalog:"
+  }
+}

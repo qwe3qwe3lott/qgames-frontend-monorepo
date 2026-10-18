@@ -1,0 +1,9 @@
+{
+  "extends": "@qgames/config/tsconfig/react.json",
+  "compilerOptions": {
+    "paths": {
+      "@qgames/ui/*": ["./src/*"]
+    }
+  },
+  "include": ["src", "*.config.js"]
+}
