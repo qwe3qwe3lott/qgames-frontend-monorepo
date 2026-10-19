@@ -6,8 +6,9 @@ import {
   CardTitle,
 } from '@qgames/ui/components/card';
 
+import {ChangePasswordDialog} from '@/features/change-password';
 import {LinkGoogleButton} from '@/features/link-google';
-import {SetPasswordForm} from '@/features/set-password';
+import {SetPasswordDialog} from '@/features/set-password';
 import {UpdateProfileForm} from '@/features/update-profile';
 import {errorMessage} from '@/shared/lib';
 import {PageLayout} from '@/shared/ui';
@@ -58,11 +59,14 @@ export function ProfilePage() {
           </CardHeader>
           <CardContent className="flex flex-col gap-6">
             <section className="flex flex-col gap-2">
-              <h2 className="font-medium">Email и пароль</h2>
+              <h2 className="font-medium">Вход по паролю</h2>
               {hasPassword ? (
-                <p className="text-sm text-muted-foreground">Подключён</p>
+                <>
+                  <p className="text-sm text-muted-foreground">Подключён</p>
+                  <ChangePasswordDialog />
+                </>
               ) : (
-                <SetPasswordForm />
+                <SetPasswordDialog />
               )}
             </section>
             <section className="flex flex-col gap-2">
