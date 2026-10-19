@@ -4,10 +4,13 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
-import type {MoveRequestMove} from './moveRequestMove';
+import type {MoveRequestData} from './moveRequestData';
 
 export interface MoveRequest {
-  move: MoveRequestMove;
+  /** @minLength 1 */
+  type: string;
+  /** @nullable */
+  data?: MoveRequestData;
   /** @nullable */
   expectedVersion?: number | null;
 }

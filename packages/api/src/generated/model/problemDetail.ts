@@ -4,6 +4,7 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
+import type {ProblemDetailErrors} from './problemDetailErrors';
 import type {ProblemDetailProperties} from './problemDetailProperties';
 
 export interface ProblemDetail {
@@ -14,5 +15,9 @@ export interface ProblemDetail {
   instance?: string;
   properties?: ProblemDetailProperties;
   /** Машиночитаемый код ошибки */
-  code?: unknown;
+  code?: string;
+  /** Ошибки по полям запроса (у VALIDATION_ERROR): имя поля → сообщение */
+  errors?: ProblemDetailErrors;
+  /** Причина отказа правил игры (у MOVE_REJECTED), например NOT_YOUR_TURN */
+  reason?: string;
 }

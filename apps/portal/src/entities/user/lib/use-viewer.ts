@@ -21,6 +21,5 @@ export function useViewer(): ViewerState {
   if (error !== null) {
     return {status: 'error', error};
   }
-  const viewer = toViewer(data);
-  return viewer === null ? {status: 'guest'} : {status: 'user', viewer};
+  return {status: 'user', viewer: toViewer(data)};
 }

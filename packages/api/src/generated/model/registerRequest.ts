@@ -8,7 +8,7 @@ import type {RegisterRequestAvatar} from './registerRequestAvatar';
 
 export interface RegisterRequest {
   /**
-   * @minLength 0
+   * @minLength 1
    * @maxLength 320
    */
   email: string;
@@ -16,11 +16,11 @@ export interface RegisterRequest {
    * @minLength 8
    * @maxLength 128
    */
-  password?: string;
+  password: string;
   /**
    * @minLength 3
    * @maxLength 32
-   * @pattern ^[^\s\p{Cntrl}]([^\p{Cntrl}]*[^\s\p{Cntrl}])?$
+   * @pattern ^[^\s\p{Cc}]([^\p{Cc}]*[^\s\p{Cc}])?$
    */
   nickname: string;
   avatar: RegisterRequestAvatar;

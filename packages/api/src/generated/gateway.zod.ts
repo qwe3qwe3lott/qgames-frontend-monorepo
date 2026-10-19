@@ -18,7 +18,39 @@ export const ChangeRoleBody = zod.object({
   role: zod.enum(['PLAYER', 'SPECTATOR']),
 });
 
-export const ChangeRoleResponse = zod.unknown();
+export const ChangeRoleResponse = zod.object({
+  id: zod.uuid(),
+  gameType: zod.enum(['NOTHING']),
+  status: zod.enum(['WAITING', 'IN_GAME']),
+  ownerId: zod.uuid().nullish(),
+  minPlayers: zod.int(),
+  maxPlayers: zod.int(),
+  members: zod.array(
+    zod.object({
+      userId: zod.uuid(),
+      nickname: zod.string().nullish(),
+      avatar: zod
+        .union([zod.literal('CAT'), zod.literal('DOG'), zod.literal(null)])
+        .nullish(),
+      role: zod.enum(['PLAYER', 'SPECTATOR']),
+      owner: zod.boolean(),
+      joinedAt: zod.iso.datetime({offset: true}),
+    }),
+  ),
+  session: zod
+    .union([
+      zod.object({
+        id: zod.uuid(),
+        status: zod.enum(['IN_PROGRESS', 'FINISHED', 'CANCELLED']),
+        players: zod.array(zod.uuid()),
+        version: zod.int(),
+        state: zod.record(zod.string(), zod.unknown()),
+      }),
+      zod.null(),
+    ])
+    .optional(),
+  createdAt: zod.iso.datetime({offset: true}),
+});
 
 /**
  * Для аккаунта без пароля (например, созданного через Google). Логином становится email аккаунта.
@@ -31,11 +63,17 @@ export const AddPasswordLoginBody = zod.object({
   password: zod
     .string()
     .min(addPasswordLoginBodyPasswordMin)
-    .max(addPasswordLoginBodyPasswordMax)
-    .optional(),
+    .max(addPasswordLoginBodyPasswordMax),
 });
 
-export const AddPasswordLoginResponse = zod.unknown();
+export const AddPasswordLoginResponse = zod.object({
+  id: zod.uuid(),
+  email: zod.string(),
+  emailVerified: zod.boolean(),
+  nickname: zod.string(),
+  avatar: zod.enum(['CAT', 'DOG']),
+  loginMethods: zod.array(zod.enum(['PASSWORD', 'GOOGLE'])),
+});
 
 /**
  * Явная привязка Google к текущему аккаунту. Email Google-аккаунта может отличаться от email аккаунта.
@@ -46,7 +84,14 @@ export const AddGoogleLoginBody = zod.object({
   idToken: zod.string().min(1),
 });
 
-export const AddGoogleLoginResponse = zod.unknown();
+export const AddGoogleLoginResponse = zod.object({
+  id: zod.uuid(),
+  email: zod.string(),
+  emailVerified: zod.boolean(),
+  nickname: zod.string(),
+  avatar: zod.enum(['CAT', 'DOG']),
+  loginMethods: zod.array(zod.enum(['PASSWORD', 'GOOGLE'])),
+});
 
 /**
  * Создаёт комнату под выбранную игру. Создатель становится владельцем и первым игроком. Ссылку на комнату (её id) можно отправить другим игрокам.
@@ -56,7 +101,39 @@ export const CreateRoomBody = zod.object({
   gameType: zod.enum(['NOTHING']),
 });
 
-export const CreateRoomResponse = zod.unknown();
+export const CreateRoomResponse = zod.object({
+  id: zod.uuid(),
+  gameType: zod.enum(['NOTHING']),
+  status: zod.enum(['WAITING', 'IN_GAME']),
+  ownerId: zod.uuid().nullish(),
+  minPlayers: zod.int(),
+  maxPlayers: zod.int(),
+  members: zod.array(
+    zod.object({
+      userId: zod.uuid(),
+      nickname: zod.string().nullish(),
+      avatar: zod
+        .union([zod.literal('CAT'), zod.literal('DOG'), zod.literal(null)])
+        .nullish(),
+      role: zod.enum(['PLAYER', 'SPECTATOR']),
+      owner: zod.boolean(),
+      joinedAt: zod.iso.datetime({offset: true}),
+    }),
+  ),
+  session: zod
+    .union([
+      zod.object({
+        id: zod.uuid(),
+        status: zod.enum(['IN_PROGRESS', 'FINISHED', 'CANCELLED']),
+        players: zod.array(zod.uuid()),
+        version: zod.int(),
+        state: zod.record(zod.string(), zod.unknown()),
+      }),
+      zod.null(),
+    ])
+    .optional(),
+  createdAt: zod.iso.datetime({offset: true}),
+});
 
 /**
  * Стартует партию с текущими игроками комнаты (места — по порядку входа). Только владелец, число игроков должно укладываться в ограничения игры (minPlayers–maxPlayers).
@@ -66,7 +143,39 @@ export const StartSessionParams = zod.object({
   roomId: zod.uuid(),
 });
 
-export const StartSessionResponse = zod.unknown();
+export const StartSessionResponse = zod.object({
+  id: zod.uuid(),
+  gameType: zod.enum(['NOTHING']),
+  status: zod.enum(['WAITING', 'IN_GAME']),
+  ownerId: zod.uuid().nullish(),
+  minPlayers: zod.int(),
+  maxPlayers: zod.int(),
+  members: zod.array(
+    zod.object({
+      userId: zod.uuid(),
+      nickname: zod.string().nullish(),
+      avatar: zod
+        .union([zod.literal('CAT'), zod.literal('DOG'), zod.literal(null)])
+        .nullish(),
+      role: zod.enum(['PLAYER', 'SPECTATOR']),
+      owner: zod.boolean(),
+      joinedAt: zod.iso.datetime({offset: true}),
+    }),
+  ),
+  session: zod
+    .union([
+      zod.object({
+        id: zod.uuid(),
+        status: zod.enum(['IN_PROGRESS', 'FINISHED', 'CANCELLED']),
+        players: zod.array(zod.uuid()),
+        version: zod.int(),
+        state: zod.record(zod.string(), zod.unknown()),
+      }),
+      zod.null(),
+    ])
+    .optional(),
+  createdAt: zod.iso.datetime({offset: true}),
+});
 
 /**
  * Завершает идущую партию без результата и возвращает комнату в ожидание. Только владелец.
@@ -76,22 +185,39 @@ export const CancelSessionParams = zod.object({
   roomId: zod.uuid(),
 });
 
-export const CancelSessionResponse = zod.unknown();
-
-/**
- * Применяет ход по правилам игры. Ходить может только игрок партии, находящийся в комнате. Когда партия заканчивается, комната возвращается в ожидание, а законченная партия остаётся в ответе.
- * @summary Сделать ход
- */
-export const MakeMoveParams = zod.object({
-  roomId: zod.uuid(),
+export const CancelSessionResponse = zod.object({
+  id: zod.uuid(),
+  gameType: zod.enum(['NOTHING']),
+  status: zod.enum(['WAITING', 'IN_GAME']),
+  ownerId: zod.uuid().nullish(),
+  minPlayers: zod.int(),
+  maxPlayers: zod.int(),
+  members: zod.array(
+    zod.object({
+      userId: zod.uuid(),
+      nickname: zod.string().nullish(),
+      avatar: zod
+        .union([zod.literal('CAT'), zod.literal('DOG'), zod.literal(null)])
+        .nullish(),
+      role: zod.enum(['PLAYER', 'SPECTATOR']),
+      owner: zod.boolean(),
+      joinedAt: zod.iso.datetime({offset: true}),
+    }),
+  ),
+  session: zod
+    .union([
+      zod.object({
+        id: zod.uuid(),
+        status: zod.enum(['IN_PROGRESS', 'FINISHED', 'CANCELLED']),
+        players: zod.array(zod.uuid()),
+        version: zod.int(),
+        state: zod.record(zod.string(), zod.unknown()),
+      }),
+      zod.null(),
+    ])
+    .optional(),
+  createdAt: zod.iso.datetime({offset: true}),
 });
-
-export const MakeMoveBody = zod.object({
-  move: zod.record(zod.string(), zod.unknown()),
-  expectedVersion: zod.int().nullish(),
-});
-
-export const MakeMoveResponse = zod.unknown();
 
 /**
  * Выйти можно всегда. Игрок идущей партии сохраняет место и может вернуться. Если вышел владелец, владение переходит к самому раннему из оставшихся: сначала игроки, затем наблюдатели. Пустая комната удаляется автоматически через 30 минут.
@@ -111,7 +237,88 @@ export const JoinRoomParams = zod.object({
   roomId: zod.uuid(),
 });
 
-export const JoinRoomResponse = zod.unknown();
+export const JoinRoomResponse = zod.object({
+  id: zod.uuid(),
+  gameType: zod.enum(['NOTHING']),
+  status: zod.enum(['WAITING', 'IN_GAME']),
+  ownerId: zod.uuid().nullish(),
+  minPlayers: zod.int(),
+  maxPlayers: zod.int(),
+  members: zod.array(
+    zod.object({
+      userId: zod.uuid(),
+      nickname: zod.string().nullish(),
+      avatar: zod
+        .union([zod.literal('CAT'), zod.literal('DOG'), zod.literal(null)])
+        .nullish(),
+      role: zod.enum(['PLAYER', 'SPECTATOR']),
+      owner: zod.boolean(),
+      joinedAt: zod.iso.datetime({offset: true}),
+    }),
+  ),
+  session: zod
+    .union([
+      zod.object({
+        id: zod.uuid(),
+        status: zod.enum(['IN_PROGRESS', 'FINISHED', 'CANCELLED']),
+        players: zod.array(zod.uuid()),
+        version: zod.int(),
+        state: zod.record(zod.string(), zod.unknown()),
+      }),
+      zod.null(),
+    ])
+    .optional(),
+  createdAt: zod.iso.datetime({offset: true}),
+});
+
+/**
+ * Ручка одна на все игры: код игры — в пути, ход — общий конверт `{type, data}`. `type` — вид действия (`PASS` в «игре в ничто»), `data` — его параметры в формате игры. Код игры должен совпадать с игрой комнаты. Ходить может только игрок партии, находящийся в комнате. Когда партия заканчивается, комната возвращается в ожидание, а законченная партия остаётся в ответе.
+ * @summary Сделать ход
+ */
+export const MakeMoveParams = zod.object({
+  gameCode: zod.enum(['nothing']).describe('Код игры'),
+  roomId: zod.uuid(),
+});
+
+export const MakeMoveBody = zod.object({
+  type: zod.string().min(1),
+  data: zod.record(zod.string(), zod.unknown()).nullish(),
+  expectedVersion: zod.int().nullish(),
+});
+
+export const MakeMoveResponse = zod.object({
+  id: zod.uuid(),
+  gameType: zod.enum(['NOTHING']),
+  status: zod.enum(['WAITING', 'IN_GAME']),
+  ownerId: zod.uuid().nullish(),
+  minPlayers: zod.int(),
+  maxPlayers: zod.int(),
+  members: zod.array(
+    zod.object({
+      userId: zod.uuid(),
+      nickname: zod.string().nullish(),
+      avatar: zod
+        .union([zod.literal('CAT'), zod.literal('DOG'), zod.literal(null)])
+        .nullish(),
+      role: zod.enum(['PLAYER', 'SPECTATOR']),
+      owner: zod.boolean(),
+      joinedAt: zod.iso.datetime({offset: true}),
+    }),
+  ),
+  session: zod
+    .union([
+      zod.object({
+        id: zod.uuid(),
+        status: zod.enum(['IN_PROGRESS', 'FINISHED', 'CANCELLED']),
+        players: zod.array(zod.uuid()),
+        version: zod.int(),
+        state: zod.record(zod.string(), zod.unknown()),
+      }),
+      zod.null(),
+    ])
+    .optional(),
+  createdAt: zod.iso.datetime({offset: true}),
+});
 
 /**
  * Подтверждает email и сразу открывает сессию: ставит куки с токенами. Код действует 15 минут, на один код даётся 5 попыток.
@@ -122,10 +329,17 @@ export const verifyEmailBodyCodeRegExp = new RegExp('[0-9]{6}');
 
 export const VerifyEmailBody = zod.object({
   email: zod.email().min(1),
-  code: zod.string().regex(verifyEmailBodyCodeRegExp).optional(),
+  code: zod.string().min(1).regex(verifyEmailBodyCodeRegExp),
 });
 
-export const VerifyEmailResponse = zod.unknown();
+export const VerifyEmailResponse = zod.object({
+  id: zod.uuid(),
+  email: zod.string(),
+  emailVerified: zod.boolean(),
+  nickname: zod.string(),
+  avatar: zod.enum(['CAT', 'DOG']),
+  loginMethods: zod.array(zod.enum(['PASSWORD', 'GOOGLE'])),
+});
 
 /**
  * Высылает новый код, прежний перестаёт действовать. Для неизвестного или уже подтверждённого email письмо не отправляется, ответ — 200.
@@ -142,7 +356,6 @@ export const ResendCodeResponse = zod.unknown();
  * Создаёт аккаунт с ником (3–32 символа, не уникален) и аватаром и отправляет на email 6-значный код подтверждения. Сессия не открывается: войти можно после подтверждения email.
  * @summary Регистрация по email и паролю
  */
-export const registerBodyEmailMin = 0;
 export const registerBodyEmailMax = 320;
 
 export const registerBodyPasswordMin = 8;
@@ -152,17 +365,16 @@ export const registerBodyNicknameMin = 3;
 export const registerBodyNicknameMax = 32;
 
 export const registerBodyNicknameRegExp = new RegExp(
-  '^[^\\s\\p{Cntrl}]([^\\p{Cntrl}]*[^\\s\\p{Cntrl}])?$',
+  '^[^\\s\\p{Cc}]([^\\p{Cc}]*[^\\s\\p{Cc}])?$',
   'u',
 );
 
 export const RegisterBody = zod.object({
-  email: zod.email().min(registerBodyEmailMin).max(registerBodyEmailMax),
+  email: zod.email().min(1).max(registerBodyEmailMax),
   password: zod
     .string()
     .min(registerBodyPasswordMin)
-    .max(registerBodyPasswordMax)
-    .optional(),
+    .max(registerBodyPasswordMax),
   nickname: zod
     .string()
     .min(registerBodyNicknameMin)
@@ -171,13 +383,23 @@ export const RegisterBody = zod.object({
   avatar: zod.enum(['CAT', 'DOG']),
 });
 
-export const RegisterResponse = zod.unknown();
+export const RegisterResponse = zod.object({
+  userId: zod.uuid(),
+  email: zod.string(),
+});
 
 /**
  * Берёт refresh-токен из куки refresh_token и ставит новые куки. Вызывать, когда access-токен истёк (защищённые ручки ответили 401). Параллельные вызовы из нескольких вкладок в течение 10 секунд допустимы. При ошибке обе куки удаляются.
  * @summary Обновление сессии
  */
-export const RefreshResponse = zod.unknown();
+export const RefreshResponse = zod.object({
+  id: zod.uuid(),
+  email: zod.string(),
+  emailVerified: zod.boolean(),
+  nickname: zod.string(),
+  avatar: zod.enum(['CAT', 'DOG']),
+  loginMethods: zod.array(zod.enum(['PASSWORD', 'GOOGLE'])),
+});
 
 /**
  * Отзывает сессию по куке refresh_token и удаляет обе куки. Без куки просто удаляет куки.
@@ -195,7 +417,14 @@ export const LoginBody = zod.object({
   password: zod.string().min(1),
 });
 
-export const LoginResponse = zod.unknown();
+export const LoginResponse = zod.object({
+  id: zod.uuid(),
+  email: zod.string(),
+  emailVerified: zod.boolean(),
+  nickname: zod.string(),
+  avatar: zod.enum(['CAT', 'DOG']),
+  loginMethods: zod.array(zod.enum(['PASSWORD', 'GOOGLE'])),
+});
 
 /**
  * Принимает Google ID token из Google Identity Services. Новый Google-аккаунт создаёт аккаунт или привязывается к существующему с тем же email, если email подтверждён и у нас, и в Google. Новый аккаунт получает ник вида player-a1b2c3 и аватар CAT — их можно сменить в профиле.
@@ -206,7 +435,14 @@ export const LoginWithGoogleBody = zod.object({
   idToken: zod.string().min(1),
 });
 
-export const LoginWithGoogleResponse = zod.unknown();
+export const LoginWithGoogleResponse = zod.object({
+  id: zod.uuid(),
+  email: zod.string(),
+  emailVerified: zod.boolean(),
+  nickname: zod.string(),
+  avatar: zod.enum(['CAT', 'DOG']),
+  loginMethods: zod.array(zod.enum(['PASSWORD', 'GOOGLE'])),
+});
 
 /**
  * Меняет ник и/или аватар: изменяется только переданное. Ник не уникален. В игровых комнатах новый ник появляется через несколько секунд.
@@ -216,7 +452,7 @@ export const updateProfileBodyNicknameMin = 3;
 export const updateProfileBodyNicknameMax = 32;
 
 export const updateProfileBodyNicknameRegExp = new RegExp(
-  '^[^\\s\\p{Cntrl}]([^\\p{Cntrl}]*[^\\s\\p{Cntrl}])?$',
+  '^[^\\s\\p{Cc}]([^\\p{Cc}]*[^\\s\\p{Cc}])?$',
   'u',
 );
 
@@ -232,13 +468,27 @@ export const UpdateProfileBody = zod.object({
     .nullish(),
 });
 
-export const UpdateProfileResponse = zod.unknown();
+export const UpdateProfileResponse = zod.object({
+  id: zod.uuid(),
+  email: zod.string(),
+  emailVerified: zod.boolean(),
+  nickname: zod.string(),
+  avatar: zod.enum(['CAT', 'DOG']),
+  loginMethods: zod.array(zod.enum(['PASSWORD', 'GOOGLE'])),
+});
 
 /**
  * Email, статус его подтверждения и привязанные способы входа. Подходит, чтобы проверить, залогинен ли пользователь.
  * @summary Данные текущего пользователя
  */
-export const GetCurrentUserResponse = zod.unknown();
+export const GetCurrentUserResponse = zod.object({
+  id: zod.uuid(),
+  email: zod.string(),
+  emailVerified: zod.boolean(),
+  nickname: zod.string(),
+  avatar: zod.enum(['CAT', 'DOG']),
+  loginMethods: zod.array(zod.enum(['PASSWORD', 'GOOGLE'])),
+});
 
 /**
  * Участники с ролями, владелец, текущая или последняя партия. Доступно и до входа в комнату — так страница по ссылке показывает комнату перед кнопкой «Войти».
@@ -248,7 +498,39 @@ export const GetRoomParams = zod.object({
   roomId: zod.uuid(),
 });
 
-export const GetRoomResponse = zod.unknown();
+export const GetRoomResponse = zod.object({
+  id: zod.uuid(),
+  gameType: zod.enum(['NOTHING']),
+  status: zod.enum(['WAITING', 'IN_GAME']),
+  ownerId: zod.uuid().nullish(),
+  minPlayers: zod.int(),
+  maxPlayers: zod.int(),
+  members: zod.array(
+    zod.object({
+      userId: zod.uuid(),
+      nickname: zod.string().nullish(),
+      avatar: zod
+        .union([zod.literal('CAT'), zod.literal('DOG'), zod.literal(null)])
+        .nullish(),
+      role: zod.enum(['PLAYER', 'SPECTATOR']),
+      owner: zod.boolean(),
+      joinedAt: zod.iso.datetime({offset: true}),
+    }),
+  ),
+  session: zod
+    .union([
+      zod.object({
+        id: zod.uuid(),
+        status: zod.enum(['IN_PROGRESS', 'FINISHED', 'CANCELLED']),
+        players: zod.array(zod.uuid()),
+        version: zod.int(),
+        state: zod.record(zod.string(), zod.unknown()),
+      }),
+      zod.null(),
+    ])
+    .optional(),
+  createdAt: zod.iso.datetime({offset: true}),
+});
 
 /**
  * Удаляет комнату вместе с историей партий. Только владелец.

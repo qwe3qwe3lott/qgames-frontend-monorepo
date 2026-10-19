@@ -38,53 +38,31 @@ export interface RoomView {
   session: SessionView | null;
 }
 
-function toMemberView(member: RoomMemberResponse): RoomMemberView | null {
-  if (member.userId === undefined || member.role === undefined) {
-    return null;
-  }
+function toMemberView(member: RoomMemberResponse): RoomMemberView {
   return {
     userId: member.userId,
     nickname: member.nickname ?? null,
     avatar: member.avatar ?? null,
     role: member.role,
-    owner: member.owner ?? false,
+    owner: member.owner,
   };
 }
 
-function toSessionView(session: SessionResponse): SessionView | null {
+function toSessionView(session: SessionResponse): SessionView {
   const {id, status, players, version, state} = session;
-  if (id === undefined || status === undefined || version === undefined) {
-    return null;
-  }
-  return {id, status, players: players ?? [], version, state};
+  return {id, status, players, version, state};
 }
 
-/**
- * Приводит ответ к обязательным полям. В контракте все поля ответа optional
- * (недочёт спецификации, CLAUDE.md §5); без ключевых полей комнату не показываем.
- */
-export function toRoomView(room: RoomResponse): RoomView | null {
-  const {id, gameType, status, minPlayers, maxPlayers} = room;
-  if (
-    id === undefined ||
-    gameType === undefined ||
-    status === undefined ||
-    minPlayers === undefined ||
-    maxPlayers === undefined
-  ) {
-    return null;
-  }
+/** Ответ комнаты в виде для UI: необязательные nullable-поля приведены к `null`. */
+export function toRoomView(room: RoomResponse): RoomView {
   return {
-    id,
-    gameType,
-    status,
+    id: room.id,
+    gameType: room.gameType,
+    status: room.status,
     ownerId: room.ownerId ?? null,
-    minPlayers,
-    maxPlayers,
-    members: (room.members ?? []).flatMap(member => {
-      const view = toMemberView(member);
-      return view === null ? [] : [view];
-    }),
+    minPlayers: room.minPlayers,
+    maxPlayers: room.maxPlayers,
+    members: room.members.map(toMemberView),
     session:
       room.session === undefined || room.session === null
         ? null

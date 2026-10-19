@@ -8,9 +8,9 @@ import type {SessionResponseState} from './sessionResponseState';
 import type {SessionResponseStatus} from './sessionResponseStatus';
 
 export interface SessionResponse {
-  id?: string;
-  status?: SessionResponseStatus;
-  players?: string[];
-  version?: number;
-  state?: SessionResponseState;
+  id: string;
+  status: SessionResponseStatus;
+  players: string[];
+  version: number;
+  state: SessionResponseState;
 }

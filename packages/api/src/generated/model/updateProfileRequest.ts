@@ -11,7 +11,7 @@ export interface UpdateProfileRequest {
    * @minLength 3
    * @maxLength 32
    * @nullable
-   * @pattern ^[^\s\p{Cntrl}]([^\p{Cntrl}]*[^\s\p{Cntrl}])?$
+   * @pattern ^[^\s\p{Cc}]([^\p{Cc}]*[^\s\p{Cc}])?$
    */
   nickname?: string | null;
   /** @nullable */

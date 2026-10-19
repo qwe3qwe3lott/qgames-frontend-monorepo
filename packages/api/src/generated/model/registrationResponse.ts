@@ -6,6 +6,6 @@
  */
 
 export interface RegistrationResponse {
-  userId?: string;
-  email?: string;
+  userId: string;
+  email: string;
 }

@@ -10,14 +10,14 @@ import type {RoomResponseStatus} from './roomResponseStatus';
 import type {SessionResponse} from './sessionResponse';
 
 export interface RoomResponse {
-  id?: string;
-  gameType?: RoomResponseGameType;
-  status?: RoomResponseStatus;
+  id: string;
+  gameType: RoomResponseGameType;
+  status: RoomResponseStatus;
   /** @nullable */
   ownerId?: string | null;
-  minPlayers?: number;
-  maxPlayers?: number;
-  members?: RoomMemberResponse[];
+  minPlayers: number;
+  maxPlayers: number;
+  members: RoomMemberResponse[];
   session?: SessionResponse | null;
-  createdAt?: string;
+  createdAt: string;
 }

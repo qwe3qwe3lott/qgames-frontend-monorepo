@@ -19,11 +19,17 @@ export interface GameBoardSession {
   state: unknown;
 }
 
+/** Ход — общий конверт бэкенда: вид действия и его параметры в формате игры. */
+export interface GameMove {
+  type: string;
+  data?: Readonly<Record<string, unknown>>;
+}
+
 export interface GameBoardProps {
   session: GameBoardSession;
   players: readonly GameBoardPlayer[];
   viewerId: string;
-  onMove: (move: Readonly<Record<string, unknown>>) => void;
+  onMove: (move: GameMove) => void;
   movePending: boolean;
   moveError: string | null;
 }

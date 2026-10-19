@@ -8,12 +8,12 @@ import type {RoomMemberResponseAvatar} from './roomMemberResponseAvatar';
 import type {RoomMemberResponseRole} from './roomMemberResponseRole';
 
 export interface RoomMemberResponse {
-  userId?: string;
+  userId: string;
   /** @nullable */
   nickname?: string | null;
   /** @nullable */
   avatar?: RoomMemberResponseAvatar;
-  role?: RoomMemberResponseRole;
-  owner?: boolean;
-  joinedAt?: string;
+  role: RoomMemberResponseRole;
+  owner: boolean;
+  joinedAt: string;
 }

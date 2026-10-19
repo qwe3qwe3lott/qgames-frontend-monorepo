@@ -14,7 +14,7 @@
   "dependencies": {
     "@hookform/resolvers": "catalog:",
     "@qgames/api": "workspace:*",
-    "@qgames/game-nothing-game": "workspace:*",
+    "@qgames/game-nothing": "workspace:*",
     "@qgames/game-ui": "workspace:*",
     "@qgames/ui": "workspace:*",
     "@tanstack/react-query": "catalog:",

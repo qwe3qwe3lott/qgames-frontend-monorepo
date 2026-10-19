@@ -37,15 +37,6 @@ export function RoomPage({game, roomId, viewerId}: RoomPageProps) {
     );
   }
   const room = toRoomView(data);
-  if (room === null) {
-    return (
-      <PageLayout title={game.title}>
-        <p className="text-destructive" role="alert">
-          Сервер вернул комнату в неожиданном формате.
-        </p>
-      </PageLayout>
-    );
-  }
   const viewerMembership = membership(room, viewerId);
 
   return (

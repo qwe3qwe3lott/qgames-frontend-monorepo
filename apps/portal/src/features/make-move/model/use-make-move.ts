@@ -1,7 +1,9 @@
 import {isApiError} from '@qgames/api';
 import {useMakeMove} from '@qgames/api/gateway';
+import type {MoveRequest} from '@qgames/api/gateway/model';
 import {useQueryClient} from '@tanstack/react-query';
 
+import type {GameApi, GameMove} from '@/entities/game';
 import {
   invalidateRoom,
   roomErrorMessage,
@@ -10,16 +12,16 @@ import {
 } from '@/entities/room';
 
 export interface MoveControls {
-  onMove: (move: Readonly<Record<string, unknown>>) => void;
+  onMove: (move: GameMove) => void;
   movePending: boolean;
   moveError: string | null;
 }
 
 /**
- * Отправка хода с версией партии, которую видел клиент. Если партия уже
- * изменилась (SESSION_CONFLICT), комната перечитывается.
+ * Отправка хода (`{type, data}`) с версией партии, которую видел клиент.
+ * Если партия уже изменилась (SESSION_CONFLICT), комната перечитывается.
  */
-export function useMoveControls(room: RoomView): MoveControls {
+export function useMoveControls(game: GameApi, room: RoomView): MoveControls {
   const queryClient = useQueryClient();
   const makeMove = useMakeMove({
     mutation: {
@@ -35,13 +37,17 @@ export function useMoveControls(room: RoomView): MoveControls {
   });
   return {
     onMove: move => {
-      const expectedVersion = room.session?.version;
+      const request: MoveRequest = {type: move.type};
+      if (move.data !== undefined) {
+        request.data = {...move.data};
+      }
+      if (room.session !== null) {
+        request.expectedVersion = room.session.version;
+      }
       makeMove.mutate({
+        gameCode: game.gameCode,
         roomId: room.id,
-        data:
-          expectedVersion === undefined
-            ? {move: {...move}}
-            : {move: {...move}, expectedVersion},
+        data: request,
       });
     },
     movePending: makeMove.isPending,

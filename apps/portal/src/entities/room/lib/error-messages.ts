@@ -4,6 +4,8 @@ import {errorMessage} from '@/shared/lib';
 
 const ROOM_MESSAGES: Readonly<Record<string, string>> = {
   ROOM_NOT_FOUND: 'Комнаты нет или она удалена.',
+  GAME_NOT_FOUND: 'Неизвестная игра.',
+  GAME_TYPE_MISMATCH: 'Комната относится к другой игре.',
   NOT_ROOM_MEMBER: 'Сначала войдите в комнату.',
   NOT_ROOM_OWNER: 'Это может сделать только владелец комнаты.',
   NOT_SESSION_PLAYER: 'Вы не участвуете в этой партии.',

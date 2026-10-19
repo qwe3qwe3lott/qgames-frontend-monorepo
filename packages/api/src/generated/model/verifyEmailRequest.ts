@@ -8,6 +8,9 @@
 export interface VerifyEmailRequest {
   /** @minLength 1 */
   email: string;
-  /** @pattern [0-9]{6} */
-  code?: string;
+  /**
+   * @minLength 1
+   * @pattern [0-9]{6}
+   */
+  code: string;
 }

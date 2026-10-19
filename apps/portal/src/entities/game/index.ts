@@ -5,6 +5,8 @@ export {
   gameByType,
   GAMES,
   isGameCode,
+  type ApiGameCode,
+  type GameApi,
   type GameCode,
   type GameInfo,
 } from './model/registry';
@@ -14,4 +16,5 @@ export type {
   GameBoardProps,
   GameBoardSession,
   GameModule,
+  GameMove,
 } from './model/types';

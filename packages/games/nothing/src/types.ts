@@ -16,12 +16,18 @@ export interface BoardSession {
   state: unknown;
 }
 
+/** Ход — общий конверт бэкенда: вид действия и его параметры в формате игры. */
+export interface BoardMove {
+  type: string;
+  data?: Readonly<Record<string, unknown>>;
+}
+
 export interface BoardProps {
   session: BoardSession;
   /** Участники комнаты (и бывшие игроки партии) для имён и аватаров. */
   players: readonly BoardPlayer[];
   viewerId: string;
-  onMove: (move: Readonly<Record<string, unknown>>) => void;
+  onMove: (move: BoardMove) => void;
   movePending: boolean;
   moveError: string | null;
 }

@@ -30,9 +30,6 @@ export function CreateRoomDialog({game}: CreateRoomDialogProps) {
   const createRoom = useCreateRoom({
     mutation: {
       onSuccess: room => {
-        if (room.id === undefined) {
-          return;
-        }
         setRoomCache(queryClient, room.id, room);
         void navigate({
           to: '/games/$gameCode/rooms/$roomId',
@@ -41,7 +38,7 @@ export function CreateRoomDialog({game}: CreateRoomDialogProps) {
       },
     },
   });
-  const {gameType} = game;
+  const gameType = game.api?.gameType ?? null;
 
   return (
     <Dialog

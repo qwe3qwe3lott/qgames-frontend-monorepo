@@ -12,22 +12,16 @@ export async function requireUser(
   queryClient: QueryClient,
   location: {href: string},
 ): Promise<Viewer> {
-  const loginRedirect = () =>
-    redirect({to: '/login', search: {redirect: location.href}});
   try {
     // staleTime 'static' — взять из кеша, если пользователь уже загружен.
     const user = await queryClient.query({
       ...getGetCurrentUserQueryOptions(),
       staleTime: 'static',
     });
-    const viewer = toViewer(user);
-    if (viewer === null) {
-      throw loginRedirect();
-    }
-    return viewer;
+    return toViewer(user);
   } catch (error) {
     if (isApiError(error) && error.status === 401) {
-      throw loginRedirect();
+      throw redirect({to: '/login', search: {redirect: location.href}});
     }
     throw error;
   }

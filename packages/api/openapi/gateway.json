@@ -58,7 +58,7 @@
           "200": {
             "description": "Роль изменена",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RoomResponse"
                 }
@@ -150,7 +150,7 @@
           "200": {
             "description": "Пароль добавлен, возвращены обновлённые данные пользователя",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UserResponse"
                 }
@@ -222,7 +222,7 @@
           "200": {
             "description": "Google привязан, возвращены обновлённые данные пользователя",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UserResponse"
                 }
@@ -294,7 +294,7 @@
           "200": {
             "description": "Комната создана",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RoomResponse"
                 }
@@ -357,7 +357,7 @@
           "200": {
             "description": "Партия началась",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RoomResponse"
                 }
@@ -438,7 +438,7 @@
           "200": {
             "description": "Партия отменена",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RoomResponse"
                 }
@@ -477,119 +477,6 @@
           },
           "409": {
             "description": "Партия не идёт (ROOM_NOT_IN_GAME)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/rooms/{roomId}/session/moves": {
-      "post": {
-        "tags": [
-          "Игровые комнаты"
-        ],
-        "summary": "Сделать ход",
-        "description": "Применяет ход по правилам игры. Ходить может только игрок партии, находящийся в комнате. Когда партия заканчивается, комната возвращается в ожидание, а законченная партия остаётся в ответе.",
-        "operationId": "makeMove",
-        "parameters": [
-          {
-            "name": "roomId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/MoveRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Ход принят, возвращено новое состояние",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/RoomResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Нет хода в запросе или он не разбирается (VALIDATION_ERROR)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Нет действительного access-токена (UNAUTHENTICATED)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Пользователь не в комнате (NOT_ROOM_MEMBER) или не игрок партии (NOT_SESSION_PLAYER)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Партия не идёт (ROOM_NOT_IN_GAME) или изменилась с момента, который видел клиент (SESSION_CONFLICT)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Ход нарушает правила игры (MOVE_REJECTED, причина — в поле reason, например NOT_YOUR_TURN)",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -700,7 +587,7 @@
           "200": {
             "description": "Пользователь в комнате",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RoomResponse"
                 }
@@ -719,6 +606,131 @@
           },
           "404": {
             "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/games/{gameCode}/rooms/{roomId}/moves": {
+      "post": {
+        "tags": [
+          "Игровые комнаты"
+        ],
+        "summary": "Сделать ход",
+        "description": "Ручка одна на все игры: код игры — в пути, ход — общий конверт `{type, data}`. `type` — вид действия (`PASS` в «игре в ничто»), `data` — его параметры в формате игры. Код игры должен совпадать с игрой комнаты. Ходить может только игрок партии, находящийся в комнате. Когда партия заканчивается, комната возвращается в ожидание, а законченная партия остаётся в ответе.",
+        "operationId": "makeMove",
+        "parameters": [
+          {
+            "name": "gameCode",
+            "in": "path",
+            "description": "Код игры",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "nothing"
+              ]
+            }
+          },
+          {
+            "name": "roomId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Ход принят, возвращено новое состояние",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Не указан вид хода или параметры не подходят игре (VALIDATION_ERROR)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет действительного access-токена (UNAUTHENTICATED)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Пользователь не в комнате (NOT_ROOM_MEMBER) или не игрок партии (NOT_SESSION_PLAYER)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Неизвестный код игры (GAME_NOT_FOUND) или комнаты нет (ROOM_NOT_FOUND)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Комната другой игры (GAME_TYPE_MISMATCH), партия не идёт (ROOM_NOT_IN_GAME) или изменилась с момента, который видел клиент (SESSION_CONFLICT)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ход нарушает правила игры (MOVE_REJECTED, причина — в поле reason, например NOT_YOUR_TURN)",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -762,7 +774,7 @@
           "200": {
             "description": "Email подтверждён, сессия открыта, возвращены данные пользователя",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UserResponse"
                 }
@@ -889,7 +901,7 @@
           "200": {
             "description": "Аккаунт создан, письмо с кодом отправлено",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RegistrationResponse"
                 }
@@ -941,7 +953,7 @@
           "200": {
             "description": "Сессия продлена, возвращены данные пользователя",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UserResponse"
                 }
@@ -1018,7 +1030,7 @@
           "200": {
             "description": "Вход выполнен, возвращены данные пользователя",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UserResponse"
                 }
@@ -1090,7 +1102,7 @@
           "200": {
             "description": "Вход выполнен, возвращены данные пользователя",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UserResponse"
                 }
@@ -1162,7 +1174,7 @@
           "200": {
             "description": "Профиль изменён, возвращены обновлённые данные пользователя",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UserResponse"
                 }
@@ -1214,7 +1226,7 @@
           "200": {
             "description": "Данные пользователя",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UserResponse"
                 }
@@ -1277,7 +1289,7 @@
           "200": {
             "description": "Комната",
             "content": {
-              "*/*": {
+              "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RoomResponse"
                 }
@@ -1436,7 +1448,13 @@
             "type": "string",
             "format": "date-time"
           }
-        }
+        },
+        "required": [
+          "joinedAt",
+          "owner",
+          "role",
+          "userId"
+        ]
       },
       "RoomResponse": {
         "type": "object",
@@ -1493,7 +1511,16 @@
             "type": "string",
             "format": "date-time"
           }
-        }
+        },
+        "required": [
+          "createdAt",
+          "gameType",
+          "id",
+          "maxPlayers",
+          "members",
+          "minPlayers",
+          "status"
+        ]
       },
       "SessionResponse": {
         "type": "object",
@@ -1525,7 +1552,14 @@
             "type": "object",
             "additionalProperties": {}
           }
-        }
+        },
+        "required": [
+          "id",
+          "players",
+          "state",
+          "status",
+          "version"
+        ]
       },
       "SetPasswordRequest": {
         "type": "object",
@@ -1535,7 +1569,10 @@
             "maxLength": 128,
             "minLength": 8
           }
-        }
+        },
+        "required": [
+          "password"
+        ]
       },
       "UserResponse": {
         "type": "object",
@@ -1570,7 +1607,15 @@
               ]
             }
           }
-        }
+        },
+        "required": [
+          "avatar",
+          "email",
+          "emailVerified",
+          "id",
+          "loginMethods",
+          "nickname"
+        ]
       },
       "GoogleIdTokenRequest": {
         "type": "object",
@@ -1601,8 +1646,15 @@
       "MoveRequest": {
         "type": "object",
         "properties": {
-          "move": {
-            "type": "object",
+          "type": {
+            "type": "string",
+            "minLength": 1
+          },
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ],
             "additionalProperties": {}
           },
           "expectedVersion": {
@@ -1614,7 +1666,7 @@
           }
         },
         "required": [
-          "move"
+          "type"
         ]
       },
       "VerifyEmailRequest": {
@@ -1627,10 +1679,12 @@
           },
           "code": {
             "type": "string",
+            "minLength": 1,
             "pattern": "[0-9]{6}"
           }
         },
         "required": [
+          "code",
           "email"
         ]
       },
@@ -1654,7 +1708,7 @@
             "type": "string",
             "format": "email",
             "maxLength": 320,
-            "minLength": 0
+            "minLength": 1
           },
           "password": {
             "type": "string",
@@ -1665,7 +1719,7 @@
             "type": "string",
             "maxLength": 32,
             "minLength": 3,
-            "pattern": "^[^\\s\\p{Cntrl}]([^\\p{Cntrl}]*[^\\s\\p{Cntrl}])?$"
+            "pattern": "^[^\\s\\p{Cc}]([^\\p{Cc}]*[^\\s\\p{Cc}])?$"
           },
           "avatar": {
             "type": "string",
@@ -1678,7 +1732,8 @@
         "required": [
           "avatar",
           "email",
-          "nickname"
+          "nickname",
+          "password"
         ]
       },
       "RegistrationResponse": {
@@ -1691,7 +1746,11 @@
           "email": {
             "type": "string"
           }
-        }
+        },
+        "required": [
+          "email",
+          "userId"
+        ]
       },
       "LoginRequest": {
         "type": "object",
@@ -1721,7 +1780,7 @@
             ],
             "maxLength": 32,
             "minLength": 3,
-            "pattern": "^[^\\s\\p{Cntrl}]([^\\p{Cntrl}]*[^\\s\\p{Cntrl}])?$"
+            "pattern": "^[^\\s\\p{Cc}]([^\\p{Cc}]*[^\\s\\p{Cc}])?$"
           },
           "avatar": {
             "type": [
@@ -1762,7 +1821,19 @@
             }
           },
           "code": {
+            "type": "string",
             "description": "Машиночитаемый код ошибки"
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Ошибки по полям запроса (у VALIDATION_ERROR): имя поля → сообщение"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Причина отказа правил игры (у MOVE_REJECTED), например NOT_YOUR_TURN"
           }
         }
       }

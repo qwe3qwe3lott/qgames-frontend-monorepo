@@ -4,7 +4,7 @@ import {
   loadGameModule,
   type GameBoardPlayer,
   type GameInfo,
-  type GameModule,
+  type GameApi,
 } from '@/entities/game';
 import {memberName, type RoomView, type SessionView} from '@/entities/room';
 import {useMoveControls} from '@/features/make-move';
@@ -39,18 +39,18 @@ class ChunkErrorBoundary extends Component<
 }
 
 function Board({
-  modulePromise,
+  api,
   room,
   session,
   viewerId,
 }: {
-  modulePromise: Promise<GameModule>;
+  api: GameApi;
   room: RoomView;
   session: SessionView;
   viewerId: string;
 }) {
-  const module = use(modulePromise);
-  const controls = useMoveControls(room);
+  const module = use(loadGameModule(api));
+  const controls = useMoveControls(api, room);
   const players: GameBoardPlayer[] = room.members.map(member => ({
     id: member.userId,
     name: memberName(member),
@@ -68,8 +68,7 @@ function Board({
 
 /** Доска игры из отдельного чанка; без партии — подсказка, что делать. */
 export function GameBoard({game, room, viewerId}: GameBoardProps) {
-  const modulePromise = loadGameModule(game.code);
-  if (modulePromise === null) {
+  if (game.api === null) {
     return <p className="text-muted-foreground">Игра ещё в разработке.</p>;
   }
   const {session} = room;
@@ -87,7 +86,7 @@ export function GameBoard({game, room, viewerId}: GameBoardProps) {
         fallback={<p className="text-muted-foreground">Загружаем игру…</p>}
       >
         <Board
-          modulePromise={modulePromise}
+          api={game.api}
           room={room}
           session={session}
           viewerId={viewerId}

@@ -5,4 +5,7 @@
  * OpenAPI spec version: v0
  */
 
-export type MoveRequestMove = {[key: string]: unknown};
+/**
+ * @nullable
+ */
+export type MoveRequestData = {[key: string]: unknown} | null;
