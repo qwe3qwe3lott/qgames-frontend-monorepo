@@ -7,6 +7,54 @@
 import * as zod from 'zod';
 
 /**
+ * Проверяет текущий пароль и задаёт новый. Все сессии пользователя завершаются: другие устройства и вкладки потеряют доступ не позже чем через 15 минут (срок access-токена). Текущий клиент сразу получает новую сессию в куках и остаётся в системе.
+ * @summary Сменить пароль
+ */
+
+export const changePasswordBodyNewPasswordMin = 8;
+export const changePasswordBodyNewPasswordMax = 128;
+
+export const ChangePasswordBody = zod.object({
+  currentPassword: zod.string().min(1),
+  newPassword: zod
+    .string()
+    .min(changePasswordBodyNewPasswordMin)
+    .max(changePasswordBodyNewPasswordMax),
+});
+
+export const ChangePasswordResponse = zod.object({
+  id: zod.uuid(),
+  email: zod.string(),
+  emailVerified: zod.boolean(),
+  nickname: zod.string(),
+  avatar: zod.enum(['CAT', 'DOG']),
+  loginMethods: zod.array(zod.enum(['PASSWORD', 'GOOGLE'])),
+});
+
+/**
+ * Для аккаунта без пароля (например, созданного через Google).
+ * @summary Добавить вход по паролю
+ */
+export const addPasswordLoginBodyPasswordMin = 8;
+export const addPasswordLoginBodyPasswordMax = 128;
+
+export const AddPasswordLoginBody = zod.object({
+  password: zod
+    .string()
+    .min(addPasswordLoginBodyPasswordMin)
+    .max(addPasswordLoginBodyPasswordMax),
+});
+
+export const AddPasswordLoginResponse = zod.object({
+  id: zod.uuid(),
+  email: zod.string(),
+  emailVerified: zod.boolean(),
+  nickname: zod.string(),
+  avatar: zod.enum(['CAT', 'DOG']),
+  loginMethods: zod.array(zod.enum(['PASSWORD', 'GOOGLE'])),
+});
+
+/**
  * Стать игроком или наблюдателем. Только между партиями; игроком — если есть свободное место. Владелец тоже может стать наблюдателем, владение при этом сохраняется.
  * @summary Сменить роль
  */
@@ -50,29 +98,6 @@ export const ChangeRoleResponse = zod.object({
     ])
     .optional(),
   createdAt: zod.iso.datetime({offset: true}),
-});
-
-/**
- * Для аккаунта без пароля (например, созданного через Google). Логином становится email аккаунта.
- * @summary Добавить вход по паролю
- */
-export const addPasswordLoginBodyPasswordMin = 8;
-export const addPasswordLoginBodyPasswordMax = 128;
-
-export const AddPasswordLoginBody = zod.object({
-  password: zod
-    .string()
-    .min(addPasswordLoginBodyPasswordMin)
-    .max(addPasswordLoginBodyPasswordMax),
-});
-
-export const AddPasswordLoginResponse = zod.object({
-  id: zod.uuid(),
-  email: zod.string(),
-  emailVerified: zod.boolean(),
-  nickname: zod.string(),
-  avatar: zod.enum(['CAT', 'DOG']),
-  loginMethods: zod.array(zod.enum(['PASSWORD', 'GOOGLE'])),
 });
 
 /**

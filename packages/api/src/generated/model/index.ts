@@ -5,6 +5,7 @@
  * OpenAPI spec version: v0
  */
 
+export * from './changePasswordRequest';
 export * from './changeRoleRequest';
 export * from './changeRoleRequestRole';
 export * from './createRoomRequest';

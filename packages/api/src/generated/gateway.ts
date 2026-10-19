@@ -21,6 +21,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  ChangePasswordRequest,
   ChangeRoleRequest,
   CreateRoomRequest,
   GoogleIdTokenRequest,
@@ -58,6 +59,241 @@ const withQueryKey = <T extends object, K>(
     });
   }
   return result;
+};
+
+export const getChangePasswordUrl = () => {
+  return `/api/users/me/login-methods/password`;
+};
+
+/**
+ * Проверяет текущий пароль и задаёт новый. Все сессии пользователя завершаются: другие устройства и вкладки потеряют доступ не позже чем через 15 минут (срок access-токена). Текущий клиент сразу получает новую сессию в куках и остаётся в системе.
+ * @summary Сменить пароль
+ */
+export const changePassword = async (
+  changePasswordRequest: ChangePasswordRequest,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<UserResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit['headers']>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          entry => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<
+      string | readonly string[] | undefined
+    >(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<UserResponse>(getChangePasswordUrl(), {
+    ...options,
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getHeaders(options?.headers),
+    },
+    body: JSON.stringify(changePasswordRequest),
+  });
+};
+
+export const getChangePasswordMutationKey = () => ['changePassword'] as const;
+
+export const getChangePasswordMutationOptions = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof changePassword>>,
+    TError,
+    ChangePasswordMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof changePassword>>,
+  TError,
+  ChangePasswordMutationVariables,
+  TContext
+> => {
+  const mutationKey = getChangePasswordMutationKey();
+  const {mutation: mutationOptions, request: requestOptions} = options
+    ? options.mutation &&
+      'mutationKey' in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+    : {mutation: {mutationKey}, request: undefined};
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof changePassword>>,
+    ChangePasswordMutationVariables
+  > = props => {
+    const {data} = props ?? {};
+
+    return changePassword(data, requestOptions);
+  };
+
+  return {mutationFn, ...mutationOptions};
+};
+
+export type ChangePasswordMutationResult = NonNullable<
+  Awaited<ReturnType<typeof changePassword>>
+>;
+export type ChangePasswordMutationBody = ChangePasswordRequest;
+export type ChangePasswordMutationError = ErrorType<ProblemDetail>;
+export type ChangePasswordMutationVariables = {data: ChangePasswordRequest};
+
+/**
+ * @summary Сменить пароль
+ */
+export const useChangePassword = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof changePassword>>,
+      TError,
+      ChangePasswordMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof changePassword>>,
+  TError,
+  ChangePasswordMutationVariables,
+  TContext
+> => {
+  return useMutation(getChangePasswordMutationOptions(options), queryClient);
+};
+
+export const getAddPasswordLoginUrl = () => {
+  return `/api/users/me/login-methods/password`;
+};
+
+/**
+ * Для аккаунта без пароля (например, созданного через Google).
+ * @summary Добавить вход по паролю
+ */
+export const addPasswordLogin = async (
+  setPasswordRequest: SetPasswordRequest,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<UserResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit['headers']>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          entry => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<
+      string | readonly string[] | undefined
+    >(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<UserResponse>(getAddPasswordLoginUrl(), {
+    ...options,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getHeaders(options?.headers),
+    },
+    body: JSON.stringify(setPasswordRequest),
+  });
+};
+
+export const getAddPasswordLoginMutationKey = () =>
+  ['addPasswordLogin'] as const;
+
+export const getAddPasswordLoginMutationOptions = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof addPasswordLogin>>,
+    TError,
+    AddPasswordLoginMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof addPasswordLogin>>,
+  TError,
+  AddPasswordLoginMutationVariables,
+  TContext
+> => {
+  const mutationKey = getAddPasswordLoginMutationKey();
+  const {mutation: mutationOptions, request: requestOptions} = options
+    ? options.mutation &&
+      'mutationKey' in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+    : {mutation: {mutationKey}, request: undefined};
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof addPasswordLogin>>,
+    AddPasswordLoginMutationVariables
+  > = props => {
+    const {data} = props ?? {};
+
+    return addPasswordLogin(data, requestOptions);
+  };
+
+  return {mutationFn, ...mutationOptions};
+};
+
+export type AddPasswordLoginMutationResult = NonNullable<
+  Awaited<ReturnType<typeof addPasswordLogin>>
+>;
+export type AddPasswordLoginMutationBody = SetPasswordRequest;
+export type AddPasswordLoginMutationError = ErrorType<ProblemDetail>;
+export type AddPasswordLoginMutationVariables = {data: SetPasswordRequest};
+
+/**
+ * @summary Добавить вход по паролю
+ */
+export const useAddPasswordLogin = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof addPasswordLogin>>,
+      TError,
+      AddPasswordLoginMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof addPasswordLogin>>,
+  TError,
+  AddPasswordLoginMutationVariables,
+  TContext
+> => {
+  return useMutation(getAddPasswordLoginMutationOptions(options), queryClient);
 };
 
 export const getChangeRoleUrl = (roomId: string) => {
@@ -179,124 +415,6 @@ export const useChangeRole = <
   TContext
 > => {
   return useMutation(getChangeRoleMutationOptions(options), queryClient);
-};
-
-export const getAddPasswordLoginUrl = () => {
-  return `/api/users/me/login-methods/password`;
-};
-
-/**
- * Для аккаунта без пароля (например, созданного через Google). Логином становится email аккаунта.
- * @summary Добавить вход по паролю
- */
-export const addPasswordLogin = async (
-  setPasswordRequest: SetPasswordRequest,
-  options?: Parameters<typeof apiFetch>[1],
-): Promise<UserResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit['headers']>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          entry => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<
-      string | readonly string[] | undefined
-    >(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-  return apiFetch<UserResponse>(getAddPasswordLoginUrl(), {
-    ...options,
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getHeaders(options?.headers),
-    },
-    body: JSON.stringify(setPasswordRequest),
-  });
-};
-
-export const getAddPasswordLoginMutationKey = () =>
-  ['addPasswordLogin'] as const;
-
-export const getAddPasswordLoginMutationOptions = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof addPasswordLogin>>,
-    TError,
-    AddPasswordLoginMutationVariables,
-    TContext
-  >;
-  request?: SecondParameter<typeof apiFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof addPasswordLogin>>,
-  TError,
-  AddPasswordLoginMutationVariables,
-  TContext
-> => {
-  const mutationKey = getAddPasswordLoginMutationKey();
-  const {mutation: mutationOptions, request: requestOptions} = options
-    ? options.mutation &&
-      'mutationKey' in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-    : {mutation: {mutationKey}, request: undefined};
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof addPasswordLogin>>,
-    AddPasswordLoginMutationVariables
-  > = props => {
-    const {data} = props ?? {};
-
-    return addPasswordLogin(data, requestOptions);
-  };
-
-  return {mutationFn, ...mutationOptions};
-};
-
-export type AddPasswordLoginMutationResult = NonNullable<
-  Awaited<ReturnType<typeof addPasswordLogin>>
->;
-export type AddPasswordLoginMutationBody = SetPasswordRequest;
-export type AddPasswordLoginMutationError = ErrorType<ProblemDetail>;
-export type AddPasswordLoginMutationVariables = {data: SetPasswordRequest};
-
-/**
- * @summary Добавить вход по паролю
- */
-export const useAddPasswordLogin = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof addPasswordLogin>>,
-      TError,
-      AddPasswordLoginMutationVariables,
-      TContext
-    >;
-    request?: SecondParameter<typeof apiFetch>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof addPasswordLogin>>,
-  TError,
-  AddPasswordLoginMutationVariables,
-  TContext
-> => {
-  return useMutation(getAddPasswordLoginMutationOptions(options), queryClient);
 };
 
 export const getAddGoogleLoginUrl = () => {

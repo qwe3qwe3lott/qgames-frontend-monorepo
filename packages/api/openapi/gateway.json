@@ -25,6 +25,148 @@
     }
   ],
   "paths": {
+    "/api/users/me/login-methods/password": {
+      "put": {
+        "tags": [
+          "Текущий пользователь"
+        ],
+        "summary": "Сменить пароль",
+        "description": "Проверяет текущий пароль и задаёт новый. Все сессии пользователя завершаются: другие устройства и вкладки потеряют доступ не позже чем через 15 минут (срок access-токена). Текущий клиент сразу получает новую сессию в куках и остаётся в системе.",
+        "operationId": "changePassword",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Пароль изменён, куки сессии обновлены, возвращены данные пользователя",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Новый пароль не проходит требования (VALIDATION_ERROR) или текущий пароль неверен (INVALID_CURRENT_PASSWORD)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет действительного access-токена (UNAUTHENTICATED)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "У аккаунта нет пароля (PASSWORD_NOT_SET)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Сервис аутентификации недоступен (SERVICE_UNAVAILABLE)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Текущий пользователь"
+        ],
+        "summary": "Добавить вход по паролю",
+        "description": "Для аккаунта без пароля (например, созданного через Google).",
+        "operationId": "addPasswordLogin",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Пароль добавлен, возвращены обновлённые данные пользователя",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Пароль не проходит требования (VALIDATION_ERROR)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет действительного access-токена (UNAUTHENTICATED)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Пароль уже задан (LOGIN_METHOD_ALREADY_LINKED)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Сервис аутентификации недоступен (SERVICE_UNAVAILABLE)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/rooms/{roomId}/role": {
       "put": {
         "tags": [
@@ -117,78 +259,6 @@
           },
           "503": {
             "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/users/me/login-methods/password": {
-      "post": {
-        "tags": [
-          "Текущий пользователь"
-        ],
-        "summary": "Добавить вход по паролю",
-        "description": "Для аккаунта без пароля (например, созданного через Google). Логином становится email аккаунта.",
-        "operationId": "addPasswordLogin",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SetPasswordRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Пароль добавлен, возвращены обновлённые данные пользователя",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Пароль не проходит требования (VALIDATION_ERROR)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Нет действительного access-токена (UNAUTHENTICATED)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Пароль уже задан (LOGIN_METHOD_ALREADY_LINKED)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Сервис аутентификации недоступен (SERVICE_UNAVAILABLE)",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1396,6 +1466,67 @@
   },
   "components": {
     "schemas": {
+      "ChangePasswordRequest": {
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string",
+            "minLength": 1
+          },
+          "newPassword": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 8
+          }
+        },
+        "required": [
+          "currentPassword",
+          "newPassword"
+        ]
+      },
+      "UserResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string"
+          },
+          "emailVerified": {
+            "type": "boolean"
+          },
+          "nickname": {
+            "type": "string"
+          },
+          "avatar": {
+            "type": "string",
+            "enum": [
+              "CAT",
+              "DOG"
+            ]
+          },
+          "loginMethods": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "PASSWORD",
+                "GOOGLE"
+              ]
+            }
+          }
+        },
+        "required": [
+          "avatar",
+          "email",
+          "emailVerified",
+          "id",
+          "loginMethods",
+          "nickname"
+        ]
+      },
       "ChangeRoleRequest": {
         "type": "object",
         "properties": {
@@ -1572,49 +1703,6 @@
         },
         "required": [
           "password"
-        ]
-      },
-      "UserResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "email": {
-            "type": "string"
-          },
-          "emailVerified": {
-            "type": "boolean"
-          },
-          "nickname": {
-            "type": "string"
-          },
-          "avatar": {
-            "type": "string",
-            "enum": [
-              "CAT",
-              "DOG"
-            ]
-          },
-          "loginMethods": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "PASSWORD",
-                "GOOGLE"
-              ]
-            }
-          }
-        },
-        "required": [
-          "avatar",
-          "email",
-          "emailVerified",
-          "id",
-          "loginMethods",
-          "nickname"
         ]
       },
       "GoogleIdTokenRequest": {

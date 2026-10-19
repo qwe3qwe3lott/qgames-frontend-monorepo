@@ -1,1 +1,1 @@
-export {SetPasswordForm} from './ui/set-password-form';
+export {SetPasswordDialog} from './ui/set-password-dialog';
