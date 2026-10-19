@@ -27,7 +27,13 @@ export function Header() {
         <div className="ml-auto flex items-center gap-2">
           {viewer.status === 'user' ? (
             <>
-              <CurrentUser viewer={viewer.viewer} />
+              <Link
+                to="/profile"
+                className="rounded-md px-2 py-1 hover:bg-muted"
+                title="Профиль"
+              >
+                <CurrentUser viewer={viewer.viewer} />
+              </Link>
               <LogoutButton />
             </>
           ) : null}

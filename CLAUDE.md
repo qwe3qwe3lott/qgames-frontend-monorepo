@@ -1,13 +1,13 @@
 # CLAUDE.md — правила разработки qgames-frontend
 
-Фронтенд игрового портала qgames: монорепозиторий с CSR-приложениями (портал, админка) и статическим лендингом. Бэкенд — отдельный репозиторий `qgames-backend-monorepo` (`C:\Users\qwe3q\IdeaProjects\qgames-backend-monorepo`).
+Фронтенд игрового портала qgames: монорепозиторий с CSR-приложениями (портал, админка) и статическим лендингом. Бэкенд — отдельный репозиторий `qgames-backend-monorepo`, оркестратор агентов — `qgames-workspace`. Все три репозитория лежат рядом в одной родительской папке, поэтому бэкенд доступен по относительному пути `../qgames-backend-monorepo`.
 
 ## 0. Процесс принятия решений (главное правило)
 
 - **Архитектурные решения принимает только пользователь.** Новая библиотека, пакет, приложение, слой или сегмент FSD, способ работы с API, изменение правил линтера, сборки или структуры, способ деплоя и т.п. — сначала вопрос пользователю с вариантами и рекомендацией, затем реализация.
 - Если правило здесь противоречит задаче — спросить, а не обходить молча.
 - **Не замалчивать проблемы.** Если по ходу работы что-то смущает (риск безопасности, противоречие правилам или ранее сказанному, сомнительное поведение, техдолг, расхождение кода, документации и контракта бэкенда), сразу сказать пользователю и спросить, как поступить, предложив варианты. Не чинить молча и не откладывать «на потом» без согласования.
-- **Бэкенд изучаем по его монорепозиторию** (`C:\Users\qwe3q\IdeaProjects\qgames-backend-monorepo`), только чтение. Когда нужно понять, как работает бэкенд (поведение ручки, коды ошибок, валидация, куки и refresh, SSE, роли), смотреть туда, а не гадать:
+- **Бэкенд изучаем по его монорепозиторию** (`../qgames-backend-monorepo`), только чтение. Когда нужно понять, как работает бэкенд (поведение ручки, коды ошибок, валидация, куки и refresh, SSE, роли), смотреть туда, а не гадать:
   - `CLAUDE.md` бэкенда — архитектура и принятые решения;
   - `user-gateway/user-gateway-public-sync-api` — публичный контракт: интерфейсы ручек с описаниями и кодами ошибок (`@Operation`/`@ApiResponses`) и DTO;
   - `user-gateway/user-gateway` и сервисы (`user-auth`, `game`) — реализация (маппинг, проверки, куки, обработка ошибок);
@@ -46,6 +46,7 @@
 | `/`                                 | главная                                         | все         |
 | `/login`, `/register`               | вход, регистрация (`?redirect=` — куда вернуть) | все         |
 | `/verify-email?email=`              | подтверждение email 6-значным кодом             | все         |
+| `/profile`                          | ник и аватар, способы входа (пароль, Google)    | после входа |
 | `/games`                            | список игр (пока не реализован)                 | все         |
 | `/rooms`                            | публичные комнаты всех игр (пока не реализован) | все         |
 | `/games/<код>/rooms`                | комнаты игры (список не реализован) + создание  | после входа |
@@ -53,7 +54,8 @@
 
 - `<код>` — код игры из контракта бэкенда (`GameCodes`, сейчас `nothing`) — один и тот же во всём стеке: в URL портала, в пути ручки хода и в имени пакета. `carcassonne` пока есть только на фронте. Неизвестный код → 404. Реестр игр (код, `GameType`, загрузка модуля) — `entities/game/model/registry.ts`.
 - Гостя защищённые маршруты отправляют на `/login?redirect=<текущий адрес>`; `redirect` принимается только как путь этого сайта (`/…`).
-- Google-вход — решить при подключении Google Identity Services. Видимость комнаты, число игроков и настройки игры при создании — когда появятся в контракте (сейчас `CreateRoomRequest` — только `gameType`).
+- **Вход через Google** — Google Identity Services: скрипт GIS грузится по требованию (`shared/lib/google-identity.ts`), стандартную кнопку рисует сам GIS (`shared/ui/google-button.tsx`). ID token уходит в `POST /api/auth/google` (кнопка на `/login` и `/register`) или `POST /api/users/me/login-methods/google` (привязка в `/profile`). На `ACCOUNT_LINK_REQUIRED` (аккаунт с таким email уже есть) пользователь входит паролем и привязывает Google в профиле. Без `PUBLIC_GOOGLE_CLIENT_ID` кнопки Google скрыты; тот же Client ID должен быть в `GOOGLE_CLIENT_IDS` бэкенда.
+- Видимость комнаты, число игроков и настройки игры при создании — когда появятся в контракте (сейчас `CreateRoomRequest` — только `gameType`).
 
 ## 2. Структура репозитория и пакетов
 
@@ -131,7 +133,7 @@ src/
 
 - **Адресаты:** portal → `user-gateway`, admin → `admin-gateway` (REST/JSON). Браузер ходит в свой gateway **напрямую** на api-домен (`PUBLIC_API_URL`; локально user-gateway — `http://localhost:8080`, порт admin-gateway решит бэкенд) с `credentials: 'include'`. CORS с `allowCredentials` настраивается на каждом gateway для своего фронта. Same-site (фронт и api на одном регистрируемом домене) обязателен: куки `SameSite=Lax`.
 - **Клиент admin-gateway** — решить при начале работ над админкой. Рекомендация: второй снапшот `packages/api/openapi/admin-gateway.json` и вторая цель Orval с экспортом `@qgames/api/admin-gateway`; отдельный пакет — только если клиенты разойдутся. Mutator сейчас хранит один базовый URL и путь refresh — их нужно будет параметризовать. Куки admin-gateway должны называться иначе, чем у user-gateway: локально оба gateway на `localhost`, а куки по порту не изолируются.
-- **Аутентификация:** токены живут только в HttpOnly-куках, которые ставит gateway; фронт их не видит и не хранит. Признак «залогинен» — успешный `GET /api/users/me`. На 401 mutator делает один общий (single-flight) `POST /api/auth/refresh` и повторяет исходный запрос один раз; если refresh вернул 401, пользователь — гость. Запросы `/api/auth/*` не повторяются.
+- **Аутентификация:** токены живут только в HttpOnly-куках, которые ставит gateway; фронт их не видит и не хранит. Признак «залогинен» — успешный `GET /api/users/me`. На 401 с кодом `UNAUTHENTICATED` mutator делает один общий (single-flight) `POST /api/auth/refresh` и повторяет исходный запрос один раз; если refresh вернул 401, пользователь — гость. Другие 401 (например, `INVALID_GOOGLE_TOKEN`) — обычные ошибки, сессию не трогают. Запросы `/api/auth/*` не повторяются.
 - **Контракт** — OpenAPI gateway. Снапшот `packages/api/openapi/gateway.json` и сгенерированный код `packages/api/src/generated/` коммитятся; руками сгенерированный код и типы API не пишем.
   - Обновление контракта: запустить бэкенд, `pnpm api:fetch` (снимает `/v3/api-docs`), `pnpm api:generate`, проверить дифф.
   - Импорты: `@qgames/api` — `configureApi`, `ApiError`, `isApiError`; `@qgames/api/gateway` — функции, `queryOptions`, хуки и ключи; `@qgames/api/gateway/model` — типы; `@qgames/api/gateway/zod` — Zod-схемы запросов.
@@ -169,7 +171,7 @@ src/
 
 ## 9. Стек и версии
 
-Node.js 24 LTS, pnpm 12, Turborepo 2, TypeScript 6.0, React 19, Rsbuild 2 (Rspack 2), Next.js 16 (Turbopack), TanStack Query 5, TanStack Router 1, zustand 5, react-hook-form 7 + Zod 4, Tailwind CSS 4, shadcn/ui, Orval 8, ESLint 9 + gts 7, Stylelint 17. Точные версии — только в `catalog` в `pnpm-workspace.yaml`.
+Node.js 24 LTS, pnpm 12, Turborepo 2, TypeScript 6.0, React 19, Rsbuild 2 (Rspack 2), Next.js 16 (Turbopack), TanStack Query 5, TanStack Router 1, zustand 5, react-hook-form 7 + Zod 4, Tailwind CSS 4, shadcn/ui, Orval 8, ESLint 9 + gts 7, Stylelint 17, Google Identity Services (скрипт, типы `@types/google.accounts`). Точные версии — только в `catalog` в `pnpm-workspace.yaml`.
 
 - TypeScript 6, а не 7: typescript-eslint поддерживает `typescript <6.1`, а TS 7 (нативный) пока не даёт JS API для тулинга. Решить при появлении поддержки TS 7 в typescript-eslint.
 - ESLint 9, а не 10: gts 7 зависит от `eslint ^9`. Решить при выходе gts с поддержкой ESLint 10.
@@ -189,6 +191,7 @@ pnpm api:generate            # сгенерировать клиент API (Orva
 ```
 
 - Порты: portal — http://localhost:3000, admin — http://localhost:3001, landing — http://localhost:3002.
+- Вход через Google локально: в Google Cloud Console настроить OAuth consent screen (External, Testing, себя — в Test users), создать OAuth client ID типа Web application с Authorized JavaScript origins `http://localhost:3000` и `http://localhost` (redirect URI не нужны). Client ID прописать в `GOOGLE_CLIENT_IDS` (`.env` бэкенда, затем `docker compose up -d`) и в `PUBLIC_GOOGLE_CLIENT_ID` (`apps/portal/.env`).
 - Бэкенд поднимается в его репозитории: `docker compose up --build -d --wait`. Gateway и Swagger: http://localhost:8080/swagger-ui.html, письма с кодами — Mailpit http://localhost:8025.
 - Переменные окружения приложений — в `.env` приложения (шаблон — `.env.example`).
 - Статический результат `landing` — `apps/landing/out/`, Rsbuild-приложений — `apps/<app>/dist/`.
@@ -216,14 +219,15 @@ pnpm api:generate            # сгенерировать клиент API (Orva
 
 ### Код и библиотеки
 
-| Вариант                                | Почему отклонён                                     | Что вместо            |
-| -------------------------------------- | --------------------------------------------------- | --------------------- |
-| Type-sliced структура (как на бэкенде) | Границы между фичами ничем не защищены              | FSD                   |
-| Feature-folders                        | Слабее FSD по правилам зависимостей                 | FSD                   |
-| TanStack Form                          | Моложе, обёртку под shadcn пришлось бы писать самим | react-hook-form + Zod |
-| `@hey-api/openapi-ts`                  | Версия 0.x, частые ломающие изменения               | Orval                 |
-| openapi-typescript + openapi-fetch     | Хуки Query и Zod-схемы пришлось бы писать руками    | Orval                 |
-| TypeScript 7                           | Нет поддержки в typescript-eslint и тулинге         | TypeScript 6.0        |
+| Вариант                                | Почему отклонён                                                     | Что вместо                            |
+| -------------------------------------- | ------------------------------------------------------------------- | ------------------------------------- |
+| Type-sliced структура (как на бэкенде) | Границы между фичами ничем не защищены                              | FSD                                   |
+| Feature-folders                        | Слабее FSD по правилам зависимостей                                 | FSD                                   |
+| TanStack Form                          | Моложе, обёртку под shadcn пришлось бы писать самим                 | react-hook-form + Zod                 |
+| `@hey-api/openapi-ts`                  | Версия 0.x, частые ломающие изменения                               | Orval                                 |
+| openapi-typescript + openapi-fetch     | Хуки Query и Zod-схемы пришлось бы писать руками                    | Orval                                 |
+| `@react-oauth/google`                  | Runtime-зависимость и провайдер на всё приложение ради одной кнопки | Скрипт GIS + `@types/google.accounts` |
+| TypeScript 7                           | Нет поддержки в typescript-eslint и тулинге                         | TypeScript 6.0                        |
 
 ### Линтинг
 

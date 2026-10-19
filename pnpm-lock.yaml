@@ -191,6 +191,9 @@ catalogs:
     '@tanstack/router-plugin':
       specifier: 1.168.47
       version: 1.168.47
+    '@types/google.accounts':
+      specifier: 0.0.18
+      version: 0.0.18
     '@types/node':
       specifier: 24.19.2
       version: 24.19.2
@@ -445,6 +448,9 @@ importers:
       '@tanstack/router-plugin':
         specifier: 'catalog:'
         version: 1.168.47(@rsbuild/core@2.2.13)(@rspack/core@2.2.9(@swc/helpers@0.5.23))(@tanstack/react-router@1.170.45(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(esbuild@0.28.2)(supports-color@10.2.2)
+      '@types/google.accounts':
+        specifier: 'catalog:'
+        version: 0.0.18
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -2644,6 +2650,9 @@ packages:
 
   '@types/estree@1.0.9':
     resolution: {integrity: sha512-GhdPgy1el4/ImP05X05Uw4cw2/M93BCUmnEvWZNStlCzEKME4Fkk+YpoA5OiHNQmoS7Cafb8Xa3Pya8m1Qrzeg==}
+
+  '@types/google.accounts@0.0.18':
+    resolution: {integrity: sha512-yHaPznll97ZnMJlPABHyeiIlLn3u6gQaUjA5k/O9lrrpgFB9VT10CKPLuKM0qTHMl50uXpW5sIcG+utm8jMOHw==}
 
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
@@ -7108,6 +7117,8 @@ snapshots:
     optional: true
 
   '@types/estree@1.0.9': {}
+
+  '@types/google.accounts@0.0.18': {}
 
   '@types/json-schema@7.0.15': {}
 

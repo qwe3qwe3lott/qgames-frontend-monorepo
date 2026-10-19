@@ -1,7 +1,7 @@
 {
   "extends": "@qgames/config/tsconfig/react.json",
   "compilerOptions": {
-    "types": ["@rsbuild/core/types"],
+    "types": ["@rsbuild/core/types", "google.accounts"],
     "paths": {
       "@/*": ["./src/*"]
     }

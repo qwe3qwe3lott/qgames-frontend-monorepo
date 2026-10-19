@@ -1,10 +1,5 @@
 import {zodResolver} from '@hookform/resolvers/zod';
 import {useRegister} from '@qgames/api/gateway';
-import {
-  AVATAR_LABELS,
-  PLAYER_AVATARS,
-  PlayerAvatar,
-} from '@qgames/game-ui/components/player-avatar';
 import {Button} from '@qgames/ui/components/button';
 import {
   Field,
@@ -15,11 +10,10 @@ import {
   FieldSet,
 } from '@qgames/ui/components/field';
 import {Input} from '@qgames/ui/components/input';
-import {Label} from '@qgames/ui/components/label';
-import {RadioGroup, RadioGroupItem} from '@qgames/ui/components/radio-group';
 import {useNavigate} from '@tanstack/react-router';
 import {Controller, useForm} from 'react-hook-form';
 
+import {AvatarPicker} from '@/entities/user';
 import {applyFieldErrors, errorMessage} from '@/shared/lib';
 
 import {registerSchema, type RegisterValues} from '../model/schema';
@@ -107,26 +101,11 @@ export function RegisterForm({redirect}: RegisterFormProps) {
             control={form.control}
             name="avatar"
             render={({field}) => (
-              <RadioGroup
+              <AvatarPicker
+                idPrefix="register-avatar"
                 value={field.value}
-                onValueChange={field.onChange}
-                className="flex gap-4"
-              >
-                {PLAYER_AVATARS.map(avatar => (
-                  <Label
-                    key={avatar}
-                    htmlFor={`register-avatar-${avatar}`}
-                    className="flex items-center gap-2"
-                  >
-                    <RadioGroupItem
-                      id={`register-avatar-${avatar}`}
-                      value={avatar}
-                    />
-                    <PlayerAvatar avatar={avatar} />
-                    {AVATAR_LABELS[avatar]}
-                  </Label>
-                ))}
-              </RadioGroup>
+                onChange={field.onChange}
+              />
             )}
           />
           <FieldError errors={[errors.avatar]} />

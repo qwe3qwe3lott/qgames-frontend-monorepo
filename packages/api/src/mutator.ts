@@ -2,6 +2,8 @@ import {ApiError, NETWORK_ERROR_CODE} from './api-error';
 
 const AUTH_PATH = '/api/auth/';
 const REFRESH_PATH = '/api/auth/refresh';
+/** Код 401 gateway, когда нет access-токена или он истёк. */
+const UNAUTHENTICATED_CODE = 'UNAUTHENTICATED';
 
 let baseUrl: string | undefined;
 let refreshInFlight: Promise<boolean> | undefined;
@@ -58,6 +60,12 @@ export async function apiFetch<T>(path: string, init: RequestInit): Promise<T> {
 
   let response = await request();
   if (response.status === 401 && !path.startsWith(AUTH_PATH)) {
+    // Обновляем сессию только при истёкшем access-токене: другие 401
+    // (например, INVALID_GOOGLE_TOKEN при привязке Google) — обычные ошибки.
+    const error = await ApiError.fromResponse(response.clone());
+    if (error.code !== UNAUTHENTICATED_CODE) {
+      throw error;
+    }
     if (await refreshSession()) {
       response = await request();
     }
