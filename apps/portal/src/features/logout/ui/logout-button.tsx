@@ -9,9 +9,13 @@ export function LogoutButton() {
   const navigate = useNavigate();
   const logout = useLogout({
     mutation: {
-      onSettled: () => {
-        queryClient.clear();
-        void navigate({to: '/'});
+      onSettled: async () => {
+        // Сначала уходим со страницы, чтобы её запросы не перезапросились с 401.
+        await navigate({to: '/'});
+        // Не clear(): он не уведомляет подписчиков, и смонтированная шапка
+        // продолжала бы показывать пользователя. reset стирает данные всех
+        // запросов и перезапрашивает активные — текущий пользователь станет гостем (401).
+        await queryClient.resetQueries();
       },
     },
   });

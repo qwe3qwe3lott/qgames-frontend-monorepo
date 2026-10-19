@@ -32,7 +32,13 @@ export function RegisterForm({redirect}: RegisterFormProps) {
   const navigate = useNavigate();
   const form = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
-    defaultValues: {email: '', password: '', nickname: '', avatar: 'CAT'},
+    defaultValues: {
+      email: '',
+      password: '',
+      passwordConfirm: '',
+      nickname: '',
+      avatar: 'CAT',
+    },
   });
   const register = useRegister({
     mutation: {
@@ -56,9 +62,13 @@ export function RegisterForm({redirect}: RegisterFormProps) {
   return (
     <form
       noValidate
+      // Вставка из буфера в форме регистрации запрещена: email и пароль вводятся руками.
+      onPaste={event => {
+        event.preventDefault();
+      }}
       onSubmit={event => {
-        void form.handleSubmit(values => {
-          register.mutate({data: values});
+        void form.handleSubmit(({email, password, nickname, avatar}) => {
+          register.mutate({data: {email, password, nickname, avatar}});
         })(event);
       }}
     >
@@ -84,6 +94,19 @@ export function RegisterForm({redirect}: RegisterFormProps) {
             {...form.register('password')}
           />
           <FieldError errors={[errors.password]} />
+        </Field>
+        <Field data-invalid={errors.passwordConfirm !== undefined}>
+          <FieldLabel htmlFor="register-password-confirm">
+            Повтор пароля
+          </FieldLabel>
+          <Input
+            id="register-password-confirm"
+            type="password"
+            autoComplete="new-password"
+            aria-invalid={errors.passwordConfirm !== undefined}
+            {...form.register('passwordConfirm')}
+          />
+          <FieldError errors={[errors.passwordConfirm]} />
         </Field>
         <Field data-invalid={errors.nickname !== undefined}>
           <FieldLabel htmlFor="register-nickname">Ник</FieldLabel>
