@@ -1100,7 +1100,7 @@ export const getCreateRoomUrl = (gameCode: 'nothing' | 'carcassonne') => {
 };
 
 /**
- * Создаёт комнату под игру из пути с заданными настройками: правила времени и настройки игры. Создатель становится владельцем и первым игроком, ссылку на комнату (её id) можно отправить другим игрокам. Игра должна быть доступна (PUBLISHED или HIDDEN): это проверяется до настроек. Границы настроек и значения по умолчанию — в параметрах игры (GET /api/games/{gameCode}). Ошибки настроек отдаются по полям тела (например, settings.gameSettings.rounds), как у валидации запроса.
+ * Создаёт комнату под игру из пути с заданными настройками: правила времени и настройки игры. Создатель становится владельцем и первым игроком, ссылку на комнату (её id) можно отправить другим игрокам. В комнате создателя удерживает подключение к её потоку событий: без него он удаляется через 15 с. Игра должна быть доступна (PUBLISHED или HIDDEN): это проверяется до настроек. Границы настроек и значения по умолчанию — в параметрах игры (GET /api/games/{gameCode}). Ошибки настроек отдаются по полям тела (например, settings.gameSettings.rounds), как у валидации запроса.
  * @summary Создать комнату
  */
 export const createRoom = async (
@@ -1477,7 +1477,7 @@ export const getGetRoomUrl = (roomId: string) => {
 };
 
 /**
- * Участники с ролями, владелец, текущая или последняя партия. Доступно и до входа в комнату — так страница по ссылке показывает комнату ещё до входа.
+ * Участники с ролями, владелец, текущая или последняя партия. Доступно и до входа в комнату (подключения к потоку событий) — так страница по ссылке показывает комнату ещё до входа.
  * @summary Получить комнату
  */
 export const getRoom = async (
@@ -1614,188 +1614,6 @@ export function useGetRoom<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
-
-export const getJoinRoomUrl = (roomId: string) => {
-  return `/api/rooms/${roomId}/join`;
-};
-
-/**
- * Игрок идущей партии возвращается на своё место. Иначе, если партия не идёт и есть свободное место, пользователь становится игроком, в остальных случаях — наблюдателем. В пустой комнате вошедший становится владельцем. Вход вышедшего участника, пока не истёк срок выхода, отменяет выход: роль и владение сохраняются. Повторный вход ничего не меняет.
- * @summary Войти в комнату
- */
-export const joinRoom = async (
-  roomId: string,
-  options?: Parameters<typeof apiFetch>[1],
-): Promise<RoomResponse> => {
-  return apiFetch<RoomResponse>(getJoinRoomUrl(roomId), {
-    ...options,
-    method: 'POST',
-  });
-};
-
-export const getJoinRoomMutationKey = () => ['joinRoom'] as const;
-
-export const getJoinRoomMutationOptions = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof joinRoom>>,
-    TError,
-    JoinRoomMutationVariables,
-    TContext
-  >;
-  request?: SecondParameter<typeof apiFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof joinRoom>>,
-  TError,
-  JoinRoomMutationVariables,
-  TContext
-> => {
-  const mutationKey = getJoinRoomMutationKey();
-  const {mutation: mutationOptions, request: requestOptions} = options
-    ? options.mutation &&
-      'mutationKey' in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-    : {mutation: {mutationKey}, request: undefined};
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof joinRoom>>,
-    JoinRoomMutationVariables
-  > = props => {
-    const {roomId} = props ?? {};
-
-    return joinRoom(roomId, requestOptions);
-  };
-
-  return {mutationFn, ...mutationOptions};
-};
-
-export type JoinRoomMutationResult = NonNullable<
-  Awaited<ReturnType<typeof joinRoom>>
->;
-
-export type JoinRoomMutationError = ErrorType<ProblemDetail>;
-export type JoinRoomMutationVariables = {roomId: string};
-
-/**
- * @summary Войти в комнату
- */
-export const useJoinRoom = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof joinRoom>>,
-      TError,
-      JoinRoomMutationVariables,
-      TContext
-    >;
-    request?: SecondParameter<typeof apiFetch>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof joinRoom>>,
-  TError,
-  JoinRoomMutationVariables,
-  TContext
-> => {
-  return useMutation(getJoinRoomMutationOptions(options), queryClient);
-};
-
-export const getLeaveRoomUrl = (roomId: string) => {
-  return `/api/rooms/${roomId}/leave`;
-};
-
-/**
- * Выйти можно всегда, но выход отложенный: участник помечается уходящим (leaving) и до истечения срока сохраняет роль, место и владение, а вход в комнату в пределах срока отменяет выход. Срок: игроку идущей партии его задаёт игра (в «игре в ничто» 30 с, на паузе отсчёт заморожен), владельцу вне игры — 5 с, остальным — 1 с. По истечении срока участник удаляется: игрок идущей партии сохраняет место и может вернуться, владение переходит к самому раннему из оставшихся: сначала к присутствующим, к уходящим — только если присутствующих нет; в каждой группе сначала игроки, затем наблюдатели. Пустая комната удаляется автоматически через 30 минут. Повторный выход срок не продлевает.
- * @summary Выйти из комнаты
- */
-export const leaveRoom = async (
-  roomId: string,
-  options?: Parameters<typeof apiFetch>[1],
-): Promise<void> => {
-  return apiFetch<void>(getLeaveRoomUrl(roomId), {
-    ...options,
-    method: 'POST',
-  });
-};
-
-export const getLeaveRoomMutationKey = () => ['leaveRoom'] as const;
-
-export const getLeaveRoomMutationOptions = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof leaveRoom>>,
-    TError,
-    LeaveRoomMutationVariables,
-    TContext
-  >;
-  request?: SecondParameter<typeof apiFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof leaveRoom>>,
-  TError,
-  LeaveRoomMutationVariables,
-  TContext
-> => {
-  const mutationKey = getLeaveRoomMutationKey();
-  const {mutation: mutationOptions, request: requestOptions} = options
-    ? options.mutation &&
-      'mutationKey' in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-    : {mutation: {mutationKey}, request: undefined};
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof leaveRoom>>,
-    LeaveRoomMutationVariables
-  > = props => {
-    const {roomId} = props ?? {};
-
-    return leaveRoom(roomId, requestOptions);
-  };
-
-  return {mutationFn, ...mutationOptions};
-};
-
-export type LeaveRoomMutationResult = NonNullable<
-  Awaited<ReturnType<typeof leaveRoom>>
->;
-
-export type LeaveRoomMutationError = ErrorType<ProblemDetail>;
-export type LeaveRoomMutationVariables = {roomId: string};
-
-/**
- * @summary Выйти из комнаты
- */
-export const useLeaveRoom = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof leaveRoom>>,
-      TError,
-      LeaveRoomMutationVariables,
-      TContext
-    >;
-    request?: SecondParameter<typeof apiFetch>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof leaveRoom>>,
-  TError,
-  LeaveRoomMutationVariables,
-  TContext
-> => {
-  return useMutation(getLeaveRoomMutationOptions(options), queryClient);
-};
 
 export const getChangeRoleUrl = (roomId: string) => {
   return `/api/rooms/${roomId}/role`;

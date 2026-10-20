@@ -13,7 +13,8 @@ export function configureApi(options: {baseUrl: string}): void {
   baseUrl = options.baseUrl.replace(/\/+$/, '');
 }
 
-function resolveUrl(path: string): string {
+/** Полный адрес ручки gateway по пути из сгенерированного клиента (`get…Url`). */
+export function resolveUrl(path: string): string {
   if (baseUrl === undefined) {
     throw new Error('@qgames/api: перед запросами вызовите configureApi()');
   }
@@ -24,7 +25,7 @@ function resolveUrl(path: string): string {
  * Обновляет сессию по refresh-куке. Параллельные 401 ждут один общий запрос.
  * Возвращает false, если сессию обновить нельзя (пользователь — гость).
  */
-function refreshSession(): Promise<boolean> {
+export function refreshSession(): Promise<boolean> {
   refreshInFlight ??= fetch(resolveUrl(REFRESH_PATH), {
     method: 'POST',
     credentials: 'include',

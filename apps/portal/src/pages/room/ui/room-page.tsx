@@ -1,5 +1,5 @@
+import {isApiError} from '@qgames/api';
 import {useGetGame, useGetRoom} from '@qgames/api/gateway';
-import {Button} from '@qgames/ui/components/button';
 
 import type {GameEntry} from '@/entities/game';
 import {membership, roomErrorMessage, toRoomView} from '@/entities/room';
@@ -8,11 +8,19 @@ import {PageLayout} from '@/shared/ui';
 import {GameBoard} from '@/widgets/game-board';
 import {RoomPanel} from '@/widgets/room-panel';
 
-/** Пока нет SSE, комната перечитывается опросом (CLAUDE.md §4). */
-const ROOM_POLL_INTERVAL_MS = 2000;
+/**
+ * Комнату обновляет поток событий; состояние идущей партии в нём пока не
+ * приходит, поэтому во время партии комната перечитывается опросом (CLAUDE.md §4).
+ */
+const SESSION_POLL_INTERVAL_MS = 2000;
 
 /** Заголовок, пока название игры не загружено или игра недоступна. */
 const FALLBACK_TITLE = 'Комната';
+
+/** Ответ 4xx окончательный (комнаты нет, нет доступа): поток не открываем. */
+function isFinalError(error: unknown): boolean {
+  return isApiError(error) && error.status >= 400 && error.status < 500;
+}
 
 export interface RoomPageProps {
   game: GameEntry;
@@ -22,16 +30,17 @@ export interface RoomPageProps {
 
 export function RoomPage({game, roomId, viewerId}: RoomPageProps) {
   const {data, dataUpdatedAt, error, isPending} = useGetRoom(roomId, {
-    query: {refetchInterval: ROOM_POLL_INTERVAL_MS},
+    query: {
+      refetchInterval: query =>
+        query.state.data?.status === 'IN_GAME'
+          ? SESSION_POLL_INTERVAL_MS
+          : false,
+    },
   });
   // Название игры приходит с бэкенда; маршрут комнаты загружает его заранее.
   const title = useGetGame(game.code).data?.title ?? FALLBACK_TITLE;
-  // Пока страница открыта, пользователь — участник комнаты и не уходящий.
-  const viewer = data?.members.find(m => m.userId === viewerId);
-  const presence = useRoomPresence(
-    roomId,
-    data === undefined ? null : viewer === undefined || viewer.leaving,
-  );
+  // Пока страница открыта и комната доступна, пользователь в ней.
+  const presence = useRoomPresence(roomId, !isFinalError(error));
 
   if (isPending) {
     return (
@@ -57,21 +66,11 @@ export function RoomPage({game, roomId, viewerId}: RoomPageProps) {
       title={title}
       description="Отправьте ссылку на эту страницу друзьям, чтобы они вошли в комнату."
     >
-      {presence.joinError === null ? null : (
-        <div className="mb-4 flex flex-wrap items-center gap-3" role="alert">
-          <p className="text-sm text-destructive">
-            Не удалось войти в комнату. {roomErrorMessage(presence.joinError)}
-          </p>
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={presence.joinPending}
-            onClick={presence.retryJoin}
-          >
-            Повторить
-          </Button>
-        </div>
-      )}
+      {presence.status === 'reconnecting' ? (
+        <p className="mb-4 text-sm text-destructive" role="alert">
+          Нет связи с комнатой — переподключаемся…
+        </p>
+      ) : null}
       <div className="grid gap-6 md:grid-cols-[20rem_1fr]">
         <RoomPanel
           gameTitle={title}

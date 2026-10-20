@@ -20,7 +20,7 @@
       "name": "Текущий пользователь"
     },
     {
-      "description": "Публичные комнаты: вход по ссылке с id комнаты для любого авторизованного пользователя. Обновлений в реальном времени пока нет — клиент перечитывает комнату (GET). Все ручки требуют аутентификации.",
+      "description": "Публичные комнаты: вход по ссылке с id комнаты для любого авторизованного пользователя. Изменения комнаты приходят в реальном времени через поток событий (GET /api/rooms/{roomId}/events), открытый поток и есть нахождение в комнате. Все ручки требуют аутентификации.",
       "name": "Игровые комнаты"
     },
     {
@@ -540,7 +540,7 @@
     },
     "/api/games/{gameCode}/rooms": {
       "post": {
-        "description": "Создаёт комнату под игру из пути с заданными настройками: правила времени и настройки игры. Создатель становится владельцем и первым игроком, ссылку на комнату (её id) можно отправить другим игрокам. Игра должна быть доступна (PUBLISHED или HIDDEN): это проверяется до настроек. Границы настроек и значения по умолчанию — в параметрах игры (GET /api/games/{gameCode}). Ошибки настроек отдаются по полям тела (например, settings.gameSettings.rounds), как у валидации запроса.",
+        "description": "Создаёт комнату под игру из пути с заданными настройками: правила времени и настройки игры. Создатель становится владельцем и первым игроком, ссылку на комнату (её id) можно отправить другим игрокам. В комнате создателя удерживает подключение к её потоку событий: без него он удаляется через 15 с. Игра должна быть доступна (PUBLISHED или HIDDEN): это проверяется до настроек. Границы настроек и значения по умолчанию — в параметрах игры (GET /api/games/{gameCode}). Ошибки настроек отдаются по полям тела (например, settings.gameSettings.rounds), как у валидации запроса.",
         "operationId": "createRoom",
         "parameters": [
           {
@@ -879,7 +879,7 @@
     },
     "/api/rooms/{roomId}": {
       "get": {
-        "description": "Участники с ролями, владелец, текущая или последняя партия. Доступно и до входа в комнату — так страница по ссылке показывает комнату ещё до входа.",
+        "description": "Участники с ролями, владелец, текущая или последняя партия. Доступно и до входа в комнату (подключения к потоку событий) — так страница по ссылке показывает комнату ещё до входа.",
         "operationId": "getRoom",
         "parameters": [
           {
@@ -940,10 +940,10 @@
         ]
       }
     },
-    "/api/rooms/{roomId}/join": {
-      "post": {
-        "description": "Игрок идущей партии возвращается на своё место. Иначе, если партия не идёт и есть свободное место, пользователь становится игроком, в остальных случаях — наблюдателем. В пустой комнате вошедший становится владельцем. Вход вышедшего участника, пока не истёк срок выхода, отменяет выход: роль и владение сохраняются. Повторный вход ничего не меняет.",
-        "operationId": "joinRoom",
+    "/api/rooms/{roomId}/events": {
+      "get": {
+        "description": "Server-Sent Events (EventSource с withCredentials): сообщения `event: <тип>` + `data: <json>`, без `id:`, раз в ~5 с комментарий `: ping`. Первое сообщение — snapshot: комната целиком для этого пользователя, как в GET /api/rooms/{roomId}; так же после каждого переподключения. Дальше — users-changed (владелец и полный список участников: вход, выход, уход, смена роли, ника, владельца), settings-changed (настройки комнаты), session-changed (старт, отмена, пауза, продолжение, конец партии — перечитать комнату через GET) и room-deleted (комната удалена, после него сервер закрывает поток). События несут полное значение, повтор безопасен. Схема пары тип + данные — RoomStreamEvent ({type, data}, дискриминатор type).\n\nОткрытый поток и есть нахождение в комнате: подключение входит в комнату (игрок идущей партии возвращается на своё место; иначе игрок, если партия не идёт и есть место, или наблюдатель; в пустой комнате — владелец; повторное подключение, в том числе в пределах срока выхода, роль и владение не меняет). Подключений у пользователя может быть несколько (вкладки, устройства). Когда закрывается последнее, выход отложенный: участник помечается уходящим (leaving) и до истечения срока сохраняет роль, место и владение. Срок: игроку идущей партии его задаёт игра (в «игре в ничто» 30 с, на паузе отсчёт заморожен), владельцу вне игры — 15 с, остальным — 1 с. По истечении срока участник удаляется: игрок идущей партии сохраняет место, владение переходит к самому раннему из оставшихся (сначала присутствующие, в каждой группе сначала игроки). Создатель комнаты, так и не подключившийся к потоку, удаляется через 15 с. Пустая комната удаляется через 30 минут. Обрыв соединения сервер замечает с задержкой (по неудачной записи ping, обычно 10–30 с). Access-токен проверяется только при подключении: при истечении поток не рвётся.",
+        "operationId": "roomEvents",
         "parameters": [
           {
             "in": "path",
@@ -958,13 +958,13 @@
         "responses": {
           "200": {
             "content": {
-              "application/json": {
+              "text/event-stream": {
                 "schema": {
-                  "$ref": "#/components/schemas/RoomResponse"
+                  "$ref": "#/components/schemas/RoomStreamEvent"
                 }
               }
             },
-            "description": "Пользователь в комнате"
+            "description": "Поток событий"
           },
           "401": {
             "content": {
@@ -997,73 +997,7 @@
             "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)"
           }
         },
-        "summary": "Войти в комнату",
-        "tags": [
-          "Игровые комнаты"
-        ]
-      }
-    },
-    "/api/rooms/{roomId}/leave": {
-      "post": {
-        "description": "Выйти можно всегда, но выход отложенный: участник помечается уходящим (leaving) и до истечения срока сохраняет роль, место и владение, а вход в комнату в пределах срока отменяет выход. Срок: игроку идущей партии его задаёт игра (в «игре в ничто» 30 с, на паузе отсчёт заморожен), владельцу вне игры — 5 с, остальным — 1 с. По истечении срока участник удаляется: игрок идущей партии сохраняет место и может вернуться, владение переходит к самому раннему из оставшихся: сначала к присутствующим, к уходящим — только если присутствующих нет; в каждой группе сначала игроки, затем наблюдатели. Пустая комната удаляется автоматически через 30 минут. Повторный выход срок не продлевает.",
-        "operationId": "leaveRoom",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "roomId",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Пользователь вышел"
-          },
-          "401": {
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            },
-            "description": "Нет действительного access-токена (UNAUTHENTICATED)"
-          },
-          "403": {
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            },
-            "description": "Пользователь не в комнате (NOT_ROOM_MEMBER)"
-          },
-          "404": {
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            },
-            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND), игра комнаты не опубликована или принудительно отключена (GAME_NOT_FOUND)"
-          },
-          "503": {
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            },
-            "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)"
-          }
-        },
-        "summary": "Выйти из комнаты",
+        "summary": "Поток событий комнаты",
         "tags": [
           "Игровые комнаты"
         ]
@@ -1877,6 +1811,10 @@
           "settings"
         ]
       },
+      "EmptyEventDataDto": {
+        "type": "object",
+        "description": "Событие без данных: {}"
+      },
       "GameDetailsResponse": {
         "type": "object",
         "properties": {
@@ -2233,6 +2171,25 @@
           "email"
         ]
       },
+      "RoomDeletedEvent": {
+        "type": "object",
+        "description": "Комната удалена; после события сервер закрывает поток",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/EmptyEventDataDto"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "room-deleted"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "type"
+        ]
+      },
       "RoomMemberResponse": {
         "type": "object",
         "properties": {
@@ -2358,6 +2315,55 @@
           "status"
         ]
       },
+      "RoomSessionChangedEvent": {
+        "type": "object",
+        "description": "Партия началась, отменена, поставлена на паузу, продолжена или закончилась: клиент перечитывает комнату (GET)",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/EmptyEventDataDto"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "session-changed"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "type"
+        ]
+      },
+      "RoomSettingsChangedDto": {
+        "type": "object",
+        "properties": {
+          "settings": {
+            "$ref": "#/components/schemas/RoomSettingsDto"
+          }
+        },
+        "required": [
+          "settings"
+        ]
+      },
+      "RoomSettingsChangedEvent": {
+        "type": "object",
+        "description": "Изменились настройки комнаты",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/RoomSettingsChangedDto"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "settings-changed"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "type"
+        ]
+      },
       "RoomSettingsDto": {
         "type": "object",
         "properties": {
@@ -2371,6 +2377,95 @@
         "required": [
           "gameSettings",
           "timeControl"
+        ]
+      },
+      "RoomSnapshotEvent": {
+        "type": "object",
+        "description": "Комната целиком для этого зрителя, как в GET комнаты; всегда первое сообщение потока",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/RoomResponse"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "snapshot"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "type"
+        ]
+      },
+      "RoomStreamEvent": {
+        "description": "Событие потока комнаты: тип — поле event: в SSE, data — JSON в поле data:",
+        "discriminator": {
+          "mapping": {
+            "room-deleted": "#/components/schemas/RoomDeletedEvent",
+            "session-changed": "#/components/schemas/RoomSessionChangedEvent",
+            "settings-changed": "#/components/schemas/RoomSettingsChangedEvent",
+            "snapshot": "#/components/schemas/RoomSnapshotEvent",
+            "users-changed": "#/components/schemas/RoomUsersChangedEvent"
+          },
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/RoomSnapshotEvent"
+          },
+          {
+            "$ref": "#/components/schemas/RoomUsersChangedEvent"
+          },
+          {
+            "$ref": "#/components/schemas/RoomSettingsChangedEvent"
+          },
+          {
+            "$ref": "#/components/schemas/RoomSessionChangedEvent"
+          },
+          {
+            "$ref": "#/components/schemas/RoomDeletedEvent"
+          }
+        ]
+      },
+      "RoomUsersChangedEvent": {
+        "type": "object",
+        "description": "Изменился состав участников, их роли, ники, уход (leaving) или владелец",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/RoomUsersDto"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "users-changed"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "type"
+        ]
+      },
+      "RoomUsersDto": {
+        "type": "object",
+        "properties": {
+          "members": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoomMemberResponse"
+            }
+          },
+          "ownerId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "members"
         ]
       },
       "SessionResponse": {
