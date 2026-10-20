@@ -1,0 +1,76 @@
+import {useChangeRole} from '@qgames/api/gateway';
+import {Button} from '@qgames/ui/components/button';
+import {useQueryClient} from '@tanstack/react-query';
+
+import {
+  roomErrorMessage,
+  setRoomCache,
+  type Membership,
+  type RoomRole,
+  type RoomView,
+} from '@/entities/room';
+import {WithHint} from '@/shared/ui';
+
+export interface ChangeRoleButtonProps {
+  room: RoomView;
+  membership: Membership;
+  /** Роль списка, в заголовке которого стоит кнопка. */
+  role: RoomRole;
+}
+
+/** Причина, по которой перейти в список нельзя; null — можно. */
+function blockReason(membership: Membership, role: RoomRole): string | null {
+  if (membership.inGame) {
+    return 'Роль меняется только между партиями';
+  }
+  if (role === 'PLAYER' && !membership.hasFreeSeat) {
+    return 'Свободных мест игрока нет';
+  }
+  return null;
+}
+
+/**
+ * «Перейти» в заголовке списка, где пользователя сейчас нет: смена роли
+ * «игрок ↔ наблюдатель». Недоступный переход — заблокированная кнопка с подсказкой.
+ */
+export function ChangeRoleButton({
+  room,
+  membership,
+  role,
+}: ChangeRoleButtonProps) {
+  const queryClient = useQueryClient();
+  const changeRole = useChangeRole({
+    mutation: {
+      onSuccess: data => {
+        setRoomCache(queryClient, room.id, data);
+      },
+    },
+  });
+  const {member} = membership;
+  if (member === null || member.role === role) {
+    return null;
+  }
+  const reason = blockReason(membership, role);
+
+  return (
+    <>
+      <WithHint hint={reason}>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={reason !== null || changeRole.isPending}
+          onClick={() => {
+            changeRole.mutate({roomId: room.id, data: {role}});
+          }}
+        >
+          Перейти
+        </Button>
+      </WithHint>
+      {changeRole.isError ? (
+        <p className="w-full text-sm text-destructive" role="alert">
+          {roomErrorMessage(changeRole.error)}
+        </p>
+      ) : null}
+    </>
+  );
+}

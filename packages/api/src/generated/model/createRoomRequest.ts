@@ -4,8 +4,8 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
-import type {CreateRoomRequestGameType} from './createRoomRequestGameType';
+import type {RoomSettingsDto} from './roomSettingsDto';
 
 export interface CreateRoomRequest {
-  gameType: CreateRoomRequestGameType;
+  settings: RoomSettingsDto;
 }

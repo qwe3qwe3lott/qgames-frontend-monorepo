@@ -1,4 +1,5 @@
 import {cn} from '@qgames/ui/lib/utils';
+import type {ReactNode} from 'react';
 
 import {PlayerAvatar, type PlayerAvatarKind} from './player-avatar';
 
@@ -15,6 +16,8 @@ export interface PlayerListProps {
   /** Игрок, который сейчас ходит; подсвечивается. */
   activePlayerId?: string | null;
   title?: string;
+  /** Действие в заголовке списка, например переход в этот список. */
+  action?: ReactNode;
 }
 
 /** Список игроков комнаты или партии. */
@@ -22,10 +25,14 @@ export function PlayerList({
   players,
   activePlayerId = null,
   title = 'Игроки',
+  action,
 }: PlayerListProps) {
   return (
     <section className="flex flex-col gap-2">
-      <h2 className="text-sm font-medium text-muted-foreground">{title}</h2>
+      <div className="flex min-h-8 flex-wrap items-center justify-between gap-2">
+        <h2 className="text-sm font-medium text-muted-foreground">{title}</h2>
+        {action}
+      </div>
       {players.length === 0 ? (
         <p className="text-sm text-muted-foreground">Никого нет</p>
       ) : (

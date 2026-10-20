@@ -22,6 +22,10 @@
     {
       "name": "Игровые комнаты",
       "description": "Публичные комнаты: вход по ссылке с id комнаты для любого авторизованного пользователя. Обновлений в реальном времени пока нет — клиент перечитывает комнату (GET). Все ручки требуют аутентификации."
+    },
+    {
+      "name": "Игры",
+      "description": "Параметры игр портала. Все ручки требуют аутентификации."
     }
   ],
   "paths": {
@@ -126,6 +130,121 @@
           },
           "400": {
             "description": "Пароль не проходит требования (VALIDATION_ERROR)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/games/{gameCode}/rooms/{roomId}/settings": {
+      "put": {
+        "tags": [
+          "Игровые комнаты"
+        ],
+        "summary": "Изменить настройки комнаты",
+        "description": "Заменяет настройки комнаты целиком. Только владелец и только между партиями; следующая партия стартует с новыми настройками. Код игры в пути должен совпадать с игрой комнаты. Ошибки настроек отдаются по полям тела (например, gameSettings.rounds).",
+        "operationId": "updateRoomSettings",
+        "parameters": [
+          {
+            "name": "gameCode",
+            "in": "path",
+            "description": "Код игры",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "nothing"
+              ]
+            }
+          },
+          {
+            "name": "roomId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoomSettingsDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Настройки изменены",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Настройки не подходят игре или запрос некорректен (VALIDATION_ERROR, поля — в errors)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет действительного access-токена (UNAUTHENTICATED)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Пользователь не в комнате (NOT_ROOM_MEMBER) или не владелец (NOT_ROOM_OWNER)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Неизвестный код игры (GAME_NOT_FOUND) или комнаты нет (ROOM_NOT_FOUND)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Комната другой игры (GAME_TYPE_MISMATCH) или идёт партия (ROOM_NOT_WAITING)",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -342,68 +461,6 @@
         }
       }
     },
-    "/api/rooms": {
-      "post": {
-        "tags": [
-          "Игровые комнаты"
-        ],
-        "summary": "Создать комнату",
-        "description": "Создаёт комнату под выбранную игру. Создатель становится владельцем и первым игроком. Ссылку на комнату (её id) можно отправить другим игрокам.",
-        "operationId": "createRoom",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateRoomRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Комната создана",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RoomResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Не указан или неизвестен тип игры (VALIDATION_ERROR)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Нет действительного access-токена (UNAUTHENTICATED)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/rooms/{roomId}/session": {
       "post": {
         "tags": [
@@ -491,7 +548,7 @@
           "Игровые комнаты"
         ],
         "summary": "Отменить партию",
-        "description": "Завершает идущую партию без результата и возвращает комнату в ожидание. Только владелец.",
+        "description": "Завершает идущую партию без результата и возвращает комнату в ожидание. Работает и на паузе. Только владелец.",
         "operationId": "cancelSession",
         "parameters": [
           {
@@ -568,13 +625,179 @@
         }
       }
     },
+    "/api/rooms/{roomId}/session/resume": {
+      "post": {
+        "tags": [
+          "Игровые комнаты"
+        ],
+        "summary": "Продолжить партию",
+        "description": "Снимает паузу. Время хода и сроки возвращения вышедших игроков партии сдвигаются на длительность паузы: остаётся столько же времени, сколько было в момент паузы. Только владелец. Без паузы вызов ничего не меняет.",
+        "operationId": "resumeSession",
+        "parameters": [
+          {
+            "name": "roomId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Партия продолжается",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет действительного access-токена (UNAUTHENTICATED)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Пользователь не в комнате (NOT_ROOM_MEMBER) или не владелец (NOT_ROOM_OWNER)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Партия не идёт (ROOM_NOT_IN_GAME)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rooms/{roomId}/session/pause": {
+      "post": {
+        "tags": [
+          "Игровые комнаты"
+        ],
+        "summary": "Поставить партию на паузу",
+        "description": "Замораживает идущую партию: ходы запрещены, время хода и сроки возвращения вышедших игроков партии не идут (session.pausedAt; остаток времени хода — moveDeadline − pausedAt). Вход, выход и отмена партии работают. Только владелец. Повторный вызов на паузе ничего не меняет.",
+        "operationId": "pauseSession",
+        "parameters": [
+          {
+            "name": "roomId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Партия на паузе",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет действительного access-токена (UNAUTHENTICATED)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Пользователь не в комнате (NOT_ROOM_MEMBER) или не владелец (NOT_ROOM_OWNER)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Партия не идёт (ROOM_NOT_IN_GAME)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/rooms/{roomId}/leave": {
       "post": {
         "tags": [
           "Игровые комнаты"
         ],
         "summary": "Выйти из комнаты",
-        "description": "Выйти можно всегда. Игрок идущей партии сохраняет место и может вернуться. Если вышел владелец, владение переходит к самому раннему из оставшихся: сначала игроки, затем наблюдатели. Пустая комната удаляется автоматически через 30 минут.",
+        "description": "Выйти можно всегда, но выход отложенный: участник помечается уходящим (leaving) и до истечения срока сохраняет роль, место и владение, а вход в комнату в пределах срока отменяет выход. Срок: игроку идущей партии его задаёт игра (в «игре в ничто» 30 с, на паузе отсчёт заморожен), владельцу вне игры — 5 с, остальным — 1 с. По истечении срока участник удаляется: игрок идущей партии сохраняет место и может вернуться, владение переходит к самому раннему из оставшихся: сначала к присутствующим, к уходящим — только если присутствующих нет; в каждой группе сначала игроки, затем наблюдатели. Пустая комната удаляется автоматически через 30 минут. Повторный выход срок не продлевает.",
         "operationId": "leaveRoom",
         "parameters": [
           {
@@ -634,13 +857,99 @@
         }
       }
     },
+    "/api/games/{gameCode}/rooms": {
+      "post": {
+        "tags": [
+          "Игровые комнаты"
+        ],
+        "summary": "Создать комнату",
+        "description": "Создаёт комнату под игру из пути с заданными настройками: правила времени и настройки игры. Создатель становится владельцем и первым игроком, ссылку на комнату (её id) можно отправить другим игрокам. Границы настроек и значения по умолчанию — в параметрах игры (GET /api/games/{gameCode}). Ошибки настроек отдаются по полям тела (например, settings.gameSettings.rounds), как у валидации запроса.",
+        "operationId": "createRoom",
+        "parameters": [
+          {
+            "name": "gameCode",
+            "in": "path",
+            "description": "Код игры",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "nothing"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRoomRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Комната создана",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Настройки не подходят игре или запрос некорректен (VALIDATION_ERROR, поля — в errors)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет действительного access-токена (UNAUTHENTICATED)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Неизвестный код игры (GAME_NOT_FOUND)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/rooms/{roomId}/join": {
       "post": {
         "tags": [
           "Игровые комнаты"
         ],
         "summary": "Войти в комнату",
-        "description": "Игрок идущей партии возвращается на своё место. Иначе, если партия не идёт и есть свободное место, пользователь становится игроком, в остальных случаях — наблюдателем. В пустой комнате вошедший становится владельцем. Повторный вход ничего не меняет.",
+        "description": "Игрок идущей партии возвращается на своё место. Иначе, если партия не идёт и есть свободное место, пользователь становится игроком, в остальных случаях — наблюдателем. В пустой комнате вошедший становится владельцем. Вход вышедшего участника, пока не истёк срок выхода, отменяет выход: роль и владение сохраняются. Повторный вход ничего не меняет.",
         "operationId": "joinRoom",
         "parameters": [
           {
@@ -703,7 +1012,7 @@
           "Игровые комнаты"
         ],
         "summary": "Сделать ход",
-        "description": "Ручка одна на все игры: код игры — в пути, ход — общий конверт `{type, data}`. `type` — вид действия (`PASS` в «игре в ничто»), `data` — его параметры в формате игры. Код игры должен совпадать с игрой комнаты. Ходить может только игрок партии, находящийся в комнате. Когда партия заканчивается, комната возвращается в ожидание, а законченная партия остаётся в ответе.",
+        "description": "Ручка одна на все игры: код игры — в пути, ход — общий конверт `{type, data}`. `type` — вид действия (`PASS` в «игре в ничто»), `data` — его параметры в формате игры. Код игры должен совпадать с игрой комнаты. Ходить может только игрок партии, находящийся в комнате. Если у партии есть таймер, ход переставляет дедлайн (session.moveDeadline). Когда партия заканчивается, комната возвращается в ожидание, а законченная партия остаётся в ответе.",
         "operationId": "makeMove",
         "parameters": [
           {
@@ -790,7 +1099,7 @@
             }
           },
           "409": {
-            "description": "Комната другой игры (GAME_TYPE_MISMATCH), партия не идёт (ROOM_NOT_IN_GAME) или изменилась с момента, который видел клиент (SESSION_CONFLICT)",
+            "description": "Комната другой игры (GAME_TYPE_MISMATCH), партия не идёт (ROOM_NOT_IN_GAME), стоит на паузе (SESSION_PAUSED) или изменилась с момента, который видел клиент (SESSION_CONFLICT)",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1342,7 +1651,7 @@
           "Игровые комнаты"
         ],
         "summary": "Получить комнату",
-        "description": "Участники с ролями, владелец, текущая или последняя партия. Доступно и до входа в комнату — так страница по ссылке показывает комнату перед кнопкой «Войти».",
+        "description": "Участники с ролями, владелец, текущая или последняя партия. Доступно и до входа в комнату — так страница по ссылке показывает комнату ещё до входа.",
         "operationId": "getRoom",
         "parameters": [
           {
@@ -1462,6 +1771,72 @@
           }
         }
       }
+    },
+    "/api/games/{gameCode}": {
+      "get": {
+        "tags": [
+          "Игры"
+        ],
+        "summary": "Параметры игры",
+        "description": "Число игроков, поддерживаемые режимы времени и границы времени на ход, границы настроек игры и настройки по умолчанию. По ним строится форма создания комнаты и смены настроек.",
+        "operationId": "getGame",
+        "parameters": [
+          {
+            "name": "gameCode",
+            "in": "path",
+            "description": "Код игры",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "nothing"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Параметры игры",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameInfoResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет действительного access-токена (UNAUTHENTICATED)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Неизвестный код игры (GAME_NOT_FOUND)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1542,6 +1917,39 @@
           "role"
         ]
       },
+      "GameSettingsDto": {
+        "description": "Настройки конкретной игры, вид — по полю gameType",
+        "discriminator": {
+          "propertyName": "gameType",
+          "mapping": {
+            "NOTHING": "#/components/schemas/NothingSettingsDto"
+          }
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/NothingSettingsDto"
+          }
+        ]
+      },
+      "NothingSettingsDto": {
+        "type": "object",
+        "properties": {
+          "gameType": {
+            "type": "string",
+            "enum": [
+              "NOTHING"
+            ]
+          },
+          "rounds": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "gameType",
+          "rounds"
+        ]
+      },
       "RoomMemberResponse": {
         "type": "object",
         "properties": {
@@ -1575,6 +1983,9 @@
           "owner": {
             "type": "boolean"
           },
+          "leaving": {
+            "type": "boolean"
+          },
           "joinedAt": {
             "type": "string",
             "format": "date-time"
@@ -1582,6 +1993,7 @@
         },
         "required": [
           "joinedAt",
+          "leaving",
           "owner",
           "role",
           "userId"
@@ -1641,6 +2053,13 @@
           "createdAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/RoomSettingsDto"
+          },
+          "serverTime": {
+            "type": "string",
+            "format": "date-time"
           }
         },
         "required": [
@@ -1650,7 +2069,24 @@
           "maxPlayers",
           "members",
           "minPlayers",
+          "serverTime",
+          "settings",
           "status"
+        ]
+      },
+      "RoomSettingsDto": {
+        "type": "object",
+        "properties": {
+          "timeControl": {
+            "$ref": "#/components/schemas/TimeControlDto"
+          },
+          "gameSettings": {
+            "$ref": "#/components/schemas/GameSettingsDto"
+          }
+        },
+        "required": [
+          "gameSettings",
+          "timeControl"
         ]
       },
       "SessionResponse": {
@@ -1682,6 +2118,20 @@
           "state": {
             "type": "object",
             "additionalProperties": {}
+          },
+          "moveDeadline": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "pausedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           }
         },
         "required": [
@@ -1690,6 +2140,28 @@
           "state",
           "status",
           "version"
+        ]
+      },
+      "TimeControlDto": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "NONE",
+              "PER_MOVE"
+            ]
+          },
+          "moveSeconds": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
+          }
+        },
+        "required": [
+          "mode"
         ]
       },
       "SetPasswordRequest": {
@@ -1720,15 +2192,12 @@
       "CreateRoomRequest": {
         "type": "object",
         "properties": {
-          "gameType": {
-            "type": "string",
-            "enum": [
-              "NOTHING"
-            ]
+          "settings": {
+            "$ref": "#/components/schemas/RoomSettingsDto"
           }
         },
         "required": [
-          "gameType"
+          "settings"
         ]
       },
       "MoveRequest": {
@@ -1881,6 +2350,113 @@
             ]
           }
         }
+      },
+      "GameInfoResponse": {
+        "type": "object",
+        "properties": {
+          "gameType": {
+            "type": "string",
+            "enum": [
+              "NOTHING"
+            ]
+          },
+          "minPlayers": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "maxPlayers": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "timeControl": {
+            "$ref": "#/components/schemas/TimeControlLimitsDto"
+          },
+          "gameSettingsLimits": {
+            "$ref": "#/components/schemas/GameSettingsLimitsDto"
+          },
+          "defaultSettings": {
+            "$ref": "#/components/schemas/RoomSettingsDto"
+          }
+        },
+        "required": [
+          "defaultSettings",
+          "gameSettingsLimits",
+          "gameType",
+          "maxPlayers",
+          "minPlayers",
+          "timeControl"
+        ]
+      },
+      "GameSettingsLimitsDto": {
+        "description": "Границы настроек конкретной игры, вид — по полю gameType",
+        "discriminator": {
+          "propertyName": "gameType",
+          "mapping": {
+            "NOTHING": "#/components/schemas/NothingSettingsLimitsDto"
+          }
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/NothingSettingsLimitsDto"
+          }
+        ]
+      },
+      "IntRangeDto": {
+        "type": "object",
+        "properties": {
+          "min": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "max": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "max",
+          "min"
+        ]
+      },
+      "NothingSettingsLimitsDto": {
+        "type": "object",
+        "properties": {
+          "gameType": {
+            "type": "string",
+            "enum": [
+              "NOTHING"
+            ]
+          },
+          "rounds": {
+            "$ref": "#/components/schemas/IntRangeDto"
+          }
+        },
+        "required": [
+          "gameType",
+          "rounds"
+        ]
+      },
+      "TimeControlLimitsDto": {
+        "type": "object",
+        "properties": {
+          "modes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "NONE",
+                "PER_MOVE"
+              ]
+            }
+          },
+          "moveSeconds": {
+            "$ref": "#/components/schemas/IntRangeDto"
+          }
+        },
+        "required": [
+          "modes",
+          "moveSeconds"
+        ]
       },
       "ProblemDetail": {
         "properties": {

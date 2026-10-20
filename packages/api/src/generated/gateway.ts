@@ -24,6 +24,7 @@ import type {
   ChangePasswordRequest,
   ChangeRoleRequest,
   CreateRoomRequest,
+  GameInfoResponse,
   GoogleIdTokenRequest,
   LoginRequest,
   MoveRequest,
@@ -32,6 +33,7 @@ import type {
   RegistrationResponse,
   ResendCodeRequest,
   RoomResponse,
+  RoomSettingsDto,
   SetPasswordRequest,
   UpdateProfileRequest,
   UserResponse,
@@ -176,6 +178,136 @@ export const useChangePassword = <
   TContext
 > => {
   return useMutation(getChangePasswordMutationOptions(options), queryClient);
+};
+
+export const getUpdateRoomSettingsUrl = (
+  gameCode: 'nothing',
+  roomId: string,
+) => {
+  return `/api/games/${gameCode}/rooms/${roomId}/settings`;
+};
+
+/**
+ * Заменяет настройки комнаты целиком. Только владелец и только между партиями; следующая партия стартует с новыми настройками. Код игры в пути должен совпадать с игрой комнаты. Ошибки настроек отдаются по полям тела (например, gameSettings.rounds).
+ * @summary Изменить настройки комнаты
+ */
+export const updateRoomSettings = async (
+  gameCode: 'nothing',
+  roomId: string,
+  roomSettingsDto: RoomSettingsDto,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<RoomResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit['headers']>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          entry => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<
+      string | readonly string[] | undefined
+    >(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<RoomResponse>(getUpdateRoomSettingsUrl(gameCode, roomId), {
+    ...options,
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getHeaders(options?.headers),
+    },
+    body: JSON.stringify(roomSettingsDto),
+  });
+};
+
+export const getUpdateRoomSettingsMutationKey = () =>
+  ['updateRoomSettings'] as const;
+
+export const getUpdateRoomSettingsMutationOptions = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateRoomSettings>>,
+    TError,
+    UpdateRoomSettingsMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateRoomSettings>>,
+  TError,
+  UpdateRoomSettingsMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateRoomSettingsMutationKey();
+  const {mutation: mutationOptions, request: requestOptions} = options
+    ? options.mutation &&
+      'mutationKey' in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+    : {mutation: {mutationKey}, request: undefined};
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateRoomSettings>>,
+    UpdateRoomSettingsMutationVariables
+  > = props => {
+    const {gameCode, roomId, data} = props ?? {};
+
+    return updateRoomSettings(gameCode, roomId, data, requestOptions);
+  };
+
+  return {mutationFn, ...mutationOptions};
+};
+
+export type UpdateRoomSettingsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateRoomSettings>>
+>;
+export type UpdateRoomSettingsMutationBody = RoomSettingsDto;
+export type UpdateRoomSettingsMutationError = ErrorType<ProblemDetail>;
+export type UpdateRoomSettingsMutationVariables = {
+  gameCode: 'nothing';
+  roomId: string;
+  data: RoomSettingsDto;
+};
+
+/**
+ * @summary Изменить настройки комнаты
+ */
+export const useUpdateRoomSettings = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateRoomSettings>>,
+      TError,
+      UpdateRoomSettingsMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateRoomSettings>>,
+  TError,
+  UpdateRoomSettingsMutationVariables,
+  TContext
+> => {
+  return useMutation(
+    getUpdateRoomSettingsMutationOptions(options),
+    queryClient,
+  );
 };
 
 export const getAddPasswordLoginUrl = () => {
@@ -534,123 +666,6 @@ export const useAddGoogleLogin = <
   return useMutation(getAddGoogleLoginMutationOptions(options), queryClient);
 };
 
-export const getCreateRoomUrl = () => {
-  return `/api/rooms`;
-};
-
-/**
- * Создаёт комнату под выбранную игру. Создатель становится владельцем и первым игроком. Ссылку на комнату (её id) можно отправить другим игрокам.
- * @summary Создать комнату
- */
-export const createRoom = async (
-  createRoomRequest: CreateRoomRequest,
-  options?: Parameters<typeof apiFetch>[1],
-): Promise<RoomResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit['headers']>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          entry => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<
-      string | readonly string[] | undefined
-    >(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-  return apiFetch<RoomResponse>(getCreateRoomUrl(), {
-    ...options,
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getHeaders(options?.headers),
-    },
-    body: JSON.stringify(createRoomRequest),
-  });
-};
-
-export const getCreateRoomMutationKey = () => ['createRoom'] as const;
-
-export const getCreateRoomMutationOptions = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof createRoom>>,
-    TError,
-    CreateRoomMutationVariables,
-    TContext
-  >;
-  request?: SecondParameter<typeof apiFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof createRoom>>,
-  TError,
-  CreateRoomMutationVariables,
-  TContext
-> => {
-  const mutationKey = getCreateRoomMutationKey();
-  const {mutation: mutationOptions, request: requestOptions} = options
-    ? options.mutation &&
-      'mutationKey' in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-    : {mutation: {mutationKey}, request: undefined};
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof createRoom>>,
-    CreateRoomMutationVariables
-  > = props => {
-    const {data} = props ?? {};
-
-    return createRoom(data, requestOptions);
-  };
-
-  return {mutationFn, ...mutationOptions};
-};
-
-export type CreateRoomMutationResult = NonNullable<
-  Awaited<ReturnType<typeof createRoom>>
->;
-export type CreateRoomMutationBody = CreateRoomRequest;
-export type CreateRoomMutationError = ErrorType<ProblemDetail>;
-export type CreateRoomMutationVariables = {data: CreateRoomRequest};
-
-/**
- * @summary Создать комнату
- */
-export const useCreateRoom = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof createRoom>>,
-      TError,
-      CreateRoomMutationVariables,
-      TContext
-    >;
-    request?: SecondParameter<typeof apiFetch>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof createRoom>>,
-  TError,
-  CreateRoomMutationVariables,
-  TContext
-> => {
-  return useMutation(getCreateRoomMutationOptions(options), queryClient);
-};
-
 export const getStartSessionUrl = (roomId: string) => {
   return `/api/rooms/${roomId}/session`;
 };
@@ -747,7 +762,7 @@ export const getCancelSessionUrl = (roomId: string) => {
 };
 
 /**
- * Завершает идущую партию без результата и возвращает комнату в ожидание. Только владелец.
+ * Завершает идущую партию без результата и возвращает комнату в ожидание. Работает и на паузе. Только владелец.
  * @summary Отменить партию
  */
 export const cancelSession = async (
@@ -833,12 +848,194 @@ export const useCancelSession = <
   return useMutation(getCancelSessionMutationOptions(options), queryClient);
 };
 
+export const getResumeSessionUrl = (roomId: string) => {
+  return `/api/rooms/${roomId}/session/resume`;
+};
+
+/**
+ * Снимает паузу. Время хода и сроки возвращения вышедших игроков партии сдвигаются на длительность паузы: остаётся столько же времени, сколько было в момент паузы. Только владелец. Без паузы вызов ничего не меняет.
+ * @summary Продолжить партию
+ */
+export const resumeSession = async (
+  roomId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<RoomResponse> => {
+  return apiFetch<RoomResponse>(getResumeSessionUrl(roomId), {
+    ...options,
+    method: 'POST',
+  });
+};
+
+export const getResumeSessionMutationKey = () => ['resumeSession'] as const;
+
+export const getResumeSessionMutationOptions = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof resumeSession>>,
+    TError,
+    ResumeSessionMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof resumeSession>>,
+  TError,
+  ResumeSessionMutationVariables,
+  TContext
+> => {
+  const mutationKey = getResumeSessionMutationKey();
+  const {mutation: mutationOptions, request: requestOptions} = options
+    ? options.mutation &&
+      'mutationKey' in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+    : {mutation: {mutationKey}, request: undefined};
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof resumeSession>>,
+    ResumeSessionMutationVariables
+  > = props => {
+    const {roomId} = props ?? {};
+
+    return resumeSession(roomId, requestOptions);
+  };
+
+  return {mutationFn, ...mutationOptions};
+};
+
+export type ResumeSessionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof resumeSession>>
+>;
+
+export type ResumeSessionMutationError = ErrorType<ProblemDetail>;
+export type ResumeSessionMutationVariables = {roomId: string};
+
+/**
+ * @summary Продолжить партию
+ */
+export const useResumeSession = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof resumeSession>>,
+      TError,
+      ResumeSessionMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof resumeSession>>,
+  TError,
+  ResumeSessionMutationVariables,
+  TContext
+> => {
+  return useMutation(getResumeSessionMutationOptions(options), queryClient);
+};
+
+export const getPauseSessionUrl = (roomId: string) => {
+  return `/api/rooms/${roomId}/session/pause`;
+};
+
+/**
+ * Замораживает идущую партию: ходы запрещены, время хода и сроки возвращения вышедших игроков партии не идут (session.pausedAt; остаток времени хода — moveDeadline − pausedAt). Вход, выход и отмена партии работают. Только владелец. Повторный вызов на паузе ничего не меняет.
+ * @summary Поставить партию на паузу
+ */
+export const pauseSession = async (
+  roomId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<RoomResponse> => {
+  return apiFetch<RoomResponse>(getPauseSessionUrl(roomId), {
+    ...options,
+    method: 'POST',
+  });
+};
+
+export const getPauseSessionMutationKey = () => ['pauseSession'] as const;
+
+export const getPauseSessionMutationOptions = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof pauseSession>>,
+    TError,
+    PauseSessionMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof pauseSession>>,
+  TError,
+  PauseSessionMutationVariables,
+  TContext
+> => {
+  const mutationKey = getPauseSessionMutationKey();
+  const {mutation: mutationOptions, request: requestOptions} = options
+    ? options.mutation &&
+      'mutationKey' in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+    : {mutation: {mutationKey}, request: undefined};
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof pauseSession>>,
+    PauseSessionMutationVariables
+  > = props => {
+    const {roomId} = props ?? {};
+
+    return pauseSession(roomId, requestOptions);
+  };
+
+  return {mutationFn, ...mutationOptions};
+};
+
+export type PauseSessionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof pauseSession>>
+>;
+
+export type PauseSessionMutationError = ErrorType<ProblemDetail>;
+export type PauseSessionMutationVariables = {roomId: string};
+
+/**
+ * @summary Поставить партию на паузу
+ */
+export const usePauseSession = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof pauseSession>>,
+      TError,
+      PauseSessionMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof pauseSession>>,
+  TError,
+  PauseSessionMutationVariables,
+  TContext
+> => {
+  return useMutation(getPauseSessionMutationOptions(options), queryClient);
+};
+
 export const getLeaveRoomUrl = (roomId: string) => {
   return `/api/rooms/${roomId}/leave`;
 };
 
 /**
- * Выйти можно всегда. Игрок идущей партии сохраняет место и может вернуться. Если вышел владелец, владение переходит к самому раннему из оставшихся: сначала игроки, затем наблюдатели. Пустая комната удаляется автоматически через 30 минут.
+ * Выйти можно всегда, но выход отложенный: участник помечается уходящим (leaving) и до истечения срока сохраняет роль, место и владение, а вход в комнату в пределах срока отменяет выход. Срок: игроку идущей партии его задаёт игра (в «игре в ничто» 30 с, на паузе отсчёт заморожен), владельцу вне игры — 5 с, остальным — 1 с. По истечении срока участник удаляется: игрок идущей партии сохраняет место и может вернуться, владение переходит к самому раннему из оставшихся: сначала к присутствующим, к уходящим — только если присутствующих нет; в каждой группе сначала игроки, затем наблюдатели. Пустая комната удаляется автоматически через 30 минут. Повторный выход срок не продлевает.
  * @summary Выйти из комнаты
  */
 export const leaveRoom = async (
@@ -929,7 +1126,7 @@ export const getJoinRoomUrl = (roomId: string) => {
 };
 
 /**
- * Игрок идущей партии возвращается на своё место. Иначе, если партия не идёт и есть свободное место, пользователь становится игроком, в остальных случаях — наблюдателем. В пустой комнате вошедший становится владельцем. Повторный вход ничего не меняет.
+ * Игрок идущей партии возвращается на своё место. Иначе, если партия не идёт и есть свободное место, пользователь становится игроком, в остальных случаях — наблюдателем. В пустой комнате вошедший становится владельцем. Вход вышедшего участника, пока не истёк срок выхода, отменяет выход: роль и владение сохраняются. Повторный вход ничего не меняет.
  * @summary Войти в комнату
  */
 export const joinRoom = async (
@@ -1015,12 +1212,133 @@ export const useJoinRoom = <
   return useMutation(getJoinRoomMutationOptions(options), queryClient);
 };
 
+export const getCreateRoomUrl = (gameCode: 'nothing') => {
+  return `/api/games/${gameCode}/rooms`;
+};
+
+/**
+ * Создаёт комнату под игру из пути с заданными настройками: правила времени и настройки игры. Создатель становится владельцем и первым игроком, ссылку на комнату (её id) можно отправить другим игрокам. Границы настроек и значения по умолчанию — в параметрах игры (GET /api/games/{gameCode}). Ошибки настроек отдаются по полям тела (например, settings.gameSettings.rounds), как у валидации запроса.
+ * @summary Создать комнату
+ */
+export const createRoom = async (
+  gameCode: 'nothing',
+  createRoomRequest: CreateRoomRequest,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<RoomResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit['headers']>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          entry => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<
+      string | readonly string[] | undefined
+    >(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<RoomResponse>(getCreateRoomUrl(gameCode), {
+    ...options,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getHeaders(options?.headers),
+    },
+    body: JSON.stringify(createRoomRequest),
+  });
+};
+
+export const getCreateRoomMutationKey = () => ['createRoom'] as const;
+
+export const getCreateRoomMutationOptions = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createRoom>>,
+    TError,
+    CreateRoomMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createRoom>>,
+  TError,
+  CreateRoomMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreateRoomMutationKey();
+  const {mutation: mutationOptions, request: requestOptions} = options
+    ? options.mutation &&
+      'mutationKey' in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+    : {mutation: {mutationKey}, request: undefined};
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createRoom>>,
+    CreateRoomMutationVariables
+  > = props => {
+    const {gameCode, data} = props ?? {};
+
+    return createRoom(gameCode, data, requestOptions);
+  };
+
+  return {mutationFn, ...mutationOptions};
+};
+
+export type CreateRoomMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createRoom>>
+>;
+export type CreateRoomMutationBody = CreateRoomRequest;
+export type CreateRoomMutationError = ErrorType<ProblemDetail>;
+export type CreateRoomMutationVariables = {
+  gameCode: 'nothing';
+  data: CreateRoomRequest;
+};
+
+/**
+ * @summary Создать комнату
+ */
+export const useCreateRoom = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createRoom>>,
+      TError,
+      CreateRoomMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createRoom>>,
+  TError,
+  CreateRoomMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreateRoomMutationOptions(options), queryClient);
+};
+
 export const getMakeMoveUrl = (gameCode: 'nothing', roomId: string) => {
   return `/api/games/${gameCode}/rooms/${roomId}/moves`;
 };
 
 /**
- * Ручка одна на все игры: код игры — в пути, ход — общий конверт `{type, data}`. `type` — вид действия (`PASS` в «игре в ничто»), `data` — его параметры в формате игры. Код игры должен совпадать с игрой комнаты. Ходить может только игрок партии, находящийся в комнате. Когда партия заканчивается, комната возвращается в ожидание, а законченная партия остаётся в ответе.
+ * Ручка одна на все игры: код игры — в пути, ход — общий конверт `{type, data}`. `type` — вид действия (`PASS` в «игре в ничто»), `data` — его параметры в формате игры. Код игры должен совпадать с игрой комнаты. Ходить может только игрок партии, находящийся в комнате. Если у партии есть таймер, ход переставляет дедлайн (session.moveDeadline). Когда партия заканчивается, комната возвращается в ожидание, а законченная партия остаётся в ответе.
  * @summary Сделать ход
  */
 export const makeMove = async (
@@ -2148,7 +2466,7 @@ export const getGetRoomUrl = (roomId: string) => {
 };
 
 /**
- * Участники с ролями, владелец, текущая или последняя партия. Доступно и до входа в комнату — так страница по ссылке показывает комнату перед кнопкой «Войти».
+ * Участники с ролями, владелец, текущая или последняя партия. Доступно и до входа в комнату — так страница по ссылке показывает комнату ещё до входа.
  * @summary Получить комнату
  */
 export const getRoom = async (
@@ -2376,3 +2694,146 @@ export const useDeleteRoom = <
 > => {
   return useMutation(getDeleteRoomMutationOptions(options), queryClient);
 };
+
+export const getGetGameUrl = (gameCode: 'nothing') => {
+  return `/api/games/${gameCode}`;
+};
+
+/**
+ * Число игроков, поддерживаемые режимы времени и границы времени на ход, границы настроек игры и настройки по умолчанию. По ним строится форма создания комнаты и смены настроек.
+ * @summary Параметры игры
+ */
+export const getGame = async (
+  gameCode: 'nothing',
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<GameInfoResponse> => {
+  return apiFetch<GameInfoResponse>(getGetGameUrl(gameCode), {
+    ...options,
+    method: 'GET',
+  });
+};
+
+export const getGetGameQueryKey = (gameCode: 'nothing') => {
+  return [`/api/games/${gameCode}`] as const;
+};
+
+export const getGetGameQueryOptions = <
+  TData = Awaited<ReturnType<typeof getGame>>,
+  TError = ErrorType<ProblemDetail>,
+>(
+  gameCode: 'nothing',
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getGame>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetGameQueryKey(gameCode);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getGame>>> = ({
+    signal,
+  }) => getGame(gameCode, {signal, ...requestOptions});
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: gameCode !== null && gameCode !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getGame>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetGameQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getGame>>
+>;
+export type GetGameQueryError = ErrorType<ProblemDetail>;
+
+export function useGetGame<
+  TData = Awaited<ReturnType<typeof getGame>>,
+  TError = ErrorType<ProblemDetail>,
+>(
+  gameCode: 'nothing',
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getGame>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGame>>,
+          TError,
+          Awaited<ReturnType<typeof getGame>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetGame<
+  TData = Awaited<ReturnType<typeof getGame>>,
+  TError = ErrorType<ProblemDetail>,
+>(
+  gameCode: 'nothing',
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getGame>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGame>>,
+          TError,
+          Awaited<ReturnType<typeof getGame>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {queryKey: DataTag<QueryKey, TData, TError>};
+export function useGetGame<
+  TData = Awaited<ReturnType<typeof getGame>>,
+  TError = ErrorType<ProblemDetail>,
+>(
+  gameCode: 'nothing',
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getGame>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {queryKey: DataTag<QueryKey, TData, TError>};
+/**
+ * @summary Параметры игры
+ */
+
+export function useGetGame<
+  TData = Awaited<ReturnType<typeof getGame>>,
+  TError = ErrorType<ProblemDetail>,
+>(
+  gameCode: 'nothing',
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getGame>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getGetGameQueryOptions(gameCode, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & {queryKey: DataTag<QueryKey, TData, TError>};
+
+  return withQueryKey(query, queryOptions.queryKey);
+}

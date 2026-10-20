@@ -1,7 +1,9 @@
 import {useGetRoom} from '@qgames/api/gateway';
+import {Button} from '@qgames/ui/components/button';
 
 import type {GameInfo} from '@/entities/game';
 import {membership, roomErrorMessage, toRoomView} from '@/entities/room';
+import {useRoomPresence} from '@/features/room-membership';
 import {PageLayout} from '@/shared/ui';
 import {GameBoard} from '@/widgets/game-board';
 import {RoomPanel} from '@/widgets/room-panel';
@@ -16,9 +18,15 @@ export interface RoomPageProps {
 }
 
 export function RoomPage({game, roomId, viewerId}: RoomPageProps) {
-  const {data, error, isPending} = useGetRoom(roomId, {
+  const {data, dataUpdatedAt, error, isPending} = useGetRoom(roomId, {
     query: {refetchInterval: ROOM_POLL_INTERVAL_MS},
   });
+  // Пока страница открыта, пользователь — участник комнаты и не уходящий.
+  const viewer = data?.members.find(m => m.userId === viewerId);
+  const presence = useRoomPresence(
+    roomId,
+    data === undefined ? null : viewer === undefined || viewer.leaving,
+  );
 
   if (isPending) {
     return (
@@ -36,7 +44,7 @@ export function RoomPage({game, roomId, viewerId}: RoomPageProps) {
       </PageLayout>
     );
   }
-  const room = toRoomView(data);
+  const room = toRoomView(data, dataUpdatedAt);
   const viewerMembership = membership(room, viewerId);
 
   return (
@@ -44,6 +52,21 @@ export function RoomPage({game, roomId, viewerId}: RoomPageProps) {
       title={game.title}
       description="Отправьте ссылку на эту страницу друзьям, чтобы они вошли в комнату."
     >
+      {presence.joinError === null ? null : (
+        <div className="mb-4 flex flex-wrap items-center gap-3" role="alert">
+          <p className="text-sm text-destructive">
+            Не удалось войти в комнату. {roomErrorMessage(presence.joinError)}
+          </p>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={presence.joinPending}
+            onClick={presence.retryJoin}
+          >
+            Повторить
+          </Button>
+        </div>
+      )}
       <div className="grid gap-6 md:grid-cols-[20rem_1fr]">
         <RoomPanel
           game={game}

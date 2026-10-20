@@ -17,6 +17,15 @@ export interface GameBoardSession {
   players: readonly string[];
   version: number;
   state: unknown;
+  /** Дедлайн текущего хода по часам сервера (ISO 8601); null — без таймера или партия не идёт. */
+  moveDeadline: string | null;
+  /**
+   * Момент постановки на паузу по часам сервера (ISO 8601); null — не на паузе.
+   * На паузе ходить нельзя, остаток времени хода = moveDeadline − pausedAt.
+   */
+  pausedAt: string | null;
+  /** Смещение часов: время сервера минус `Date.now()` клиента, мс. */
+  clockOffsetMs: number;
 }
 
 /** Ход — общий конверт бэкенда: вид действия и его параметры в формате игры. */

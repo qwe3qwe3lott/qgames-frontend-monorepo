@@ -58,7 +58,7 @@ function Board({
   }));
   return (
     <module.Board
-      session={session}
+      session={{...session, clockOffsetMs: room.clockOffsetMs}}
       players={players}
       viewerId={viewerId}
       {...controls}

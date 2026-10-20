@@ -38,7 +38,7 @@ export const GAMES: Readonly<Record<GameCode, GameInfo>> = {
     code: 'nothing',
     title: 'Игра в ничто',
     description:
-      'Тестовая игра: игроки по очереди завершают ход, через три круга партия заканчивается.',
+      'Тестовая игра: игроки по очереди завершают ход, партия длится заданное число раундов.',
     playersLabel: '1–4 игрока',
     api: {
       gameCode: 'nothing',

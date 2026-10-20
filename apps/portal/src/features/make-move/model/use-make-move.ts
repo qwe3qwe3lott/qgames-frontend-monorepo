@@ -19,7 +19,8 @@ export interface MoveControls {
 
 /**
  * Отправка хода (`{type, data}`) с версией партии, которую видел клиент.
- * Если партия уже изменилась (SESSION_CONFLICT), комната перечитывается.
+ * Если партия уже изменилась (SESSION_CONFLICT) или стоит на паузе
+ * (SESSION_PAUSED), комната перечитывается.
  */
 export function useMoveControls(game: GameApi, room: RoomView): MoveControls {
   const queryClient = useQueryClient();
@@ -29,7 +30,10 @@ export function useMoveControls(game: GameApi, room: RoomView): MoveControls {
         setRoomCache(queryClient, room.id, data);
       },
       onError: error => {
-        if (isApiError(error) && error.code === 'SESSION_CONFLICT') {
+        if (
+          isApiError(error) &&
+          (error.code === 'SESSION_CONFLICT' || error.code === 'SESSION_PAUSED')
+        ) {
           void invalidateRoom(queryClient, room.id);
         }
       },

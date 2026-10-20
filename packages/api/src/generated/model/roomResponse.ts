@@ -7,6 +7,7 @@
 import type {RoomMemberResponse} from './roomMemberResponse';
 import type {RoomResponseGameType} from './roomResponseGameType';
 import type {RoomResponseStatus} from './roomResponseStatus';
+import type {RoomSettingsDto} from './roomSettingsDto';
 import type {SessionResponse} from './sessionResponse';
 
 export interface RoomResponse {
@@ -20,4 +21,6 @@ export interface RoomResponse {
   members: RoomMemberResponse[];
   session?: SessionResponse | null;
   createdAt: string;
+  settings: RoomSettingsDto;
+  serverTime: string;
 }

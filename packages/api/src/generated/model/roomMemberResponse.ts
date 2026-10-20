@@ -15,5 +15,6 @@ export interface RoomMemberResponse {
   avatar?: RoomMemberResponseAvatar;
   role: RoomMemberResponseRole;
   owner: boolean;
+  leaving: boolean;
   joinedAt: string;
 }

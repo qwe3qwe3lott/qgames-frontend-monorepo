@@ -1,4 +1,9 @@
-import {useCancelSession, useStartSession} from '@qgames/api/gateway';
+import {
+  useCancelSession,
+  usePauseSession,
+  useResumeSession,
+  useStartSession,
+} from '@qgames/api/gateway';
 import type {RoomResponse} from '@qgames/api/gateway/model';
 import {Button} from '@qgames/ui/components/button';
 import {useQueryClient} from '@tanstack/react-query';
@@ -9,13 +14,14 @@ import {
   type Membership,
   type RoomView,
 } from '@/entities/room';
+import {WithHint} from '@/shared/ui';
 
 export interface SessionActionsProps {
   room: RoomView;
   membership: Membership;
 }
 
-/** Старт и отмена партии; доступны только владельцу. */
+/** Старт, пауза и отмена партии; доступны только владельцу. */
 export function SessionActions({room, membership}: SessionActionsProps) {
   const queryClient = useQueryClient();
   const onRoom = {
@@ -27,38 +33,66 @@ export function SessionActions({room, membership}: SessionActionsProps) {
   };
   const start = useStartSession(onRoom);
   const cancel = useCancelSession(onRoom);
+  const pause = usePauseSession(onRoom);
+  const resume = useResumeSession(onRoom);
   if (!membership.isOwner) {
     return null;
   }
-  const error = start.error ?? cancel.error;
-  const pending = start.isPending || cancel.isPending;
+  const error = start.error ?? cancel.error ?? pause.error ?? resume.error;
+  const pending =
+    start.isPending || cancel.isPending || pause.isPending || resume.isPending;
 
   return (
     <>
       {membership.inGame ? (
-        <Button
-          variant="destructive"
-          disabled={pending}
-          onClick={() => {
-            cancel.mutate({roomId: room.id});
-          }}
-        >
-          Отменить партию
-        </Button>
+        <>
+          {membership.paused ? (
+            <Button
+              disabled={pending}
+              onClick={() => {
+                resume.mutate({roomId: room.id});
+              }}
+            >
+              Продолжить
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              disabled={pending}
+              onClick={() => {
+                pause.mutate({roomId: room.id});
+              }}
+            >
+              Пауза
+            </Button>
+          )}
+          <Button
+            variant="destructive"
+            disabled={pending}
+            onClick={() => {
+              cancel.mutate({roomId: room.id});
+            }}
+          >
+            Отменить партию
+          </Button>
+        </>
       ) : (
-        <Button
-          disabled={pending || !membership.enoughPlayers}
-          title={
+        <WithHint
+          hint={
             membership.enoughPlayers
-              ? undefined
+              ? null
               : `Нужно игроков: ${String(room.minPlayers)}–${String(room.maxPlayers)}`
           }
-          onClick={() => {
-            start.mutate({roomId: room.id});
-          }}
         >
-          {room.session === null ? 'Начать партию' : 'Начать новую партию'}
-        </Button>
+          <Button
+            disabled={pending || !membership.enoughPlayers}
+            onClick={() => {
+              start.mutate({roomId: room.id});
+            }}
+          >
+            Начать
+          </Button>
+        </WithHint>
       )}
       {error === null ? null : (
         <p className="w-full text-sm text-destructive" role="alert">

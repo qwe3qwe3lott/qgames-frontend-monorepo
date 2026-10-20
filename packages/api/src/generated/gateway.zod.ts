@@ -82,6 +82,7 @@ export const ChangeRoleResponse = zod.object({
         .nullish(),
       role: zod.enum(['PLAYER', 'SPECTATOR']),
       owner: zod.boolean(),
+      leaving: zod.boolean(),
       joinedAt: zod.iso.datetime({offset: true}),
     }),
   ),
@@ -93,11 +94,98 @@ export const ChangeRoleResponse = zod.object({
         players: zod.array(zod.uuid()),
         version: zod.int(),
         state: zod.record(zod.string(), zod.unknown()),
+        moveDeadline: zod.iso.datetime({offset: true}).nullish(),
+        pausedAt: zod.iso.datetime({offset: true}).nullish(),
       }),
       zod.null(),
     ])
     .optional(),
   createdAt: zod.iso.datetime({offset: true}),
+  settings: zod.object({
+    timeControl: zod.object({
+      mode: zod.enum(['NONE', 'PER_MOVE']),
+      moveSeconds: zod.int().nullish(),
+    }),
+    gameSettings: zod
+      .object({
+        gameType: zod.enum(['NOTHING']),
+        rounds: zod.int(),
+      })
+      .describe('Настройки конкретной игры, вид — по полю gameType'),
+  }),
+  serverTime: zod.iso.datetime({offset: true}),
+});
+
+/**
+ * Заменяет настройки комнаты целиком. Только владелец и только между партиями; следующая партия стартует с новыми настройками. Код игры в пути должен совпадать с игрой комнаты. Ошибки настроек отдаются по полям тела (например, gameSettings.rounds).
+ * @summary Изменить настройки комнаты
+ */
+export const UpdateRoomSettingsParams = zod.object({
+  gameCode: zod.enum(['nothing']).describe('Код игры'),
+  roomId: zod.uuid(),
+});
+
+export const UpdateRoomSettingsBody = zod.object({
+  timeControl: zod.object({
+    mode: zod.enum(['NONE', 'PER_MOVE']),
+    moveSeconds: zod.int().nullish(),
+  }),
+  gameSettings: zod
+    .object({
+      gameType: zod.enum(['NOTHING']),
+      rounds: zod.int(),
+    })
+    .describe('Настройки конкретной игры, вид — по полю gameType'),
+});
+
+export const UpdateRoomSettingsResponse = zod.object({
+  id: zod.uuid(),
+  gameType: zod.enum(['NOTHING']),
+  status: zod.enum(['WAITING', 'IN_GAME']),
+  ownerId: zod.uuid().nullish(),
+  minPlayers: zod.int(),
+  maxPlayers: zod.int(),
+  members: zod.array(
+    zod.object({
+      userId: zod.uuid(),
+      nickname: zod.string().nullish(),
+      avatar: zod
+        .union([zod.literal('CAT'), zod.literal('DOG'), zod.literal(null)])
+        .nullish(),
+      role: zod.enum(['PLAYER', 'SPECTATOR']),
+      owner: zod.boolean(),
+      leaving: zod.boolean(),
+      joinedAt: zod.iso.datetime({offset: true}),
+    }),
+  ),
+  session: zod
+    .union([
+      zod.object({
+        id: zod.uuid(),
+        status: zod.enum(['IN_PROGRESS', 'FINISHED', 'CANCELLED']),
+        players: zod.array(zod.uuid()),
+        version: zod.int(),
+        state: zod.record(zod.string(), zod.unknown()),
+        moveDeadline: zod.iso.datetime({offset: true}).nullish(),
+        pausedAt: zod.iso.datetime({offset: true}).nullish(),
+      }),
+      zod.null(),
+    ])
+    .optional(),
+  createdAt: zod.iso.datetime({offset: true}),
+  settings: zod.object({
+    timeControl: zod.object({
+      mode: zod.enum(['NONE', 'PER_MOVE']),
+      moveSeconds: zod.int().nullish(),
+    }),
+    gameSettings: zod
+      .object({
+        gameType: zod.enum(['NOTHING']),
+        rounds: zod.int(),
+      })
+      .describe('Настройки конкретной игры, вид — по полю gameType'),
+  }),
+  serverTime: zod.iso.datetime({offset: true}),
 });
 
 /**
@@ -116,48 +204,6 @@ export const AddGoogleLoginResponse = zod.object({
   nickname: zod.string(),
   avatar: zod.enum(['CAT', 'DOG']),
   loginMethods: zod.array(zod.enum(['PASSWORD', 'GOOGLE'])),
-});
-
-/**
- * Создаёт комнату под выбранную игру. Создатель становится владельцем и первым игроком. Ссылку на комнату (её id) можно отправить другим игрокам.
- * @summary Создать комнату
- */
-export const CreateRoomBody = zod.object({
-  gameType: zod.enum(['NOTHING']),
-});
-
-export const CreateRoomResponse = zod.object({
-  id: zod.uuid(),
-  gameType: zod.enum(['NOTHING']),
-  status: zod.enum(['WAITING', 'IN_GAME']),
-  ownerId: zod.uuid().nullish(),
-  minPlayers: zod.int(),
-  maxPlayers: zod.int(),
-  members: zod.array(
-    zod.object({
-      userId: zod.uuid(),
-      nickname: zod.string().nullish(),
-      avatar: zod
-        .union([zod.literal('CAT'), zod.literal('DOG'), zod.literal(null)])
-        .nullish(),
-      role: zod.enum(['PLAYER', 'SPECTATOR']),
-      owner: zod.boolean(),
-      joinedAt: zod.iso.datetime({offset: true}),
-    }),
-  ),
-  session: zod
-    .union([
-      zod.object({
-        id: zod.uuid(),
-        status: zod.enum(['IN_PROGRESS', 'FINISHED', 'CANCELLED']),
-        players: zod.array(zod.uuid()),
-        version: zod.int(),
-        state: zod.record(zod.string(), zod.unknown()),
-      }),
-      zod.null(),
-    ])
-    .optional(),
-  createdAt: zod.iso.datetime({offset: true}),
 });
 
 /**
@@ -184,6 +230,7 @@ export const StartSessionResponse = zod.object({
         .nullish(),
       role: zod.enum(['PLAYER', 'SPECTATOR']),
       owner: zod.boolean(),
+      leaving: zod.boolean(),
       joinedAt: zod.iso.datetime({offset: true}),
     }),
   ),
@@ -195,15 +242,30 @@ export const StartSessionResponse = zod.object({
         players: zod.array(zod.uuid()),
         version: zod.int(),
         state: zod.record(zod.string(), zod.unknown()),
+        moveDeadline: zod.iso.datetime({offset: true}).nullish(),
+        pausedAt: zod.iso.datetime({offset: true}).nullish(),
       }),
       zod.null(),
     ])
     .optional(),
   createdAt: zod.iso.datetime({offset: true}),
+  settings: zod.object({
+    timeControl: zod.object({
+      mode: zod.enum(['NONE', 'PER_MOVE']),
+      moveSeconds: zod.int().nullish(),
+    }),
+    gameSettings: zod
+      .object({
+        gameType: zod.enum(['NOTHING']),
+        rounds: zod.int(),
+      })
+      .describe('Настройки конкретной игры, вид — по полю gameType'),
+  }),
+  serverTime: zod.iso.datetime({offset: true}),
 });
 
 /**
- * Завершает идущую партию без результата и возвращает комнату в ожидание. Только владелец.
+ * Завершает идущую партию без результата и возвращает комнату в ожидание. Работает и на паузе. Только владелец.
  * @summary Отменить партию
  */
 export const CancelSessionParams = zod.object({
@@ -226,6 +288,7 @@ export const CancelSessionResponse = zod.object({
         .nullish(),
       role: zod.enum(['PLAYER', 'SPECTATOR']),
       owner: zod.boolean(),
+      leaving: zod.boolean(),
       joinedAt: zod.iso.datetime({offset: true}),
     }),
   ),
@@ -237,15 +300,146 @@ export const CancelSessionResponse = zod.object({
         players: zod.array(zod.uuid()),
         version: zod.int(),
         state: zod.record(zod.string(), zod.unknown()),
+        moveDeadline: zod.iso.datetime({offset: true}).nullish(),
+        pausedAt: zod.iso.datetime({offset: true}).nullish(),
       }),
       zod.null(),
     ])
     .optional(),
   createdAt: zod.iso.datetime({offset: true}),
+  settings: zod.object({
+    timeControl: zod.object({
+      mode: zod.enum(['NONE', 'PER_MOVE']),
+      moveSeconds: zod.int().nullish(),
+    }),
+    gameSettings: zod
+      .object({
+        gameType: zod.enum(['NOTHING']),
+        rounds: zod.int(),
+      })
+      .describe('Настройки конкретной игры, вид — по полю gameType'),
+  }),
+  serverTime: zod.iso.datetime({offset: true}),
 });
 
 /**
- * Выйти можно всегда. Игрок идущей партии сохраняет место и может вернуться. Если вышел владелец, владение переходит к самому раннему из оставшихся: сначала игроки, затем наблюдатели. Пустая комната удаляется автоматически через 30 минут.
+ * Снимает паузу. Время хода и сроки возвращения вышедших игроков партии сдвигаются на длительность паузы: остаётся столько же времени, сколько было в момент паузы. Только владелец. Без паузы вызов ничего не меняет.
+ * @summary Продолжить партию
+ */
+export const ResumeSessionParams = zod.object({
+  roomId: zod.uuid(),
+});
+
+export const ResumeSessionResponse = zod.object({
+  id: zod.uuid(),
+  gameType: zod.enum(['NOTHING']),
+  status: zod.enum(['WAITING', 'IN_GAME']),
+  ownerId: zod.uuid().nullish(),
+  minPlayers: zod.int(),
+  maxPlayers: zod.int(),
+  members: zod.array(
+    zod.object({
+      userId: zod.uuid(),
+      nickname: zod.string().nullish(),
+      avatar: zod
+        .union([zod.literal('CAT'), zod.literal('DOG'), zod.literal(null)])
+        .nullish(),
+      role: zod.enum(['PLAYER', 'SPECTATOR']),
+      owner: zod.boolean(),
+      leaving: zod.boolean(),
+      joinedAt: zod.iso.datetime({offset: true}),
+    }),
+  ),
+  session: zod
+    .union([
+      zod.object({
+        id: zod.uuid(),
+        status: zod.enum(['IN_PROGRESS', 'FINISHED', 'CANCELLED']),
+        players: zod.array(zod.uuid()),
+        version: zod.int(),
+        state: zod.record(zod.string(), zod.unknown()),
+        moveDeadline: zod.iso.datetime({offset: true}).nullish(),
+        pausedAt: zod.iso.datetime({offset: true}).nullish(),
+      }),
+      zod.null(),
+    ])
+    .optional(),
+  createdAt: zod.iso.datetime({offset: true}),
+  settings: zod.object({
+    timeControl: zod.object({
+      mode: zod.enum(['NONE', 'PER_MOVE']),
+      moveSeconds: zod.int().nullish(),
+    }),
+    gameSettings: zod
+      .object({
+        gameType: zod.enum(['NOTHING']),
+        rounds: zod.int(),
+      })
+      .describe('Настройки конкретной игры, вид — по полю gameType'),
+  }),
+  serverTime: zod.iso.datetime({offset: true}),
+});
+
+/**
+ * Замораживает идущую партию: ходы запрещены, время хода и сроки возвращения вышедших игроков партии не идут (session.pausedAt; остаток времени хода — moveDeadline − pausedAt). Вход, выход и отмена партии работают. Только владелец. Повторный вызов на паузе ничего не меняет.
+ * @summary Поставить партию на паузу
+ */
+export const PauseSessionParams = zod.object({
+  roomId: zod.uuid(),
+});
+
+export const PauseSessionResponse = zod.object({
+  id: zod.uuid(),
+  gameType: zod.enum(['NOTHING']),
+  status: zod.enum(['WAITING', 'IN_GAME']),
+  ownerId: zod.uuid().nullish(),
+  minPlayers: zod.int(),
+  maxPlayers: zod.int(),
+  members: zod.array(
+    zod.object({
+      userId: zod.uuid(),
+      nickname: zod.string().nullish(),
+      avatar: zod
+        .union([zod.literal('CAT'), zod.literal('DOG'), zod.literal(null)])
+        .nullish(),
+      role: zod.enum(['PLAYER', 'SPECTATOR']),
+      owner: zod.boolean(),
+      leaving: zod.boolean(),
+      joinedAt: zod.iso.datetime({offset: true}),
+    }),
+  ),
+  session: zod
+    .union([
+      zod.object({
+        id: zod.uuid(),
+        status: zod.enum(['IN_PROGRESS', 'FINISHED', 'CANCELLED']),
+        players: zod.array(zod.uuid()),
+        version: zod.int(),
+        state: zod.record(zod.string(), zod.unknown()),
+        moveDeadline: zod.iso.datetime({offset: true}).nullish(),
+        pausedAt: zod.iso.datetime({offset: true}).nullish(),
+      }),
+      zod.null(),
+    ])
+    .optional(),
+  createdAt: zod.iso.datetime({offset: true}),
+  settings: zod.object({
+    timeControl: zod.object({
+      mode: zod.enum(['NONE', 'PER_MOVE']),
+      moveSeconds: zod.int().nullish(),
+    }),
+    gameSettings: zod
+      .object({
+        gameType: zod.enum(['NOTHING']),
+        rounds: zod.int(),
+      })
+      .describe('Настройки конкретной игры, вид — по полю gameType'),
+  }),
+  serverTime: zod.iso.datetime({offset: true}),
+});
+
+/**
+ * Выйти можно всегда, но выход отложенный: участник помечается уходящим (leaving) и до истечения срока сохраняет роль, место и владение, а вход в комнату в пределах срока отменяет выход. Срок: игроку идущей партии его задаёт игра (в «игре в ничто» 30 с, на паузе отсчёт заморожен), владельцу вне игры — 5 с, остальным — 1 с. По истечении срока участник удаляется: игрок идущей партии сохраняет место и может вернуться, владение переходит к самому раннему из оставшихся: сначала к присутствующим, к уходящим — только если присутствующих нет; в каждой группе сначала игроки, затем наблюдатели. Пустая комната удаляется автоматически через 30 минут. Повторный выход срок не продлевает.
  * @summary Выйти из комнаты
  */
 export const LeaveRoomParams = zod.object({
@@ -255,7 +449,7 @@ export const LeaveRoomParams = zod.object({
 export const LeaveRoomResponse = zod.unknown();
 
 /**
- * Игрок идущей партии возвращается на своё место. Иначе, если партия не идёт и есть свободное место, пользователь становится игроком, в остальных случаях — наблюдателем. В пустой комнате вошедший становится владельцем. Повторный вход ничего не меняет.
+ * Игрок идущей партии возвращается на своё место. Иначе, если партия не идёт и есть свободное место, пользователь становится игроком, в остальных случаях — наблюдателем. В пустой комнате вошедший становится владельцем. Вход вышедшего участника, пока не истёк срок выхода, отменяет выход: роль и владение сохраняются. Повторный вход ничего не меняет.
  * @summary Войти в комнату
  */
 export const JoinRoomParams = zod.object({
@@ -278,6 +472,7 @@ export const JoinRoomResponse = zod.object({
         .nullish(),
       role: zod.enum(['PLAYER', 'SPECTATOR']),
       owner: zod.boolean(),
+      leaving: zod.boolean(),
       joinedAt: zod.iso.datetime({offset: true}),
     }),
   ),
@@ -289,15 +484,103 @@ export const JoinRoomResponse = zod.object({
         players: zod.array(zod.uuid()),
         version: zod.int(),
         state: zod.record(zod.string(), zod.unknown()),
+        moveDeadline: zod.iso.datetime({offset: true}).nullish(),
+        pausedAt: zod.iso.datetime({offset: true}).nullish(),
       }),
       zod.null(),
     ])
     .optional(),
   createdAt: zod.iso.datetime({offset: true}),
+  settings: zod.object({
+    timeControl: zod.object({
+      mode: zod.enum(['NONE', 'PER_MOVE']),
+      moveSeconds: zod.int().nullish(),
+    }),
+    gameSettings: zod
+      .object({
+        gameType: zod.enum(['NOTHING']),
+        rounds: zod.int(),
+      })
+      .describe('Настройки конкретной игры, вид — по полю gameType'),
+  }),
+  serverTime: zod.iso.datetime({offset: true}),
 });
 
 /**
- * Ручка одна на все игры: код игры — в пути, ход — общий конверт `{type, data}`. `type` — вид действия (`PASS` в «игре в ничто»), `data` — его параметры в формате игры. Код игры должен совпадать с игрой комнаты. Ходить может только игрок партии, находящийся в комнате. Когда партия заканчивается, комната возвращается в ожидание, а законченная партия остаётся в ответе.
+ * Создаёт комнату под игру из пути с заданными настройками: правила времени и настройки игры. Создатель становится владельцем и первым игроком, ссылку на комнату (её id) можно отправить другим игрокам. Границы настроек и значения по умолчанию — в параметрах игры (GET /api/games/{gameCode}). Ошибки настроек отдаются по полям тела (например, settings.gameSettings.rounds), как у валидации запроса.
+ * @summary Создать комнату
+ */
+export const CreateRoomParams = zod.object({
+  gameCode: zod.enum(['nothing']).describe('Код игры'),
+});
+
+export const CreateRoomBody = zod.object({
+  settings: zod.object({
+    timeControl: zod.object({
+      mode: zod.enum(['NONE', 'PER_MOVE']),
+      moveSeconds: zod.int().nullish(),
+    }),
+    gameSettings: zod
+      .object({
+        gameType: zod.enum(['NOTHING']),
+        rounds: zod.int(),
+      })
+      .describe('Настройки конкретной игры, вид — по полю gameType'),
+  }),
+});
+
+export const CreateRoomResponse = zod.object({
+  id: zod.uuid(),
+  gameType: zod.enum(['NOTHING']),
+  status: zod.enum(['WAITING', 'IN_GAME']),
+  ownerId: zod.uuid().nullish(),
+  minPlayers: zod.int(),
+  maxPlayers: zod.int(),
+  members: zod.array(
+    zod.object({
+      userId: zod.uuid(),
+      nickname: zod.string().nullish(),
+      avatar: zod
+        .union([zod.literal('CAT'), zod.literal('DOG'), zod.literal(null)])
+        .nullish(),
+      role: zod.enum(['PLAYER', 'SPECTATOR']),
+      owner: zod.boolean(),
+      leaving: zod.boolean(),
+      joinedAt: zod.iso.datetime({offset: true}),
+    }),
+  ),
+  session: zod
+    .union([
+      zod.object({
+        id: zod.uuid(),
+        status: zod.enum(['IN_PROGRESS', 'FINISHED', 'CANCELLED']),
+        players: zod.array(zod.uuid()),
+        version: zod.int(),
+        state: zod.record(zod.string(), zod.unknown()),
+        moveDeadline: zod.iso.datetime({offset: true}).nullish(),
+        pausedAt: zod.iso.datetime({offset: true}).nullish(),
+      }),
+      zod.null(),
+    ])
+    .optional(),
+  createdAt: zod.iso.datetime({offset: true}),
+  settings: zod.object({
+    timeControl: zod.object({
+      mode: zod.enum(['NONE', 'PER_MOVE']),
+      moveSeconds: zod.int().nullish(),
+    }),
+    gameSettings: zod
+      .object({
+        gameType: zod.enum(['NOTHING']),
+        rounds: zod.int(),
+      })
+      .describe('Настройки конкретной игры, вид — по полю gameType'),
+  }),
+  serverTime: zod.iso.datetime({offset: true}),
+});
+
+/**
+ * Ручка одна на все игры: код игры — в пути, ход — общий конверт `{type, data}`. `type` — вид действия (`PASS` в «игре в ничто»), `data` — его параметры в формате игры. Код игры должен совпадать с игрой комнаты. Ходить может только игрок партии, находящийся в комнате. Если у партии есть таймер, ход переставляет дедлайн (session.moveDeadline). Когда партия заканчивается, комната возвращается в ожидание, а законченная партия остаётся в ответе.
  * @summary Сделать ход
  */
 export const MakeMoveParams = zod.object({
@@ -327,6 +610,7 @@ export const MakeMoveResponse = zod.object({
         .nullish(),
       role: zod.enum(['PLAYER', 'SPECTATOR']),
       owner: zod.boolean(),
+      leaving: zod.boolean(),
       joinedAt: zod.iso.datetime({offset: true}),
     }),
   ),
@@ -338,11 +622,26 @@ export const MakeMoveResponse = zod.object({
         players: zod.array(zod.uuid()),
         version: zod.int(),
         state: zod.record(zod.string(), zod.unknown()),
+        moveDeadline: zod.iso.datetime({offset: true}).nullish(),
+        pausedAt: zod.iso.datetime({offset: true}).nullish(),
       }),
       zod.null(),
     ])
     .optional(),
   createdAt: zod.iso.datetime({offset: true}),
+  settings: zod.object({
+    timeControl: zod.object({
+      mode: zod.enum(['NONE', 'PER_MOVE']),
+      moveSeconds: zod.int().nullish(),
+    }),
+    gameSettings: zod
+      .object({
+        gameType: zod.enum(['NOTHING']),
+        rounds: zod.int(),
+      })
+      .describe('Настройки конкретной игры, вид — по полю gameType'),
+  }),
+  serverTime: zod.iso.datetime({offset: true}),
 });
 
 /**
@@ -516,7 +815,7 @@ export const GetCurrentUserResponse = zod.object({
 });
 
 /**
- * Участники с ролями, владелец, текущая или последняя партия. Доступно и до входа в комнату — так страница по ссылке показывает комнату перед кнопкой «Войти».
+ * Участники с ролями, владелец, текущая или последняя партия. Доступно и до входа в комнату — так страница по ссылке показывает комнату ещё до входа.
  * @summary Получить комнату
  */
 export const GetRoomParams = zod.object({
@@ -539,6 +838,7 @@ export const GetRoomResponse = zod.object({
         .nullish(),
       role: zod.enum(['PLAYER', 'SPECTATOR']),
       owner: zod.boolean(),
+      leaving: zod.boolean(),
       joinedAt: zod.iso.datetime({offset: true}),
     }),
   ),
@@ -550,11 +850,26 @@ export const GetRoomResponse = zod.object({
         players: zod.array(zod.uuid()),
         version: zod.int(),
         state: zod.record(zod.string(), zod.unknown()),
+        moveDeadline: zod.iso.datetime({offset: true}).nullish(),
+        pausedAt: zod.iso.datetime({offset: true}).nullish(),
       }),
       zod.null(),
     ])
     .optional(),
   createdAt: zod.iso.datetime({offset: true}),
+  settings: zod.object({
+    timeControl: zod.object({
+      mode: zod.enum(['NONE', 'PER_MOVE']),
+      moveSeconds: zod.int().nullish(),
+    }),
+    gameSettings: zod
+      .object({
+        gameType: zod.enum(['NOTHING']),
+        rounds: zod.int(),
+      })
+      .describe('Настройки конкретной игры, вид — по полю gameType'),
+  }),
+  serverTime: zod.iso.datetime({offset: true}),
 });
 
 /**
@@ -566,3 +881,45 @@ export const DeleteRoomParams = zod.object({
 });
 
 export const DeleteRoomResponse = zod.unknown();
+
+/**
+ * Число игроков, поддерживаемые режимы времени и границы времени на ход, границы настроек игры и настройки по умолчанию. По ним строится форма создания комнаты и смены настроек.
+ * @summary Параметры игры
+ */
+export const GetGameParams = zod.object({
+  gameCode: zod.enum(['nothing']).describe('Код игры'),
+});
+
+export const GetGameResponse = zod.object({
+  gameType: zod.enum(['NOTHING']),
+  minPlayers: zod.int(),
+  maxPlayers: zod.int(),
+  timeControl: zod.object({
+    modes: zod.array(zod.enum(['NONE', 'PER_MOVE'])),
+    moveSeconds: zod.object({
+      min: zod.int(),
+      max: zod.int(),
+    }),
+  }),
+  gameSettingsLimits: zod
+    .object({
+      gameType: zod.enum(['NOTHING']),
+      rounds: zod.object({
+        min: zod.int(),
+        max: zod.int(),
+      }),
+    })
+    .describe('Границы настроек конкретной игры, вид — по полю gameType'),
+  defaultSettings: zod.object({
+    timeControl: zod.object({
+      mode: zod.enum(['NONE', 'PER_MOVE']),
+      moveSeconds: zod.int().nullish(),
+    }),
+    gameSettings: zod
+      .object({
+        gameType: zod.enum(['NOTHING']),
+        rounds: zod.int(),
+      })
+      .describe('Настройки конкретной игры, вид — по полю gameType'),
+  }),
+});

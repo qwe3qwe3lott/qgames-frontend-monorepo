@@ -1,14 +1,21 @@
 import {GameOver} from '@qgames/game-ui/components/game-over';
 import {PlayerList} from '@qgames/game-ui/components/player-list';
 import {TurnIndicator} from '@qgames/game-ui/components/turn-indicator';
+import {TurnTimer} from '@qgames/game-ui/components/turn-timer';
 import {Button} from '@qgames/ui/components/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@qgames/ui/components/tooltip';
 
 import {nothingViewSchema, PASS_MOVE} from '../state';
 import type {BoardPlayer, BoardProps} from '../types';
 
 const UNKNOWN_PLAYER_NAME = 'Игрок';
+const PAUSED_HINT = 'Партия на паузе';
 
-/** Доска «Игры в ничто»: игроки по очереди завершают ход, N кругов. */
+/** Доска «Игры в ничто»: игроки по очереди завершают ход, N раундов; при таймере — обратный отсчёт хода. */
 export function Board({
   session,
   players,
@@ -41,7 +48,7 @@ export function Board({
           description={
             session.status === 'CANCELLED'
               ? undefined
-              : `Сыграно кругов: ${String(view.rounds)}. В этой игре не бывает победителей.`
+              : `Сыграно раундов: ${String(view.rounds)}. В этой игре не бывает победителей.`
           }
         />
         <PlayerList players={sessionPlayers} title="Участники партии" />
@@ -50,28 +57,63 @@ export function Board({
   }
 
   const myTurn = view.currentPlayer === viewerId;
+  const paused = session.pausedAt !== null;
+  const passButton = (
+    <Button
+      disabled={paused || !myTurn || movePending}
+      onClick={() => {
+        onMove(PASS_MOVE);
+      }}
+    >
+      Завершить ход
+    </Button>
+  );
   return (
     <div className="flex flex-col gap-4">
-      <TurnIndicator
-        round={view.round}
-        totalRounds={view.rounds}
-        playerName={current?.name ?? UNKNOWN_PLAYER_NAME}
-      />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <TurnIndicator
+          round={view.round}
+          totalRounds={view.rounds}
+          playerName={current?.name ?? UNKNOWN_PLAYER_NAME}
+        />
+        <div className="flex items-center gap-2">
+          {paused ? (
+            <span
+              role="status"
+              className="rounded-md bg-muted px-2 py-1 text-sm font-medium text-muted-foreground"
+            >
+              Пауза
+            </span>
+          ) : null}
+          {session.moveDeadline === null ? null : (
+            <TurnTimer
+              deadline={session.moveDeadline}
+              clockOffsetMs={session.clockOffsetMs}
+              pausedAt={session.pausedAt}
+            />
+          )}
+        </div>
+      </div>
       <PlayerList
         players={sessionPlayers}
         activePlayerId={view.currentPlayer}
         title="Порядок ходов"
       />
       <div className="flex items-center gap-3">
-        <Button
-          disabled={!myTurn || movePending}
-          onClick={() => {
-            onMove(PASS_MOVE);
-          }}
-        >
-          Завершить ход
-        </Button>
-        {myTurn ? null : (
+        {paused ? (
+          // Заблокированная кнопка не получает событий мыши: триггер — обёртка.
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-flex" tabIndex={0}>
+                {passButton}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>{PAUSED_HINT}</TooltipContent>
+          </Tooltip>
+        ) : (
+          passButton
+        )}
+        {paused || myTurn ? null : (
           <span className="text-sm text-muted-foreground">
             Ждём хода другого игрока
           </span>

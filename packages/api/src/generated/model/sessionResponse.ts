@@ -13,4 +13,8 @@ export interface SessionResponse {
   players: string[];
   version: number;
   state: SessionResponseState;
+  /** @nullable */
+  moveDeadline?: string | null;
+  /** @nullable */
+  pausedAt?: string | null;
 }

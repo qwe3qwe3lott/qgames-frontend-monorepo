@@ -82,4 +82,22 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Курсоры у всех интерактивных элементов, в том числе у компонентов shadcn. */
+  button,
+  [role='button'],
+  [type='button'],
+  [type='submit'],
+  [type='reset'],
+  [type='checkbox'],
+  [type='radio'],
+  select,
+  summary {
+    cursor: pointer;
+  }
+
+  :disabled,
+  [aria-disabled='true'] {
+    cursor: not-allowed;
+  }
 }

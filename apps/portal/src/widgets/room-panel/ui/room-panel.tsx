@@ -8,12 +8,14 @@ import type {GameInfo} from '@/entities/game';
 import {
   memberName,
   ROOM_STATUS_LABELS,
+  roomSettingsRows,
   type Membership,
   type RoomMemberView,
   type RoomView,
 } from '@/entities/room';
 import {DeleteRoomButton} from '@/features/delete-room';
-import {MembershipActions} from '@/features/room-membership';
+import {RoomSettingsDialog} from '@/features/edit-room-settings';
+import {ChangeRoleButton} from '@/features/room-membership';
 import {SessionActions} from '@/features/room-session';
 
 export interface RoomPanelProps {
@@ -31,6 +33,9 @@ function toListItem(member: RoomMemberView, viewerId: string): PlayerListItem {
   if (member.owner) {
     badges.push('Владелец');
   }
+  if (member.leaving) {
+    badges.push('отошёл');
+  }
   return {
     id: member.userId,
     name: memberName(member),
@@ -39,7 +44,7 @@ function toListItem(member: RoomMemberView, viewerId: string): PlayerListItem {
   };
 }
 
-/** Описание комнаты, участники по ролям и действия пользователя. */
+/** Описание и настройки комнаты, участники по ролям и действия пользователя. */
 export function RoomPanel({game, room, membership, viewerId}: RoomPanelProps) {
   const players = room.members.filter(m => m.role === 'PLAYER');
   const spectators = room.members.filter(m => m.role === 'SPECTATOR');
@@ -52,10 +57,17 @@ export function RoomPanel({game, room, membership, viewerId}: RoomPanelProps) {
         playersCount={membership.playersCount}
         minPlayers={room.minPlayers}
         maxPlayers={room.maxPlayers}
+        rows={roomSettingsRows(room.settings)}
         actions={
           <>
-            <MembershipActions room={room} membership={membership} />
             <SessionActions room={room} membership={membership} />
+            {game.api === null ? null : (
+              <RoomSettingsDialog
+                api={game.api}
+                room={room}
+                membership={membership}
+              />
+            )}
             <DeleteRoomButton
               room={room}
               membership={membership}
@@ -66,14 +78,22 @@ export function RoomPanel({game, room, membership, viewerId}: RoomPanelProps) {
       />
       <PlayerList
         players={players.map(m => toListItem(m, viewerId))}
-        title="Игроки"
+        title={`Игроки (${String(players.length)}/${String(room.maxPlayers)})`}
+        action={
+          <ChangeRoleButton room={room} membership={membership} role="PLAYER" />
+        }
       />
-      {spectators.length === 0 ? null : (
-        <PlayerList
-          players={spectators.map(m => toListItem(m, viewerId))}
-          title="Наблюдатели"
-        />
-      )}
+      <PlayerList
+        players={spectators.map(m => toListItem(m, viewerId))}
+        title="Наблюдатели"
+        action={
+          <ChangeRoleButton
+            room={room}
+            membership={membership}
+            role="SPECTATOR"
+          />
+        }
+      />
     </aside>
   );
 }
