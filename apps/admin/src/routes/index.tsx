@@ -1,7 +1,8 @@
-import {createFileRoute} from '@tanstack/react-router';
+import {createFileRoute, redirect} from '@tanstack/react-router';
 
-import {HomePage} from '@/pages/home';
-
+/** Своей главной у админки нет — сразу список администраторов. */
 export const Route = createFileRoute('/')({
-  component: HomePage,
+  beforeLoad: () => {
+    throw redirect({to: '/admins'});
+  },
 });

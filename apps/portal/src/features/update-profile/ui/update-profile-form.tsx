@@ -1,4 +1,5 @@
 import {zodResolver} from '@hookform/resolvers/zod';
+import {applyFieldErrors, errorMessage} from '@qgames/api';
 import {getGetCurrentUserQueryKey, useUpdateProfile} from '@qgames/api/gateway';
 import type {UpdateProfileRequest} from '@qgames/api/gateway/model';
 import {Button} from '@qgames/ui/components/button';
@@ -16,7 +17,6 @@ import {useState} from 'react';
 import {Controller, useForm} from 'react-hook-form';
 
 import {AvatarPicker} from '@/entities/user';
-import {applyFieldErrors, errorMessage} from '@/shared/lib';
 
 import {updateProfileSchema, type UpdateProfileValues} from '../model/schema';
 

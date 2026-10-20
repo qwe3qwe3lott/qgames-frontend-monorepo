@@ -1,3 +1,4 @@
+import {errorMessage} from '@qgames/api';
 import {useListGames} from '@qgames/api/gateway';
 import type {GameSummaryDto} from '@qgames/api/gateway/model';
 import {Button} from '@qgames/ui/components/button';
@@ -10,7 +11,6 @@ import {
 import {cn} from '@qgames/ui/lib/utils';
 import {Link} from '@tanstack/react-router';
 
-import {errorMessage} from '@/shared/lib';
 import {PageLayout} from '@/shared/ui';
 
 /** DISABLED-игра бледная, с пометкой и без перехода к созданию комнаты. */

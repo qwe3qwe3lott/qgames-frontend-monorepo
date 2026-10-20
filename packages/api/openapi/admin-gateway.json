@@ -1,0 +1,349 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "OpenAPI definition",
+    "version": "v0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8083",
+      "description": "Generated server url"
+    }
+  ],
+  "tags": [
+    {
+      "description": "Текущий администратор и список всех администраторов. Требуется аутентификация: кука admin_access_token (или заголовок Authorization: Bearer).",
+      "name": "Администраторы"
+    },
+    {
+      "description": "Вход и выход администратора. Регистрации нет. Токены выдаются только в HttpOnly-куках admin_access_token и admin_refresh_token, в теле ответа их нет.",
+      "name": "Аутентификация"
+    }
+  ],
+  "paths": {
+    "/api/admins": {
+      "get": {
+        "description": "Все администраторы по возрастанию даты создания, при равенстве — по id. Ролей нет, все администраторы равны.",
+        "operationId": "getAdmins",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminListResponse"
+                }
+              }
+            },
+            "description": "Список администраторов"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Нет access-токена, он истёк или недействителен (UNAUTHENTICATED) — нужно вызвать /api/auth/refresh"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Сервис аутентификации недоступен (SERVICE_UNAVAILABLE)"
+          }
+        },
+        "summary": "Список администраторов",
+        "tags": [
+          "Администраторы"
+        ]
+      }
+    },
+    "/api/admins/me": {
+      "get": {
+        "description": "Данные администратора текущей сессии. Подходит, чтобы проверить, залогинен ли администратор.",
+        "operationId": "getCurrentAdmin",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminResponse"
+                }
+              }
+            },
+            "description": "Данные администратора"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Нет access-токена, он истёк или недействителен (UNAUTHENTICATED) — нужно вызвать /api/auth/refresh"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Администратор не найден (ADMIN_NOT_FOUND)"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Сервис аутентификации недоступен (SERVICE_UNAVAILABLE)"
+          }
+        },
+        "summary": "Текущий администратор",
+        "tags": [
+          "Администраторы"
+        ]
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "description": "Открывает сессию администратора: ставит куки admin_access_token (5 минут) и admin_refresh_token (15 минут, продлевается при каждом обновлении сессии). Логин сравнивается точно, с учётом регистра и без обрезки пробелов.",
+        "operationId": "login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminLoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminResponse"
+                }
+              }
+            },
+            "description": "Вход выполнен, возвращены данные администратора"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Невалидный запрос (VALIDATION_ERROR)"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Неверный логин или пароль (INVALID_CREDENTIALS)"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Сервис аутентификации недоступен (SERVICE_UNAVAILABLE)"
+          }
+        },
+        "summary": "Вход по логину и паролю",
+        "tags": [
+          "Аутентификация"
+        ]
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "description": "Отзывает сессию по куке admin_refresh_token и удаляет обе куки. Без куки просто удаляет куки.",
+        "operationId": "logout",
+        "responses": {
+          "200": {
+            "description": "Сессия завершена, куки удалены"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Сервис аутентификации недоступен (SERVICE_UNAVAILABLE)"
+          }
+        },
+        "summary": "Выход",
+        "tags": [
+          "Аутентификация"
+        ]
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "description": "Берёт refresh-токен из куки admin_refresh_token и ставит новые куки; новый refresh-токен снова действует 15 минут. Вызывать, когда access-токен истёк (защищённые ручки ответили 401). Параллельные вызовы из нескольких вкладок в течение 10 секунд допустимы. При ошибке обе куки удаляются.",
+        "operationId": "refresh",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminResponse"
+                }
+              }
+            },
+            "description": "Сессия продлена, возвращены данные администратора"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Куки нет, токен неизвестен или истёк (INVALID_REFRESH_TOKEN); токен уже использован, сессия отозвана (REFRESH_TOKEN_REUSED)"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Сервис аутентификации недоступен (SERVICE_UNAVAILABLE)"
+          }
+        },
+        "summary": "Обновление сессии",
+        "tags": [
+          "Аутентификация"
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AdminListResponse": {
+        "type": "object",
+        "properties": {
+          "admins": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminResponse"
+            }
+          }
+        },
+        "required": [
+          "admins"
+        ]
+      },
+      "AdminLoginRequest": {
+        "type": "object",
+        "properties": {
+          "login": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1
+          }
+        },
+        "required": [
+          "login",
+          "password"
+        ]
+      },
+      "AdminResponse": {
+        "type": "object",
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "login": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "createdAt",
+          "id",
+          "login"
+        ]
+      },
+      "ProblemDetail": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Машиночитаемый код ошибки"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Ошибки по полям запроса (у VALIDATION_ERROR): имя поля → сообщение"
+          },
+          "instance": {
+            "type": "string",
+            "format": "uri"
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object"
+            }
+          },
+          "reason": {
+            "type": "string",
+            "description": "Причина отказа правил игры (у MOVE_REJECTED), например NOT_YOUR_TURN"
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "title": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      }
+    }
+  }
+}

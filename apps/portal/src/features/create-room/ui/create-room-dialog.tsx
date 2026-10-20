@@ -1,4 +1,5 @@
 import {zodResolver} from '@hookform/resolvers/zod';
+import {applyFieldErrors} from '@qgames/api';
 import {useCreateRoom} from '@qgames/api/gateway';
 import type {
   GameDetailsResponse,
@@ -38,7 +39,6 @@ import {
   toRoomSettingsValues,
   type RoomSettingsValues,
 } from '@/entities/room';
-import {applyFieldErrors} from '@/shared/lib';
 import {WithHint} from '@/shared/ui';
 
 export interface CreateRoomDialogProps {

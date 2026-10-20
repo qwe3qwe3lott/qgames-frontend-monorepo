@@ -8,7 +8,7 @@
 | `apps/admin`   | Админка (CSR, Rsbuild + TanStack Router)         | 3001 |
 | `apps/landing` | Статический лендинг для SEO (Next.js, Turbopack) | 3002 |
 
-Общие пакеты: `packages/ui` (shadcn/ui + Tailwind), `packages/api` (клиент gateway из OpenAPI, Orval), `packages/config` (TypeScript, ESLint, Stylelint, Prettier), `packages/game-ui` (общий игровой UI), `packages/games/*` (модули игр, каждая — отдельный чанк).
+Общие пакеты: `packages/ui` (shadcn/ui + Tailwind), `packages/api` (клиенты user-gateway и admin-gateway из OpenAPI, Orval), `packages/config` (TypeScript, ESLint, Stylelint, Prettier), `packages/game-ui` (общий игровой UI), `packages/games/*` (модули игр, каждая — отдельный чанк).
 
 ## Запуск
 
@@ -30,7 +30,7 @@ pnpm build          # сборка
 pnpm typecheck      # проверка типов
 pnpm lint           # ESLint + Stylelint
 pnpm format         # Prettier
-pnpm api:fetch      # снять OpenAPI с запущенного gateway
+pnpm api:fetch      # снять OpenAPI с запущенных user-gateway и admin-gateway
 pnpm api:generate   # сгенерировать клиент API
 ```
 
