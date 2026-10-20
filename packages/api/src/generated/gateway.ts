@@ -24,7 +24,8 @@ import type {
   ChangePasswordRequest,
   ChangeRoleRequest,
   CreateRoomRequest,
-  GameInfoResponse,
+  GameDetailsResponse,
+  GameListResponse,
   GoogleIdTokenRequest,
   LoginRequest,
   MoveRequest,
@@ -819,25 +820,157 @@ export const useVerifyEmail = <
   return useMutation(getVerifyEmailMutationOptions(options), queryClient);
 };
 
-export const getGetGameUrl = (gameCode: 'nothing') => {
-  return `/api/games/${gameCode}`;
+export const getListGamesUrl = () => {
+  return `/api/games`;
 };
 
 /**
- * Число игроков, поддерживаемые режимы времени и границы времени на ход, границы настроек игры и настройки по умолчанию. По ним строится форма создания комнаты и смены настроек.
- * @summary Параметры игры
+ * Игры в порядке показа: код, название, описание и статус публикации. Скрытые игры в список не попадают. Игры со статусом DISABLED (временно недоступна) показываются, но создать для них комнату нельзя. Доступна без аутентификации.
+ * @summary Каталог игр
  */
-export const getGame = async (
-  gameCode: 'nothing',
+export const listGames = async (
   options?: Parameters<typeof apiFetch>[1],
-): Promise<GameInfoResponse> => {
-  return apiFetch<GameInfoResponse>(getGetGameUrl(gameCode), {
+): Promise<GameListResponse> => {
+  return apiFetch<GameListResponse>(getListGamesUrl(), {
     ...options,
     method: 'GET',
   });
 };
 
-export const getGetGameQueryKey = (gameCode: 'nothing') => {
+export const getListGamesQueryKey = () => {
+  return [`/api/games`] as const;
+};
+
+export const getListGamesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listGames>>,
+  TError = ErrorType<ProblemDetail>,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<Awaited<ReturnType<typeof listGames>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListGamesQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listGames>>> = ({
+    signal,
+  }) => listGames({signal, ...requestOptions});
+
+  return {queryKey, queryFn, ...queryOptions} as UseQueryOptions<
+    Awaited<ReturnType<typeof listGames>>,
+    TError,
+    TData
+  > & {queryKey: DataTag<QueryKey, TData, TError>};
+};
+
+export type ListGamesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listGames>>
+>;
+export type ListGamesQueryError = ErrorType<ProblemDetail>;
+
+export function useListGames<
+  TData = Awaited<ReturnType<typeof listGames>>,
+  TError = ErrorType<ProblemDetail>,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listGames>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listGames>>,
+          TError,
+          Awaited<ReturnType<typeof listGames>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useListGames<
+  TData = Awaited<ReturnType<typeof listGames>>,
+  TError = ErrorType<ProblemDetail>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listGames>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listGames>>,
+          TError,
+          Awaited<ReturnType<typeof listGames>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {queryKey: DataTag<QueryKey, TData, TError>};
+export function useListGames<
+  TData = Awaited<ReturnType<typeof listGames>>,
+  TError = ErrorType<ProblemDetail>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listGames>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {queryKey: DataTag<QueryKey, TData, TError>};
+/**
+ * @summary Каталог игр
+ */
+
+export function useListGames<
+  TData = Awaited<ReturnType<typeof listGames>>,
+  TError = ErrorType<ProblemDetail>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listGames>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getListGamesQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & {queryKey: DataTag<QueryKey, TData, TError>};
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getGetGameUrl = (gameCode: 'nothing' | 'carcassonne') => {
+  return `/api/games/${gameCode}`;
+};
+
+/**
+ * Название, описание и статус публикации игры, а также параметры правил (rules): число игроков, режимы времени и границы времени на ход, границы настроек игры и настройки по умолчанию. По ним строятся карточка игры и форма создания комнаты и смены настроек. Скрытая игра доступна по прямой ссылке. Доступна без аутентификации.
+ * @summary Игра
+ */
+export const getGame = async (
+  gameCode: 'nothing' | 'carcassonne',
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<GameDetailsResponse> => {
+  return apiFetch<GameDetailsResponse>(getGetGameUrl(gameCode), {
+    ...options,
+    method: 'GET',
+  });
+};
+
+export const getGetGameQueryKey = (gameCode: 'nothing' | 'carcassonne') => {
   return [`/api/games/${gameCode}`] as const;
 };
 
@@ -845,7 +978,7 @@ export const getGetGameQueryOptions = <
   TData = Awaited<ReturnType<typeof getGame>>,
   TError = ErrorType<ProblemDetail>,
 >(
-  gameCode: 'nothing',
+  gameCode: 'nothing' | 'carcassonne',
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof getGame>>, TError, TData>
@@ -880,7 +1013,7 @@ export function useGetGame<
   TData = Awaited<ReturnType<typeof getGame>>,
   TError = ErrorType<ProblemDetail>,
 >(
-  gameCode: 'nothing',
+  gameCode: 'nothing' | 'carcassonne',
   options: {
     query: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof getGame>>, TError, TData>
@@ -903,7 +1036,7 @@ export function useGetGame<
   TData = Awaited<ReturnType<typeof getGame>>,
   TError = ErrorType<ProblemDetail>,
 >(
-  gameCode: 'nothing',
+  gameCode: 'nothing' | 'carcassonne',
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof getGame>>, TError, TData>
@@ -924,7 +1057,7 @@ export function useGetGame<
   TData = Awaited<ReturnType<typeof getGame>>,
   TError = ErrorType<ProblemDetail>,
 >(
-  gameCode: 'nothing',
+  gameCode: 'nothing' | 'carcassonne',
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof getGame>>, TError, TData>
@@ -934,14 +1067,14 @@ export function useGetGame<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & {queryKey: DataTag<QueryKey, TData, TError>};
 /**
- * @summary Параметры игры
+ * @summary Игра
  */
 
 export function useGetGame<
   TData = Awaited<ReturnType<typeof getGame>>,
   TError = ErrorType<ProblemDetail>,
 >(
-  gameCode: 'nothing',
+  gameCode: 'nothing' | 'carcassonne',
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof getGame>>, TError, TData>
@@ -962,16 +1095,16 @@ export function useGetGame<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-export const getCreateRoomUrl = (gameCode: 'nothing') => {
+export const getCreateRoomUrl = (gameCode: 'nothing' | 'carcassonne') => {
   return `/api/games/${gameCode}/rooms`;
 };
 
 /**
- * Создаёт комнату под игру из пути с заданными настройками: правила времени и настройки игры. Создатель становится владельцем и первым игроком, ссылку на комнату (её id) можно отправить другим игрокам. Границы настроек и значения по умолчанию — в параметрах игры (GET /api/games/{gameCode}). Ошибки настроек отдаются по полям тела (например, settings.gameSettings.rounds), как у валидации запроса.
+ * Создаёт комнату под игру из пути с заданными настройками: правила времени и настройки игры. Создатель становится владельцем и первым игроком, ссылку на комнату (её id) можно отправить другим игрокам. Игра должна быть доступна (PUBLISHED или HIDDEN): это проверяется до настроек. Границы настроек и значения по умолчанию — в параметрах игры (GET /api/games/{gameCode}). Ошибки настроек отдаются по полям тела (например, settings.gameSettings.rounds), как у валидации запроса.
  * @summary Создать комнату
  */
 export const createRoom = async (
-  gameCode: 'nothing',
+  gameCode: 'nothing' | 'carcassonne',
   createRoomRequest: CreateRoomRequest,
   options?: Parameters<typeof apiFetch>[1],
 ): Promise<RoomResponse> => {
@@ -1053,7 +1186,7 @@ export type CreateRoomMutationResult = NonNullable<
 export type CreateRoomMutationBody = CreateRoomRequest;
 export type CreateRoomMutationError = ErrorType<ProblemDetail>;
 export type CreateRoomMutationVariables = {
-  gameCode: 'nothing';
+  gameCode: 'nothing' | 'carcassonne';
   data: CreateRoomRequest;
 };
 
@@ -1083,16 +1216,19 @@ export const useCreateRoom = <
   return useMutation(getCreateRoomMutationOptions(options), queryClient);
 };
 
-export const getMakeMoveUrl = (gameCode: 'nothing', roomId: string) => {
+export const getMakeMoveUrl = (
+  gameCode: 'nothing' | 'carcassonne',
+  roomId: string,
+) => {
   return `/api/games/${gameCode}/rooms/${roomId}/moves`;
 };
 
 /**
- * Ручка одна на все игры: код игры — в пути, ход — общий конверт `{type, data}`. `type` — вид действия (`PASS` в «игре в ничто»), `data` — его параметры в формате игры. Код игры должен совпадать с игрой комнаты. Ходить может только игрок партии, находящийся в комнате. Если у партии есть таймер, ход переставляет дедлайн (session.moveDeadline). Когда партия заканчивается, комната возвращается в ожидание, а законченная партия остаётся в ответе.
+ * Ручка одна на все игры: код игры — в пути, ход — общий конверт `{type, data}`. `type` — вид действия (`PASS` в «игре в ничто»), `data` — его параметры в формате игры. Код игры должен совпадать с игрой комнаты. Ходить может только игрок партии, находящийся в комнате. Если у партии есть таймер, ход переставляет дедлайн (session.moveDeadline). Когда партия заканчивается, комната возвращается в ожидание, а законченная партия остаётся в ответе. Идущая партия продолжается, даже если игра стала временно недоступной.
  * @summary Сделать ход
  */
 export const makeMove = async (
-  gameCode: 'nothing',
+  gameCode: 'nothing' | 'carcassonne',
   roomId: string,
   moveRequest: MoveRequest,
   options?: Parameters<typeof apiFetch>[1],
@@ -1175,7 +1311,7 @@ export type MakeMoveMutationResult = NonNullable<
 export type MakeMoveMutationBody = MoveRequest;
 export type MakeMoveMutationError = ErrorType<ProblemDetail>;
 export type MakeMoveMutationVariables = {
-  gameCode: 'nothing';
+  gameCode: 'nothing' | 'carcassonne';
   roomId: string;
   data: MoveRequest;
 };
@@ -1207,7 +1343,7 @@ export const useMakeMove = <
 };
 
 export const getUpdateRoomSettingsUrl = (
-  gameCode: 'nothing',
+  gameCode: 'nothing' | 'carcassonne',
   roomId: string,
 ) => {
   return `/api/games/${gameCode}/rooms/${roomId}/settings`;
@@ -1218,7 +1354,7 @@ export const getUpdateRoomSettingsUrl = (
  * @summary Изменить настройки комнаты
  */
 export const updateRoomSettings = async (
-  gameCode: 'nothing',
+  gameCode: 'nothing' | 'carcassonne',
   roomId: string,
   roomSettingsDto: RoomSettingsDto,
   options?: Parameters<typeof apiFetch>[1],
@@ -1302,7 +1438,7 @@ export type UpdateRoomSettingsMutationResult = NonNullable<
 export type UpdateRoomSettingsMutationBody = RoomSettingsDto;
 export type UpdateRoomSettingsMutationError = ErrorType<ProblemDetail>;
 export type UpdateRoomSettingsMutationVariables = {
-  gameCode: 'nothing';
+  gameCode: 'nothing' | 'carcassonne';
   roomId: string;
   data: RoomSettingsDto;
 };
@@ -1878,7 +2014,7 @@ export const getStartSessionUrl = (roomId: string) => {
 };
 
 /**
- * Стартует партию с текущими игроками комнаты (места — по порядку входа). Только владелец, число игроков должно укладываться в ограничения игры (minPlayers–maxPlayers).
+ * Стартует партию с текущими игроками комнаты (места — по порядку входа). Только владелец, число игроков должно укладываться в ограничения игры (minPlayers–maxPlayers). Игра должна быть доступна (PUBLISHED или HIDDEN).
  * @summary Начать партию
  */
 export const startSession = async (

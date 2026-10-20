@@ -10,9 +10,7 @@ export function HomePage() {
       description="Настольные игры онлайн: создайте комнату и пригласите друзей."
     >
       <Button asChild className="self-start">
-        <Link to="/games/$gameCode/rooms" params={{gameCode: 'nothing'}}>
-          Сыграть в «Игру в ничто»
-        </Link>
+        <Link to="/games">Выбрать игру</Link>
       </Button>
     </PageLayout>
   );

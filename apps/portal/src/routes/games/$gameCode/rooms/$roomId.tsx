@@ -1,9 +1,11 @@
 import {isApiError} from '@qgames/api';
-import {getGetRoomQueryOptions} from '@qgames/api/gateway';
+import {
+  getGetGameQueryOptions,
+  getGetRoomQueryOptions,
+} from '@qgames/api/gateway';
 import {createFileRoute, notFound} from '@tanstack/react-router';
 import {z} from 'zod';
 
-import {gameByType} from '@/entities/game';
 import {RoomPage} from '@/pages/room';
 
 const roomIdSchema = z.uuid();
@@ -15,22 +17,31 @@ export const Route = createFileRoute('/games/$gameCode/rooms/$roomId')({
     }
   },
   loader: async ({context, params}) => {
+    const {queryClient, game} = context;
+    // Название игры для заголовка; ошибку (игра недоступна) покажет страница.
+    const gameDetails = queryClient
+      .query(getGetGameQueryOptions(game.code))
+      .catch(() => undefined);
     try {
       // Из кеша, если комната уже загружена (например, сразу после создания).
-      const room = await context.queryClient.query({
+      const room = await queryClient.query({
         ...getGetRoomQueryOptions(params.roomId),
         staleTime: 'static',
       });
       // Комната другой игры по этой ссылке не открывается.
-      if (gameByType(room.gameType)?.code !== context.game.code) {
+      if (room.gameCode !== game.code) {
         throw notFound();
       }
     } catch (error) {
       if (isApiError(error) && error.code === 'ROOM_NOT_FOUND') {
         throw notFound();
       }
-      throw error;
+      // Игра комнаты не опубликована или отключена: страница покажет «Игра недоступна».
+      if (!(isApiError(error) && error.code === 'GAME_NOT_FOUND')) {
+        throw error;
+      }
     }
+    await gameDetails;
   },
   component: RoomRoute,
 });

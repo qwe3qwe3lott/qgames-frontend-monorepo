@@ -1,4 +1,4 @@
-import type {GameInfoResponse} from '@qgames/api/gateway/model';
+import type {GameRulesDto} from '@qgames/api/gateway/model';
 import {
   Field,
   FieldDescription,
@@ -17,8 +17,8 @@ import type {RoomSettingsValues} from '../model/settings';
 
 export interface RoomSettingsFieldsProps {
   form: UseFormReturn<RoomSettingsValues>;
-  /** Параметры игры: режимы времени и границы настроек. */
-  info: GameInfoResponse;
+  /** Правила игры: режимы времени и границы настроек. */
+  rules: GameRulesDto;
   /** Префикс id полей, чтобы на странице могло быть несколько форм. */
   idPrefix: string;
 }
@@ -26,13 +26,13 @@ export interface RoomSettingsFieldsProps {
 /** Поля настроек комнаты: число раундов и правила времени. */
 export function RoomSettingsFields({
   form,
-  info,
+  rules,
   idPrefix,
 }: RoomSettingsFieldsProps) {
   const {errors} = form.formState;
   const mode = useWatch({control: form.control, name: 'timeControl.mode'});
-  const {modes, moveSeconds} = info.timeControl;
-  const {rounds} = info.gameSettingsLimits;
+  const {modes, moveSeconds} = rules.timeControl;
+  const {rounds} = rules.gameSettingsLimits;
 
   return (
     <>

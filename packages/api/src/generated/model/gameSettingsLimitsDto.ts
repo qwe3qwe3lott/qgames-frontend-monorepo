@@ -7,6 +7,6 @@
 import type {NothingSettingsLimitsDto} from './nothingSettingsLimitsDto';
 
 /**
- * Границы настроек конкретной игры, вид — по полю gameType
+ * Границы настроек конкретной игры, вид — по полю gameCode
  */
 export type GameSettingsLimitsDto = NothingSettingsLimitsDto;

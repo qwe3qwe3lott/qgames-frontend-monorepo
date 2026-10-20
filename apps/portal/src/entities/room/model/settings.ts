@@ -1,7 +1,4 @@
-import type {
-  GameInfoResponse,
-  RoomSettingsDto,
-} from '@qgames/api/gateway/model';
+import type {GameRulesDto, RoomSettingsDto} from '@qgames/api/gateway/model';
 import {UpdateRoomSettingsBody} from '@qgames/api/gateway/zod';
 import type {Path} from 'react-hook-form';
 import {z} from 'zod';
@@ -11,14 +8,14 @@ const DEFAULT_MOVE_SECONDS = 30;
 
 /**
  * Схема формы настроек комнаты: сгенерированная схема `RoomSettingsDto`,
- * дополненная границами игры из `GET /api/games/{gameCode}`.
+ * дополненная границами игры из `rules` ответа `GET /api/games/{gameCode}`.
  *
- * `gameSettings` сейчас один вариант (NOTHING, `rounds`); со второй игрой
- * здесь появится выбор схемы по `gameType`.
+ * `gameSettings` сейчас один вариант (`nothing`, `rounds`); со второй игрой
+ * здесь появится выбор схемы по `gameCode`.
  */
-export function roomSettingsSchema(info: GameInfoResponse) {
-  const {modes, moveSeconds} = info.timeControl;
-  const {rounds} = info.gameSettingsLimits;
+export function roomSettingsSchema(rules: GameRulesDto) {
+  const {modes, moveSeconds} = rules.timeControl;
+  const {rounds} = rules.gameSettingsLimits;
   const body = UpdateRoomSettingsBody.shape;
   return z.object({
     timeControl: z
@@ -67,9 +64,9 @@ export const ROOM_SETTINGS_FIELDS = [
 /** Значения формы из настроек комнаты (или настроек игры по умолчанию). */
 export function toRoomSettingsValues(
   settings: RoomSettingsDto,
-  info: GameInfoResponse,
+  rules: GameRulesDto,
 ): RoomSettingsValues {
-  const {min, max} = info.timeControl.moveSeconds;
+  const {min, max} = rules.timeControl.moveSeconds;
   return {
     timeControl: {
       mode: settings.timeControl.mode,

@@ -1,16 +1,17 @@
 import {Component, Suspense, use, type ReactNode} from 'react';
 
 import {
+  GAME_IN_DEVELOPMENT_HINT,
   loadGameModule,
   type GameBoardPlayer,
-  type GameInfo,
-  type GameApi,
+  type GameEntry,
+  type GameLoader,
 } from '@/entities/game';
 import {memberName, type RoomView, type SessionView} from '@/entities/room';
 import {useMoveControls} from '@/features/make-move';
 
 export interface GameBoardProps {
-  game: GameInfo;
+  game: GameEntry;
   room: RoomView;
   viewerId: string;
 }
@@ -39,18 +40,18 @@ class ChunkErrorBoundary extends Component<
 }
 
 function Board({
-  api,
+  load,
   room,
   session,
   viewerId,
 }: {
-  api: GameApi;
+  load: GameLoader;
   room: RoomView;
   session: SessionView;
   viewerId: string;
 }) {
-  const module = use(loadGameModule(api));
-  const controls = useMoveControls(api, room);
+  const module = use(loadGameModule(room.gameCode, load));
+  const controls = useMoveControls(room);
   const players: GameBoardPlayer[] = room.members.map(member => ({
     id: member.userId,
     name: memberName(member),
@@ -68,8 +69,9 @@ function Board({
 
 /** Доска игры из отдельного чанка; без партии — подсказка, что делать. */
 export function GameBoard({game, room, viewerId}: GameBoardProps) {
-  if (game.api === null) {
-    return <p className="text-muted-foreground">Игра ещё в разработке.</p>;
+  const {load} = game;
+  if (load === undefined) {
+    return <p className="text-muted-foreground">{GAME_IN_DEVELOPMENT_HINT}.</p>;
   }
   const {session} = room;
   if (session === null) {
@@ -85,12 +87,7 @@ export function GameBoard({game, room, viewerId}: GameBoardProps) {
       <Suspense
         fallback={<p className="text-muted-foreground">Загружаем игру…</p>}
       >
-        <Board
-          api={game.api}
-          room={room}
-          session={session}
-          viewerId={viewerId}
-        />
+        <Board load={load} room={room} session={session} viewerId={viewerId} />
       </Suspense>
     </ChunkErrorBoundary>
   );

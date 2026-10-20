@@ -1,7 +1,7 @@
 import type {
   RoomMemberResponse,
   RoomResponse,
-  RoomResponseGameType,
+  RoomResponseGameCode,
   RoomSettingsDto,
   SessionResponse,
 } from '@qgames/api/gateway/model';
@@ -35,7 +35,7 @@ export interface SessionView {
 
 export interface RoomView {
   id: string;
-  gameType: RoomResponseGameType;
+  gameCode: RoomResponseGameCode;
   status: RoomStatus;
   ownerId: string | null;
   minPlayers: number;
@@ -82,7 +82,7 @@ export function toRoomView(room: RoomResponse, receivedAt: number): RoomView {
   const serverTime = Date.parse(room.serverTime);
   return {
     id: room.id,
-    gameType: room.gameType,
+    gameCode: room.gameCode,
     status: room.status,
     ownerId: room.ownerId ?? null,
     minPlayers: room.minPlayers,

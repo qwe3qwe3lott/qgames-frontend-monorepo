@@ -4,9 +4,9 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
-import type {NothingSettingsDtoGameType} from './nothingSettingsDtoGameType';
+import type {NothingSettingsDtoGameCode} from './nothingSettingsDtoGameCode';
 
 export interface NothingSettingsDto {
-  gameType: NothingSettingsDtoGameType;
+  gameCode: NothingSettingsDtoGameCode;
   rounds: number;
 }

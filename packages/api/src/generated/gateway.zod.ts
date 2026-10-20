@@ -130,63 +130,83 @@ export const VerifyEmailResponse = zod.object({
 });
 
 /**
- * Число игроков, поддерживаемые режимы времени и границы времени на ход, границы настроек игры и настройки по умолчанию. По ним строится форма создания комнаты и смены настроек.
- * @summary Параметры игры
+ * Игры в порядке показа: код, название, описание и статус публикации. Скрытые игры в список не попадают. Игры со статусом DISABLED (временно недоступна) показываются, но создать для них комнату нельзя. Доступна без аутентификации.
+ * @summary Каталог игр
  */
-export const GetGameParams = zod.object({
-  gameCode: zod.enum(['nothing']).describe('Код игры'),
-});
-
-export const GetGameResponse = zod.object({
-  defaultSettings: zod.object({
-    gameSettings: zod
-      .object({
-        gameType: zod.enum(['NOTHING']),
-        rounds: zod.int(),
-      })
-      .describe('Настройки конкретной игры, вид — по полю gameType'),
-    timeControl: zod.object({
-      mode: zod.enum(['NONE', 'PER_MOVE']),
-      moveSeconds: zod.int().nullish(),
+export const ListGamesResponse = zod.object({
+  games: zod.array(
+    zod.object({
+      code: zod.enum(['nothing', 'carcassonne']),
+      description: zod.string(),
+      publishStatus: zod.enum(['PUBLISHED', 'DISABLED', 'HIDDEN']),
+      title: zod.string(),
     }),
-  }),
-  gameSettingsLimits: zod
-    .object({
-      gameType: zod.enum(['NOTHING']),
-      rounds: zod.object({
-        max: zod.int(),
-        min: zod.int(),
-      }),
-    })
-    .describe('Границы настроек конкретной игры, вид — по полю gameType'),
-  gameType: zod.enum(['NOTHING']),
-  maxPlayers: zod.int(),
-  minPlayers: zod.int(),
-  timeControl: zod.object({
-    modes: zod.array(zod.enum(['NONE', 'PER_MOVE'])),
-    moveSeconds: zod.object({
-      max: zod.int(),
-      min: zod.int(),
-    }),
-  }),
+  ),
 });
 
 /**
- * Создаёт комнату под игру из пути с заданными настройками: правила времени и настройки игры. Создатель становится владельцем и первым игроком, ссылку на комнату (её id) можно отправить другим игрокам. Границы настроек и значения по умолчанию — в параметрах игры (GET /api/games/{gameCode}). Ошибки настроек отдаются по полям тела (например, settings.gameSettings.rounds), как у валидации запроса.
+ * Название, описание и статус публикации игры, а также параметры правил (rules): число игроков, режимы времени и границы времени на ход, границы настроек игры и настройки по умолчанию. По ним строятся карточка игры и форма создания комнаты и смены настроек. Скрытая игра доступна по прямой ссылке. Доступна без аутентификации.
+ * @summary Игра
+ */
+export const GetGameParams = zod.object({
+  gameCode: zod.enum(['nothing', 'carcassonne']).describe('Код игры'),
+});
+
+export const GetGameResponse = zod.object({
+  code: zod.enum(['nothing', 'carcassonne']),
+  description: zod.string(),
+  publishStatus: zod.enum(['PUBLISHED', 'DISABLED', 'HIDDEN']),
+  rules: zod.object({
+    defaultSettings: zod.object({
+      gameSettings: zod
+        .object({
+          gameCode: zod.enum(['nothing']),
+          rounds: zod.int(),
+        })
+        .describe('Настройки конкретной игры, вид — по полю gameCode'),
+      timeControl: zod.object({
+        mode: zod.enum(['NONE', 'PER_MOVE']),
+        moveSeconds: zod.int().nullish(),
+      }),
+    }),
+    gameSettingsLimits: zod
+      .object({
+        gameCode: zod.enum(['nothing']),
+        rounds: zod.object({
+          max: zod.int(),
+          min: zod.int(),
+        }),
+      })
+      .describe('Границы настроек конкретной игры, вид — по полю gameCode'),
+    maxPlayers: zod.int(),
+    minPlayers: zod.int(),
+    timeControl: zod.object({
+      modes: zod.array(zod.enum(['NONE', 'PER_MOVE'])),
+      moveSeconds: zod.object({
+        max: zod.int(),
+        min: zod.int(),
+      }),
+    }),
+  }),
+  title: zod.string(),
+});
+
+/**
+ * Создаёт комнату под игру из пути с заданными настройками: правила времени и настройки игры. Создатель становится владельцем и первым игроком, ссылку на комнату (её id) можно отправить другим игрокам. Игра должна быть доступна (PUBLISHED или HIDDEN): это проверяется до настроек. Границы настроек и значения по умолчанию — в параметрах игры (GET /api/games/{gameCode}). Ошибки настроек отдаются по полям тела (например, settings.gameSettings.rounds), как у валидации запроса.
  * @summary Создать комнату
  */
 export const CreateRoomParams = zod.object({
-  gameCode: zod.enum(['nothing']).describe('Код игры'),
+  gameCode: zod.enum(['nothing', 'carcassonne']).describe('Код игры'),
 });
 
 export const CreateRoomBody = zod.object({
   settings: zod.object({
     gameSettings: zod
       .object({
-        gameType: zod.enum(['NOTHING']),
+        gameCode: zod.enum(['nothing']),
         rounds: zod.int(),
       })
-      .describe('Настройки конкретной игры, вид — по полю gameType'),
+      .describe('Настройки конкретной игры, вид — по полю gameCode'),
     timeControl: zod.object({
       mode: zod.enum(['NONE', 'PER_MOVE']),
       moveSeconds: zod.int().nullish(),
@@ -196,7 +216,7 @@ export const CreateRoomBody = zod.object({
 
 export const CreateRoomResponse = zod.object({
   createdAt: zod.iso.datetime({offset: true}),
-  gameType: zod.enum(['NOTHING']),
+  gameCode: zod.enum(['nothing', 'carcassonne']),
   id: zod.uuid(),
   maxPlayers: zod.int(),
   members: zod.array(
@@ -232,10 +252,10 @@ export const CreateRoomResponse = zod.object({
   settings: zod.object({
     gameSettings: zod
       .object({
-        gameType: zod.enum(['NOTHING']),
+        gameCode: zod.enum(['nothing']),
         rounds: zod.int(),
       })
-      .describe('Настройки конкретной игры, вид — по полю gameType'),
+      .describe('Настройки конкретной игры, вид — по полю gameCode'),
     timeControl: zod.object({
       mode: zod.enum(['NONE', 'PER_MOVE']),
       moveSeconds: zod.int().nullish(),
@@ -245,11 +265,11 @@ export const CreateRoomResponse = zod.object({
 });
 
 /**
- * Ручка одна на все игры: код игры — в пути, ход — общий конверт `{type, data}`. `type` — вид действия (`PASS` в «игре в ничто»), `data` — его параметры в формате игры. Код игры должен совпадать с игрой комнаты. Ходить может только игрок партии, находящийся в комнате. Если у партии есть таймер, ход переставляет дедлайн (session.moveDeadline). Когда партия заканчивается, комната возвращается в ожидание, а законченная партия остаётся в ответе.
+ * Ручка одна на все игры: код игры — в пути, ход — общий конверт `{type, data}`. `type` — вид действия (`PASS` в «игре в ничто»), `data` — его параметры в формате игры. Код игры должен совпадать с игрой комнаты. Ходить может только игрок партии, находящийся в комнате. Если у партии есть таймер, ход переставляет дедлайн (session.moveDeadline). Когда партия заканчивается, комната возвращается в ожидание, а законченная партия остаётся в ответе. Идущая партия продолжается, даже если игра стала временно недоступной.
  * @summary Сделать ход
  */
 export const MakeMoveParams = zod.object({
-  gameCode: zod.enum(['nothing']).describe('Код игры'),
+  gameCode: zod.enum(['nothing', 'carcassonne']).describe('Код игры'),
   roomId: zod.uuid(),
 });
 
@@ -261,7 +281,7 @@ export const MakeMoveBody = zod.object({
 
 export const MakeMoveResponse = zod.object({
   createdAt: zod.iso.datetime({offset: true}),
-  gameType: zod.enum(['NOTHING']),
+  gameCode: zod.enum(['nothing', 'carcassonne']),
   id: zod.uuid(),
   maxPlayers: zod.int(),
   members: zod.array(
@@ -297,10 +317,10 @@ export const MakeMoveResponse = zod.object({
   settings: zod.object({
     gameSettings: zod
       .object({
-        gameType: zod.enum(['NOTHING']),
+        gameCode: zod.enum(['nothing']),
         rounds: zod.int(),
       })
-      .describe('Настройки конкретной игры, вид — по полю gameType'),
+      .describe('Настройки конкретной игры, вид — по полю gameCode'),
     timeControl: zod.object({
       mode: zod.enum(['NONE', 'PER_MOVE']),
       moveSeconds: zod.int().nullish(),
@@ -314,17 +334,17 @@ export const MakeMoveResponse = zod.object({
  * @summary Изменить настройки комнаты
  */
 export const UpdateRoomSettingsParams = zod.object({
-  gameCode: zod.enum(['nothing']).describe('Код игры'),
+  gameCode: zod.enum(['nothing', 'carcassonne']).describe('Код игры'),
   roomId: zod.uuid(),
 });
 
 export const UpdateRoomSettingsBody = zod.object({
   gameSettings: zod
     .object({
-      gameType: zod.enum(['NOTHING']),
+      gameCode: zod.enum(['nothing']),
       rounds: zod.int(),
     })
-    .describe('Настройки конкретной игры, вид — по полю gameType'),
+    .describe('Настройки конкретной игры, вид — по полю gameCode'),
   timeControl: zod.object({
     mode: zod.enum(['NONE', 'PER_MOVE']),
     moveSeconds: zod.int().nullish(),
@@ -333,7 +353,7 @@ export const UpdateRoomSettingsBody = zod.object({
 
 export const UpdateRoomSettingsResponse = zod.object({
   createdAt: zod.iso.datetime({offset: true}),
-  gameType: zod.enum(['NOTHING']),
+  gameCode: zod.enum(['nothing', 'carcassonne']),
   id: zod.uuid(),
   maxPlayers: zod.int(),
   members: zod.array(
@@ -369,10 +389,10 @@ export const UpdateRoomSettingsResponse = zod.object({
   settings: zod.object({
     gameSettings: zod
       .object({
-        gameType: zod.enum(['NOTHING']),
+        gameCode: zod.enum(['nothing']),
         rounds: zod.int(),
       })
-      .describe('Настройки конкретной игры, вид — по полю gameType'),
+      .describe('Настройки конкретной игры, вид — по полю gameCode'),
     timeControl: zod.object({
       mode: zod.enum(['NONE', 'PER_MOVE']),
       moveSeconds: zod.int().nullish(),
@@ -391,7 +411,7 @@ export const GetRoomParams = zod.object({
 
 export const GetRoomResponse = zod.object({
   createdAt: zod.iso.datetime({offset: true}),
-  gameType: zod.enum(['NOTHING']),
+  gameCode: zod.enum(['nothing', 'carcassonne']),
   id: zod.uuid(),
   maxPlayers: zod.int(),
   members: zod.array(
@@ -427,10 +447,10 @@ export const GetRoomResponse = zod.object({
   settings: zod.object({
     gameSettings: zod
       .object({
-        gameType: zod.enum(['NOTHING']),
+        gameCode: zod.enum(['nothing']),
         rounds: zod.int(),
       })
-      .describe('Настройки конкретной игры, вид — по полю gameType'),
+      .describe('Настройки конкретной игры, вид — по полю gameCode'),
     timeControl: zod.object({
       mode: zod.enum(['NONE', 'PER_MOVE']),
       moveSeconds: zod.int().nullish(),
@@ -449,7 +469,7 @@ export const JoinRoomParams = zod.object({
 
 export const JoinRoomResponse = zod.object({
   createdAt: zod.iso.datetime({offset: true}),
-  gameType: zod.enum(['NOTHING']),
+  gameCode: zod.enum(['nothing', 'carcassonne']),
   id: zod.uuid(),
   maxPlayers: zod.int(),
   members: zod.array(
@@ -485,10 +505,10 @@ export const JoinRoomResponse = zod.object({
   settings: zod.object({
     gameSettings: zod
       .object({
-        gameType: zod.enum(['NOTHING']),
+        gameCode: zod.enum(['nothing']),
         rounds: zod.int(),
       })
-      .describe('Настройки конкретной игры, вид — по полю gameType'),
+      .describe('Настройки конкретной игры, вид — по полю gameCode'),
     timeControl: zod.object({
       mode: zod.enum(['NONE', 'PER_MOVE']),
       moveSeconds: zod.int().nullish(),
@@ -521,7 +541,7 @@ export const ChangeRoleBody = zod.object({
 
 export const ChangeRoleResponse = zod.object({
   createdAt: zod.iso.datetime({offset: true}),
-  gameType: zod.enum(['NOTHING']),
+  gameCode: zod.enum(['nothing', 'carcassonne']),
   id: zod.uuid(),
   maxPlayers: zod.int(),
   members: zod.array(
@@ -557,10 +577,10 @@ export const ChangeRoleResponse = zod.object({
   settings: zod.object({
     gameSettings: zod
       .object({
-        gameType: zod.enum(['NOTHING']),
+        gameCode: zod.enum(['nothing']),
         rounds: zod.int(),
       })
-      .describe('Настройки конкретной игры, вид — по полю gameType'),
+      .describe('Настройки конкретной игры, вид — по полю gameCode'),
     timeControl: zod.object({
       mode: zod.enum(['NONE', 'PER_MOVE']),
       moveSeconds: zod.int().nullish(),
@@ -579,7 +599,7 @@ export const CancelSessionParams = zod.object({
 
 export const CancelSessionResponse = zod.object({
   createdAt: zod.iso.datetime({offset: true}),
-  gameType: zod.enum(['NOTHING']),
+  gameCode: zod.enum(['nothing', 'carcassonne']),
   id: zod.uuid(),
   maxPlayers: zod.int(),
   members: zod.array(
@@ -615,10 +635,10 @@ export const CancelSessionResponse = zod.object({
   settings: zod.object({
     gameSettings: zod
       .object({
-        gameType: zod.enum(['NOTHING']),
+        gameCode: zod.enum(['nothing']),
         rounds: zod.int(),
       })
-      .describe('Настройки конкретной игры, вид — по полю gameType'),
+      .describe('Настройки конкретной игры, вид — по полю gameCode'),
     timeControl: zod.object({
       mode: zod.enum(['NONE', 'PER_MOVE']),
       moveSeconds: zod.int().nullish(),
@@ -628,7 +648,7 @@ export const CancelSessionResponse = zod.object({
 });
 
 /**
- * Стартует партию с текущими игроками комнаты (места — по порядку входа). Только владелец, число игроков должно укладываться в ограничения игры (minPlayers–maxPlayers).
+ * Стартует партию с текущими игроками комнаты (места — по порядку входа). Только владелец, число игроков должно укладываться в ограничения игры (minPlayers–maxPlayers). Игра должна быть доступна (PUBLISHED или HIDDEN).
  * @summary Начать партию
  */
 export const StartSessionParams = zod.object({
@@ -637,7 +657,7 @@ export const StartSessionParams = zod.object({
 
 export const StartSessionResponse = zod.object({
   createdAt: zod.iso.datetime({offset: true}),
-  gameType: zod.enum(['NOTHING']),
+  gameCode: zod.enum(['nothing', 'carcassonne']),
   id: zod.uuid(),
   maxPlayers: zod.int(),
   members: zod.array(
@@ -673,10 +693,10 @@ export const StartSessionResponse = zod.object({
   settings: zod.object({
     gameSettings: zod
       .object({
-        gameType: zod.enum(['NOTHING']),
+        gameCode: zod.enum(['nothing']),
         rounds: zod.int(),
       })
-      .describe('Настройки конкретной игры, вид — по полю gameType'),
+      .describe('Настройки конкретной игры, вид — по полю gameCode'),
     timeControl: zod.object({
       mode: zod.enum(['NONE', 'PER_MOVE']),
       moveSeconds: zod.int().nullish(),
@@ -695,7 +715,7 @@ export const PauseSessionParams = zod.object({
 
 export const PauseSessionResponse = zod.object({
   createdAt: zod.iso.datetime({offset: true}),
-  gameType: zod.enum(['NOTHING']),
+  gameCode: zod.enum(['nothing', 'carcassonne']),
   id: zod.uuid(),
   maxPlayers: zod.int(),
   members: zod.array(
@@ -731,10 +751,10 @@ export const PauseSessionResponse = zod.object({
   settings: zod.object({
     gameSettings: zod
       .object({
-        gameType: zod.enum(['NOTHING']),
+        gameCode: zod.enum(['nothing']),
         rounds: zod.int(),
       })
-      .describe('Настройки конкретной игры, вид — по полю gameType'),
+      .describe('Настройки конкретной игры, вид — по полю gameCode'),
     timeControl: zod.object({
       mode: zod.enum(['NONE', 'PER_MOVE']),
       moveSeconds: zod.int().nullish(),
@@ -753,7 +773,7 @@ export const ResumeSessionParams = zod.object({
 
 export const ResumeSessionResponse = zod.object({
   createdAt: zod.iso.datetime({offset: true}),
-  gameType: zod.enum(['NOTHING']),
+  gameCode: zod.enum(['nothing', 'carcassonne']),
   id: zod.uuid(),
   maxPlayers: zod.int(),
   members: zod.array(
@@ -789,10 +809,10 @@ export const ResumeSessionResponse = zod.object({
   settings: zod.object({
     gameSettings: zod
       .object({
-        gameType: zod.enum(['NOTHING']),
+        gameCode: zod.enum(['nothing']),
         rounds: zod.int(),
       })
-      .describe('Настройки конкретной игры, вид — по полю gameType'),
+      .describe('Настройки конкретной игры, вид — по полю gameCode'),
     timeControl: zod.object({
       mode: zod.enum(['NONE', 'PER_MOVE']),
       moveSeconds: zod.int().nullish(),

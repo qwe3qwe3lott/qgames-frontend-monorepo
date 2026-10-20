@@ -7,6 +7,6 @@
 import type {NothingSettingsDto} from './nothingSettingsDto';
 
 /**
- * Настройки конкретной игры, вид — по полю gameType
+ * Настройки конкретной игры, вид — по полю gameCode
  */
 export type GameSettingsDto = NothingSettingsDto;

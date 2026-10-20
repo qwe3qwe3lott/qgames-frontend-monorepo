@@ -5,9 +5,9 @@
  * OpenAPI spec version: v0
  */
 import type {IntRangeDto} from './intRangeDto';
-import type {NothingSettingsLimitsDtoGameType} from './nothingSettingsLimitsDtoGameType';
+import type {NothingSettingsLimitsDtoGameCode} from './nothingSettingsLimitsDtoGameCode';
 
 export interface NothingSettingsLimitsDto {
-  gameType: NothingSettingsLimitsDtoGameType;
+  gameCode: NothingSettingsLimitsDtoGameCode;
   rounds: IntRangeDto;
 }

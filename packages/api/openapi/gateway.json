@@ -24,7 +24,7 @@
       "name": "Игровые комнаты"
     },
     {
-      "description": "Параметры игр портала. Все ручки требуют аутентификации.",
+      "description": "Каталог игр портала и параметры игры. Ручки доступны без аутентификации.",
       "name": "Игры"
     }
   ],
@@ -429,34 +429,20 @@
         ]
       }
     },
-    "/api/games/{gameCode}": {
+    "/api/games": {
       "get": {
-        "description": "Число игроков, поддерживаемые режимы времени и границы времени на ход, границы настроек игры и настройки по умолчанию. По ним строится форма создания комнаты и смены настроек.",
-        "operationId": "getGame",
-        "parameters": [
-          {
-            "description": "Код игры",
-            "in": "path",
-            "name": "gameCode",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "nothing"
-              ]
-            }
-          }
-        ],
+        "description": "Игры в порядке показа: код, название, описание и статус публикации. Скрытые игры в список не попадают. Игры со статусом DISABLED (временно недоступна) показываются, но создать для них комнату нельзя. Доступна без аутентификации.",
+        "operationId": "listGames",
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GameInfoResponse"
+                  "$ref": "#/components/schemas/GameListResponse"
                 }
               }
             },
-            "description": "Параметры игры"
+            "description": "Каталог игр"
           },
           "401": {
             "content": {
@@ -466,17 +452,7 @@
                 }
               }
             },
-            "description": "Нет действительного access-токена (UNAUTHENTICATED)"
-          },
-          "404": {
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            },
-            "description": "Неизвестный код игры (GAME_NOT_FOUND)"
+            "description": "Access-токен в куке недействителен или истёк (UNAUTHENTICATED)"
           },
           "503": {
             "content": {
@@ -489,7 +465,74 @@
             "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)"
           }
         },
-        "summary": "Параметры игры",
+        "summary": "Каталог игр",
+        "tags": [
+          "Игры"
+        ]
+      }
+    },
+    "/api/games/{gameCode}": {
+      "get": {
+        "description": "Название, описание и статус публикации игры, а также параметры правил (rules): число игроков, режимы времени и границы времени на ход, границы настроек игры и настройки по умолчанию. По ним строятся карточка игры и форма создания комнаты и смены настроек. Скрытая игра доступна по прямой ссылке. Доступна без аутентификации.",
+        "operationId": "getGame",
+        "parameters": [
+          {
+            "description": "Код игры",
+            "in": "path",
+            "name": "gameCode",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "nothing",
+                "carcassonne"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameDetailsResponse"
+                }
+              }
+            },
+            "description": "Игра"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Access-токен в куке недействителен или истёк (UNAUTHENTICATED)"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Неизвестный код игры, игра не опубликована или принудительно отключена (GAME_NOT_FOUND)"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)"
+          }
+        },
+        "summary": "Игра",
         "tags": [
           "Игры"
         ]
@@ -497,7 +540,7 @@
     },
     "/api/games/{gameCode}/rooms": {
       "post": {
-        "description": "Создаёт комнату под игру из пути с заданными настройками: правила времени и настройки игры. Создатель становится владельцем и первым игроком, ссылку на комнату (её id) можно отправить другим игрокам. Границы настроек и значения по умолчанию — в параметрах игры (GET /api/games/{gameCode}). Ошибки настроек отдаются по полям тела (например, settings.gameSettings.rounds), как у валидации запроса.",
+        "description": "Создаёт комнату под игру из пути с заданными настройками: правила времени и настройки игры. Создатель становится владельцем и первым игроком, ссылку на комнату (её id) можно отправить другим игрокам. Игра должна быть доступна (PUBLISHED или HIDDEN): это проверяется до настроек. Границы настроек и значения по умолчанию — в параметрах игры (GET /api/games/{gameCode}). Ошибки настроек отдаются по полям тела (например, settings.gameSettings.rounds), как у валидации запроса.",
         "operationId": "createRoom",
         "parameters": [
           {
@@ -508,7 +551,8 @@
             "schema": {
               "type": "string",
               "enum": [
-                "nothing"
+                "nothing",
+                "carcassonne"
               ]
             }
           }
@@ -562,7 +606,17 @@
                 }
               }
             },
-            "description": "Неизвестный код игры (GAME_NOT_FOUND)"
+            "description": "Неизвестный код игры, игра не опубликована или принудительно отключена (GAME_NOT_FOUND)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Игра временно недоступна (GAME_UNAVAILABLE)"
           },
           "503": {
             "content": {
@@ -583,7 +637,7 @@
     },
     "/api/games/{gameCode}/rooms/{roomId}/moves": {
       "post": {
-        "description": "Ручка одна на все игры: код игры — в пути, ход — общий конверт `{type, data}`. `type` — вид действия (`PASS` в «игре в ничто»), `data` — его параметры в формате игры. Код игры должен совпадать с игрой комнаты. Ходить может только игрок партии, находящийся в комнате. Если у партии есть таймер, ход переставляет дедлайн (session.moveDeadline). Когда партия заканчивается, комната возвращается в ожидание, а законченная партия остаётся в ответе.",
+        "description": "Ручка одна на все игры: код игры — в пути, ход — общий конверт `{type, data}`. `type` — вид действия (`PASS` в «игре в ничто»), `data` — его параметры в формате игры. Код игры должен совпадать с игрой комнаты. Ходить может только игрок партии, находящийся в комнате. Если у партии есть таймер, ход переставляет дедлайн (session.moveDeadline). Когда партия заканчивается, комната возвращается в ожидание, а законченная партия остаётся в ответе. Идущая партия продолжается, даже если игра стала временно недоступной.",
         "operationId": "makeMove",
         "parameters": [
           {
@@ -594,7 +648,8 @@
             "schema": {
               "type": "string",
               "enum": [
-                "nothing"
+                "nothing",
+                "carcassonne"
               ]
             }
           },
@@ -667,7 +722,7 @@
                 }
               }
             },
-            "description": "Неизвестный код игры (GAME_NOT_FOUND) или комнаты нет (ROOM_NOT_FOUND)"
+            "description": "Неизвестный код игры, игра не опубликована или принудительно отключена (GAME_NOT_FOUND), комнаты нет (ROOM_NOT_FOUND)"
           },
           "409": {
             "content": {
@@ -719,7 +774,8 @@
             "schema": {
               "type": "string",
               "enum": [
-                "nothing"
+                "nothing",
+                "carcassonne"
               ]
             }
           },
@@ -792,7 +848,7 @@
                 }
               }
             },
-            "description": "Неизвестный код игры (GAME_NOT_FOUND) или комнаты нет (ROOM_NOT_FOUND)"
+            "description": "Неизвестный код игры, игра не опубликована или принудительно отключена (GAME_NOT_FOUND), комнаты нет (ROOM_NOT_FOUND)"
           },
           "409": {
             "content": {
@@ -865,7 +921,7 @@
                 }
               }
             },
-            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND)"
+            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND), игра комнаты не опубликована или принудительно отключена (GAME_NOT_FOUND)"
           },
           "503": {
             "content": {
@@ -928,7 +984,7 @@
                 }
               }
             },
-            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND)"
+            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND), игра комнаты не опубликована или принудительно отключена (GAME_NOT_FOUND)"
           },
           "503": {
             "content": {
@@ -994,7 +1050,7 @@
                 }
               }
             },
-            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND)"
+            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND), игра комнаты не опубликована или принудительно отключена (GAME_NOT_FOUND)"
           },
           "503": {
             "content": {
@@ -1087,7 +1143,7 @@
                 }
               }
             },
-            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND)"
+            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND), игра комнаты не опубликована или принудительно отключена (GAME_NOT_FOUND)"
           },
           "409": {
             "content": {
@@ -1170,7 +1226,7 @@
                 }
               }
             },
-            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND)"
+            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND), игра комнаты не опубликована или принудительно отключена (GAME_NOT_FOUND)"
           },
           "409": {
             "content": {
@@ -1199,7 +1255,7 @@
         ]
       },
       "post": {
-        "description": "Стартует партию с текущими игроками комнаты (места — по порядку входа). Только владелец, число игроков должно укладываться в ограничения игры (minPlayers–maxPlayers).",
+        "description": "Стартует партию с текущими игроками комнаты (места — по порядку входа). Только владелец, число игроков должно укладываться в ограничения игры (minPlayers–maxPlayers). Игра должна быть доступна (PUBLISHED или HIDDEN).",
         "operationId": "startSession",
         "parameters": [
           {
@@ -1251,7 +1307,7 @@
                 }
               }
             },
-            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND)"
+            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND), игра комнаты не опубликована или принудительно отключена (GAME_NOT_FOUND)"
           },
           "409": {
             "content": {
@@ -1261,7 +1317,7 @@
                 }
               }
             },
-            "description": "Партия уже идёт (ROOM_NOT_WAITING) или число игроков не подходит игре (NOT_ENOUGH_PLAYERS)"
+            "description": "Партия уже идёт (ROOM_NOT_WAITING), игра временно недоступна (GAME_UNAVAILABLE), число игроков не подходит игре (NOT_ENOUGH_PLAYERS)"
           },
           "503": {
             "content": {
@@ -1334,7 +1390,7 @@
                 }
               }
             },
-            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND)"
+            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND), игра комнаты не опубликована или принудительно отключена (GAME_NOT_FOUND)"
           },
           "409": {
             "content": {
@@ -1417,7 +1473,7 @@
                 }
               }
             },
-            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND)"
+            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND), игра комнаты не опубликована или принудительно отключена (GAME_NOT_FOUND)"
           },
           "409": {
             "content": {
@@ -1821,7 +1877,57 @@
           "settings"
         ]
       },
-      "GameInfoResponse": {
+      "GameDetailsResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "nothing",
+              "carcassonne"
+            ]
+          },
+          "description": {
+            "type": "string"
+          },
+          "publishStatus": {
+            "type": "string",
+            "enum": [
+              "PUBLISHED",
+              "DISABLED",
+              "HIDDEN"
+            ]
+          },
+          "rules": {
+            "$ref": "#/components/schemas/GameRulesDto"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "description",
+          "publishStatus",
+          "rules",
+          "title"
+        ]
+      },
+      "GameListResponse": {
+        "type": "object",
+        "properties": {
+          "games": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GameSummaryDto"
+            }
+          }
+        },
+        "required": [
+          "games"
+        ]
+      },
+      "GameRulesDto": {
         "type": "object",
         "properties": {
           "defaultSettings": {
@@ -1829,12 +1935,6 @@
           },
           "gameSettingsLimits": {
             "$ref": "#/components/schemas/GameSettingsLimitsDto"
-          },
-          "gameType": {
-            "type": "string",
-            "enum": [
-              "NOTHING"
-            ]
           },
           "maxPlayers": {
             "type": "integer",
@@ -1851,19 +1951,18 @@
         "required": [
           "defaultSettings",
           "gameSettingsLimits",
-          "gameType",
           "maxPlayers",
           "minPlayers",
           "timeControl"
         ]
       },
       "GameSettingsDto": {
-        "description": "Настройки конкретной игры, вид — по полю gameType",
+        "description": "Настройки конкретной игры, вид — по полю gameCode",
         "discriminator": {
           "mapping": {
-            "NOTHING": "#/components/schemas/NothingSettingsDto"
+            "nothing": "#/components/schemas/NothingSettingsDto"
           },
-          "propertyName": "gameType"
+          "propertyName": "gameCode"
         },
         "oneOf": [
           {
@@ -1872,17 +1971,49 @@
         ]
       },
       "GameSettingsLimitsDto": {
-        "description": "Границы настроек конкретной игры, вид — по полю gameType",
+        "description": "Границы настроек конкретной игры, вид — по полю gameCode",
         "discriminator": {
           "mapping": {
-            "NOTHING": "#/components/schemas/NothingSettingsLimitsDto"
+            "nothing": "#/components/schemas/NothingSettingsLimitsDto"
           },
-          "propertyName": "gameType"
+          "propertyName": "gameCode"
         },
         "oneOf": [
           {
             "$ref": "#/components/schemas/NothingSettingsLimitsDto"
           }
+        ]
+      },
+      "GameSummaryDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "nothing",
+              "carcassonne"
+            ]
+          },
+          "description": {
+            "type": "string"
+          },
+          "publishStatus": {
+            "type": "string",
+            "enum": [
+              "PUBLISHED",
+              "DISABLED",
+              "HIDDEN"
+            ]
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "description",
+          "publishStatus",
+          "title"
         ]
       },
       "GoogleIdTokenRequest": {
@@ -1961,10 +2092,10 @@
       "NothingSettingsDto": {
         "type": "object",
         "properties": {
-          "gameType": {
+          "gameCode": {
             "type": "string",
             "enum": [
-              "NOTHING"
+              "nothing"
             ]
           },
           "rounds": {
@@ -1973,17 +2104,17 @@
           }
         },
         "required": [
-          "gameType",
+          "gameCode",
           "rounds"
         ]
       },
       "NothingSettingsLimitsDto": {
         "type": "object",
         "properties": {
-          "gameType": {
+          "gameCode": {
             "type": "string",
             "enum": [
-              "NOTHING"
+              "nothing"
             ]
           },
           "rounds": {
@@ -1991,7 +2122,7 @@
           }
         },
         "required": [
-          "gameType",
+          "gameCode",
           "rounds"
         ]
       },
@@ -2158,10 +2289,11 @@
             "type": "string",
             "format": "date-time"
           },
-          "gameType": {
+          "gameCode": {
             "type": "string",
             "enum": [
-              "NOTHING"
+              "nothing",
+              "carcassonne"
             ]
           },
           "id": {
@@ -2216,7 +2348,7 @@
         },
         "required": [
           "createdAt",
-          "gameType",
+          "gameCode",
           "id",
           "maxPlayers",
           "members",

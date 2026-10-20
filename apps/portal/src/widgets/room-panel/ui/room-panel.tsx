@@ -4,7 +4,6 @@ import {
 } from '@qgames/game-ui/components/player-list';
 import {RoomInfo} from '@qgames/game-ui/components/room-info';
 
-import type {GameInfo} from '@/entities/game';
 import {
   memberName,
   ROOM_STATUS_LABELS,
@@ -18,7 +17,8 @@ import {ChangeRoleButton} from '@/features/room-membership';
 import {SessionActions} from '@/features/room-session';
 
 export interface RoomPanelProps {
-  game: GameInfo;
+  /** Название игры из `GET /api/games/{gameCode}`. */
+  gameTitle: string;
   room: RoomView;
   membership: Membership;
   viewerId: string;
@@ -44,14 +44,19 @@ function toListItem(member: RoomMemberView, viewerId: string): PlayerListItem {
 }
 
 /** Описание и настройки комнаты, участники по ролям и действия пользователя. */
-export function RoomPanel({game, room, membership, viewerId}: RoomPanelProps) {
+export function RoomPanel({
+  gameTitle,
+  room,
+  membership,
+  viewerId,
+}: RoomPanelProps) {
   const players = room.members.filter(m => m.role === 'PLAYER');
   const spectators = room.members.filter(m => m.role === 'SPECTATOR');
 
   return (
     <aside className="flex flex-col gap-4">
       <RoomInfo
-        gameTitle={game.title}
+        gameTitle={gameTitle}
         status={ROOM_STATUS_LABELS[room.status]}
         playersCount={membership.playersCount}
         minPlayers={room.minPlayers}
@@ -60,13 +65,7 @@ export function RoomPanel({game, room, membership, viewerId}: RoomPanelProps) {
         actions={
           <>
             <SessionActions room={room} membership={membership} />
-            {game.api === null ? null : (
-              <RoomSettingsDialog
-                api={game.api}
-                room={room}
-                membership={membership}
-              />
-            )}
+            <RoomSettingsDialog room={room} membership={membership} />
           </>
         }
       />

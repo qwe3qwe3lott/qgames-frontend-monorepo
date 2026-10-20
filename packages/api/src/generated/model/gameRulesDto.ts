@@ -4,15 +4,13 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
-import type {GameInfoResponseGameType} from './gameInfoResponseGameType';
 import type {GameSettingsLimitsDto} from './gameSettingsLimitsDto';
 import type {RoomSettingsDto} from './roomSettingsDto';
 import type {TimeControlLimitsDto} from './timeControlLimitsDto';
 
-export interface GameInfoResponse {
+export interface GameRulesDto {
   defaultSettings: RoomSettingsDto;
   gameSettingsLimits: GameSettingsLimitsDto;
-  gameType: GameInfoResponseGameType;
   maxPlayers: number;
   minPlayers: number;
   timeControl: TimeControlLimitsDto;

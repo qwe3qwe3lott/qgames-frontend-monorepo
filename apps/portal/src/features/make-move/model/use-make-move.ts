@@ -3,7 +3,7 @@ import {useMakeMove} from '@qgames/api/gateway';
 import type {MoveRequest} from '@qgames/api/gateway/model';
 import {useQueryClient} from '@tanstack/react-query';
 
-import type {GameApi, GameMove} from '@/entities/game';
+import type {GameMove} from '@/entities/game';
 import {
   invalidateRoom,
   roomErrorMessage,
@@ -22,7 +22,7 @@ export interface MoveControls {
  * Если партия уже изменилась (SESSION_CONFLICT) или стоит на паузе
  * (SESSION_PAUSED), комната перечитывается.
  */
-export function useMoveControls(game: GameApi, room: RoomView): MoveControls {
+export function useMoveControls(room: RoomView): MoveControls {
   const queryClient = useQueryClient();
   const makeMove = useMakeMove({
     mutation: {
@@ -49,7 +49,7 @@ export function useMoveControls(game: GameApi, room: RoomView): MoveControls {
         request.expectedVersion = room.session.version;
       }
       makeMove.mutate({
-        gameCode: game.gameCode,
+        gameCode: room.gameCode,
         roomId: room.id,
         data: request,
       });

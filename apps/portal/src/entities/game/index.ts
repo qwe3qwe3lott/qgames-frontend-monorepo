@@ -1,14 +1,17 @@
+export {
+  GAME_IN_DEVELOPMENT_HINT,
+  GAME_UNAVAILABLE_HINT,
+  playersLabel,
+} from './lib/labels';
 export {loadGameModule} from './lib/load-game-module';
 export {
   GAME_CODES,
   gameByCode,
-  gameByType,
   GAMES,
   isGameCode,
-  type ApiGameCode,
-  type GameApi,
   type GameCode,
-  type GameInfo,
+  type GameEntry,
+  type GameLoader,
 } from './model/registry';
 export type {
   GameAvatar,

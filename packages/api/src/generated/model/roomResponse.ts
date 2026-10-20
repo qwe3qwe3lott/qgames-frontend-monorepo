@@ -5,14 +5,14 @@
  * OpenAPI spec version: v0
  */
 import type {RoomMemberResponse} from './roomMemberResponse';
-import type {RoomResponseGameType} from './roomResponseGameType';
+import type {RoomResponseGameCode} from './roomResponseGameCode';
 import type {RoomResponseStatus} from './roomResponseStatus';
 import type {RoomSettingsDto} from './roomSettingsDto';
 import type {SessionResponse} from './sessionResponse';
 
 export interface RoomResponse {
   createdAt: string;
-  gameType: RoomResponseGameType;
+  gameCode: RoomResponseGameCode;
   id: string;
   maxPlayers: number;
   members: RoomMemberResponse[];

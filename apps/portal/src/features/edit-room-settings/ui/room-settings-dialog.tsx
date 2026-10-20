@@ -1,6 +1,6 @@
 import {zodResolver} from '@hookform/resolvers/zod';
 import {useGetGame, useUpdateRoomSettings} from '@qgames/api/gateway';
-import type {GameInfoResponse} from '@qgames/api/gateway/model';
+import type {GameRulesDto} from '@qgames/api/gateway/model';
 import {Button} from '@qgames/ui/components/button';
 import {
   Dialog,
@@ -17,7 +17,6 @@ import {useQueryClient} from '@tanstack/react-query';
 import {useMemo, useState} from 'react';
 import {useForm} from 'react-hook-form';
 
-import type {GameApi} from '@/entities/game';
 import {
   ROOM_SETTINGS_FIELDS,
   roomErrorMessage,
@@ -36,25 +35,23 @@ import {WithHint} from '@/shared/ui';
 const IN_GAME_HINT = 'Настройки меняются только между партиями';
 
 export interface RoomSettingsDialogProps {
-  api: GameApi;
   room: RoomView;
   membership: Membership;
 }
 
 interface SettingsFormProps {
-  api: GameApi;
   room: RoomView;
   inGame: boolean;
-  info: GameInfoResponse;
+  rules: GameRulesDto;
   onSaved: () => void;
 }
 
-function SettingsForm({api, room, inGame, info, onSaved}: SettingsFormProps) {
+function SettingsForm({room, inGame, rules, onSaved}: SettingsFormProps) {
   const queryClient = useQueryClient();
-  const schema = useMemo(() => roomSettingsSchema(info), [info]);
+  const schema = useMemo(() => roomSettingsSchema(rules), [rules]);
   const form = useForm<RoomSettingsValues>({
     resolver: zodResolver(schema),
-    defaultValues: toRoomSettingsValues(room.settings, info),
+    defaultValues: toRoomSettingsValues(room.settings, rules),
   });
   const updateSettings = useUpdateRoomSettings({
     mutation: {
@@ -77,7 +74,7 @@ function SettingsForm({api, room, inGame, info, onSaved}: SettingsFormProps) {
       onSubmit={event => {
         void form.handleSubmit(values => {
           updateSettings.mutate({
-            gameCode: api.gameCode,
+            gameCode: room.gameCode,
             roomId: room.id,
             data: toRoomSettings(values),
           });
@@ -85,7 +82,11 @@ function SettingsForm({api, room, inGame, info, onSaved}: SettingsFormProps) {
       }}
     >
       <FieldGroup>
-        <RoomSettingsFields form={form} info={info} idPrefix="room-settings" />
+        <RoomSettingsFields
+          form={form}
+          rules={rules}
+          idPrefix="room-settings"
+        />
         {inGame ? (
           <p className="text-sm text-muted-foreground">{IN_GAME_HINT}.</p>
         ) : null}
@@ -107,8 +108,8 @@ function SettingsForm({api, room, inGame, info, onSaved}: SettingsFormProps) {
   );
 }
 
-function SettingsContent(props: Omit<SettingsFormProps, 'info'>) {
-  const info = useGetGame(props.api.gameCode);
+function SettingsContent(props: Omit<SettingsFormProps, 'rules'>) {
+  const info = useGetGame(props.room.gameCode);
   if (info.isPending) {
     return (
       <p className="text-sm text-muted-foreground">Загружаем параметры игры…</p>
@@ -121,12 +122,11 @@ function SettingsContent(props: Omit<SettingsFormProps, 'info'>) {
       </p>
     );
   }
-  return <SettingsForm {...props} info={info.data} />;
+  return <SettingsForm {...props} rules={info.data.rules} />;
 }
 
 /** Смена настроек комнаты владельцем между партиями. */
 export function RoomSettingsDialog({
-  api,
   room,
   membership,
 }: RoomSettingsDialogProps) {
@@ -152,7 +152,6 @@ export function RoomSettingsDialog({
           </DialogDescription>
         </DialogHeader>
         <SettingsContent
-          api={api}
           room={room}
           inGame={membership.inGame}
           onSaved={() => {
