@@ -7,21 +7,21 @@
 import type {RegisterRequestAvatar} from './registerRequestAvatar';
 
 export interface RegisterRequest {
+  avatar: RegisterRequestAvatar;
   /**
    * @minLength 1
    * @maxLength 320
    */
   email: string;
   /**
-   * @minLength 8
-   * @maxLength 128
-   */
-  password: string;
-  /**
    * @minLength 3
    * @maxLength 32
    * @pattern ^[^\s\p{Cc}]([^\p{Cc}]*[^\s\p{Cc}])?$
    */
   nickname: string;
-  avatar: RegisterRequestAvatar;
+  /**
+   * @minLength 8
+   * @maxLength 128
+   */
+  password: string;
 }

@@ -13,7 +13,6 @@ import {
   type RoomMemberView,
   type RoomView,
 } from '@/entities/room';
-import {DeleteRoomButton} from '@/features/delete-room';
 import {RoomSettingsDialog} from '@/features/edit-room-settings';
 import {ChangeRoleButton} from '@/features/room-membership';
 import {SessionActions} from '@/features/room-session';
@@ -68,11 +67,6 @@ export function RoomPanel({game, room, membership, viewerId}: RoomPanelProps) {
                 membership={membership}
               />
             )}
-            <DeleteRoomButton
-              room={room}
-              membership={membership}
-              gameCode={game.code}
-            />
           </>
         }
       />

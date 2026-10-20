@@ -8,16 +8,16 @@ import type {ProblemDetailErrors} from './problemDetailErrors';
 import type {ProblemDetailProperties} from './problemDetailProperties';
 
 export interface ProblemDetail {
-  type?: string;
-  title?: string;
-  status?: number;
-  detail?: string;
-  instance?: string;
-  properties?: ProblemDetailProperties;
   /** Машиночитаемый код ошибки */
   code?: string;
+  detail?: string;
   /** Ошибки по полям запроса (у VALIDATION_ERROR): имя поля → сообщение */
   errors?: ProblemDetailErrors;
+  instance?: string;
+  properties?: ProblemDetailProperties;
   /** Причина отказа правил игры (у MOVE_REJECTED), например NOT_YOUR_TURN */
   reason?: string;
+  status?: number;
+  title?: string;
+  type?: string;
 }

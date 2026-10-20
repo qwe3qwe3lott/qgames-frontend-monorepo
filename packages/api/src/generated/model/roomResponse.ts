@@ -11,16 +11,16 @@ import type {RoomSettingsDto} from './roomSettingsDto';
 import type {SessionResponse} from './sessionResponse';
 
 export interface RoomResponse {
-  id: string;
+  createdAt: string;
   gameType: RoomResponseGameType;
-  status: RoomResponseStatus;
-  /** @nullable */
-  ownerId?: string | null;
-  minPlayers: number;
+  id: string;
   maxPlayers: number;
   members: RoomMemberResponse[];
-  session?: SessionResponse | null;
-  createdAt: string;
-  settings: RoomSettingsDto;
+  minPlayers: number;
+  /** @nullable */
+  ownerId?: string | null;
   serverTime: string;
+  session?: SessionResponse | null;
+  settings: RoomSettingsDto;
+  status: RoomResponseStatus;
 }

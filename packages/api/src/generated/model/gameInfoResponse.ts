@@ -10,10 +10,10 @@ import type {RoomSettingsDto} from './roomSettingsDto';
 import type {TimeControlLimitsDto} from './timeControlLimitsDto';
 
 export interface GameInfoResponse {
-  gameType: GameInfoResponseGameType;
-  minPlayers: number;
-  maxPlayers: number;
-  timeControl: TimeControlLimitsDto;
-  gameSettingsLimits: GameSettingsLimitsDto;
   defaultSettings: RoomSettingsDto;
+  gameSettingsLimits: GameSettingsLimitsDto;
+  gameType: GameInfoResponseGameType;
+  maxPlayers: number;
+  minPlayers: number;
+  timeControl: TimeControlLimitsDto;
 }

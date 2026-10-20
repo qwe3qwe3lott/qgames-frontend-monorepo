@@ -6,6 +6,6 @@
  */
 
 export interface IntRangeDto {
-  min: number;
   max: number;
+  min: number;
 }

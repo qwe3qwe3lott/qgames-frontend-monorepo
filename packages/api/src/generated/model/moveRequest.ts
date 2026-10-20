@@ -7,10 +7,10 @@
 import type {MoveRequestData} from './moveRequestData';
 
 export interface MoveRequest {
-  /** @minLength 1 */
-  type: string;
   /** @nullable */
   data?: MoveRequestData;
   /** @nullable */
   expectedVersion?: number | null;
+  /** @minLength 1 */
+  type: string;
 }

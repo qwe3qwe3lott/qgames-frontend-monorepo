@@ -8,6 +8,6 @@ import type {GameSettingsDto} from './gameSettingsDto';
 import type {TimeControlDto} from './timeControlDto';
 
 export interface RoomSettingsDto {
-  timeControl: TimeControlDto;
   gameSettings: GameSettingsDto;
+  timeControl: TimeControlDto;
 }

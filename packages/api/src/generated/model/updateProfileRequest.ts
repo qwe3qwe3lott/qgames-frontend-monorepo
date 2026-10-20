@@ -7,6 +7,8 @@
 import type {UpdateProfileRequestAvatar} from './updateProfileRequestAvatar';
 
 export interface UpdateProfileRequest {
+  /** @nullable */
+  avatar?: UpdateProfileRequestAvatar;
   /**
    * @minLength 3
    * @maxLength 32
@@ -14,6 +16,4 @@ export interface UpdateProfileRequest {
    * @pattern ^[^\s\p{Cc}]([^\p{Cc}]*[^\s\p{Cc}])?$
    */
   nickname?: string | null;
-  /** @nullable */
-  avatar?: UpdateProfileRequestAvatar;
 }

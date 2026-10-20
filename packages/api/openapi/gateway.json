@@ -12,391 +12,27 @@
   ],
   "tags": [
     {
-      "name": "Аутентификация",
-      "description": "Регистрация, подтверждение email, вход и выход. Токены выдаются только в HttpOnly-куках access_token и refresh_token, в теле ответа их нет."
+      "description": "Регистрация, подтверждение email, вход и выход. Токены выдаются только в HttpOnly-куках access_token и refresh_token, в теле ответа их нет.",
+      "name": "Аутентификация"
     },
     {
-      "name": "Текущий пользователь",
-      "description": "Профиль и способы входа. Требуется аутентификация: кука access_token (или заголовок Authorization: Bearer)."
+      "description": "Профиль и способы входа. Требуется аутентификация: кука access_token (или заголовок Authorization: Bearer).",
+      "name": "Текущий пользователь"
     },
     {
-      "name": "Игровые комнаты",
-      "description": "Публичные комнаты: вход по ссылке с id комнаты для любого авторизованного пользователя. Обновлений в реальном времени пока нет — клиент перечитывает комнату (GET). Все ручки требуют аутентификации."
+      "description": "Публичные комнаты: вход по ссылке с id комнаты для любого авторизованного пользователя. Обновлений в реальном времени пока нет — клиент перечитывает комнату (GET). Все ручки требуют аутентификации.",
+      "name": "Игровые комнаты"
     },
     {
-      "name": "Игры",
-      "description": "Параметры игр портала. Все ручки требуют аутентификации."
+      "description": "Параметры игр портала. Все ручки требуют аутентификации.",
+      "name": "Игры"
     }
   ],
   "paths": {
-    "/api/users/me/login-methods/password": {
-      "put": {
-        "tags": [
-          "Текущий пользователь"
-        ],
-        "summary": "Сменить пароль",
-        "description": "Проверяет текущий пароль и задаёт новый. Все сессии пользователя завершаются: другие устройства и вкладки потеряют доступ не позже чем через 15 минут (срок access-токена). Текущий клиент сразу получает новую сессию в куках и остаётся в системе.",
-        "operationId": "changePassword",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ChangePasswordRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Пароль изменён, куки сессии обновлены, возвращены данные пользователя",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Новый пароль не проходит требования (VALIDATION_ERROR) или текущий пароль неверен (INVALID_CURRENT_PASSWORD)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Нет действительного access-токена (UNAUTHENTICATED)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "У аккаунта нет пароля (PASSWORD_NOT_SET)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Сервис аутентификации недоступен (SERVICE_UNAVAILABLE)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          }
-        }
-      },
+    "/api/auth/google": {
       "post": {
-        "tags": [
-          "Текущий пользователь"
-        ],
-        "summary": "Добавить вход по паролю",
-        "description": "Для аккаунта без пароля (например, созданного через Google).",
-        "operationId": "addPasswordLogin",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SetPasswordRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Пароль добавлен, возвращены обновлённые данные пользователя",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Пароль не проходит требования (VALIDATION_ERROR)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/games/{gameCode}/rooms/{roomId}/settings": {
-      "put": {
-        "tags": [
-          "Игровые комнаты"
-        ],
-        "summary": "Изменить настройки комнаты",
-        "description": "Заменяет настройки комнаты целиком. Только владелец и только между партиями; следующая партия стартует с новыми настройками. Код игры в пути должен совпадать с игрой комнаты. Ошибки настроек отдаются по полям тела (например, gameSettings.rounds).",
-        "operationId": "updateRoomSettings",
-        "parameters": [
-          {
-            "name": "gameCode",
-            "in": "path",
-            "description": "Код игры",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "nothing"
-              ]
-            }
-          },
-          {
-            "name": "roomId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RoomSettingsDto"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Настройки изменены",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RoomResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Настройки не подходят игре или запрос некорректен (VALIDATION_ERROR, поля — в errors)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Нет действительного access-токена (UNAUTHENTICATED)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Пользователь не в комнате (NOT_ROOM_MEMBER) или не владелец (NOT_ROOM_OWNER)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Неизвестный код игры (GAME_NOT_FOUND) или комнаты нет (ROOM_NOT_FOUND)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Комната другой игры (GAME_TYPE_MISMATCH) или идёт партия (ROOM_NOT_WAITING)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Нет действительного access-токена (UNAUTHENTICATED)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Пароль уже задан (LOGIN_METHOD_ALREADY_LINKED)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Сервис аутентификации недоступен (SERVICE_UNAVAILABLE)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/rooms/{roomId}/role": {
-      "put": {
-        "tags": [
-          "Игровые комнаты"
-        ],
-        "summary": "Сменить роль",
-        "description": "Стать игроком или наблюдателем. Только между партиями; игроком — если есть свободное место. Владелец тоже может стать наблюдателем, владение при этом сохраняется.",
-        "operationId": "changeRole",
-        "parameters": [
-          {
-            "name": "roomId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ChangeRoleRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Роль изменена",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RoomResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Не указана роль (VALIDATION_ERROR)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Нет действительного access-токена (UNAUTHENTICATED)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Пользователь не в комнате (NOT_ROOM_MEMBER)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Идёт партия (ROOM_NOT_WAITING) или нет свободного места игрока (NO_FREE_SEAT)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/users/me/login-methods/google": {
-      "post": {
-        "tags": [
-          "Текущий пользователь"
-        ],
-        "summary": "Привязать Google-аккаунт",
-        "description": "Явная привязка Google к текущему аккаунту. Email Google-аккаунта может отличаться от email аккаунта.",
-        "operationId": "addGoogleLogin",
+        "description": "Принимает Google ID token из Google Identity Services. Новый Google-аккаунт создаёт аккаунт или привязывается к существующему с тем же email, если email подтверждён и у нас, и в Google. Новый аккаунт получает ник вида player-a1b2c3 и аватар CAT — их можно сменить в профиле.",
+        "operationId": "loginWithGoogle",
         "requestBody": {
           "content": {
             "application/json": {
@@ -409,467 +45,465 @@
         },
         "responses": {
           "200": {
-            "description": "Google привязан, возвращены обновлённые данные пользователя",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UserResponse"
                 }
               }
-            }
+            },
+            "description": "Вход выполнен, возвращены данные пользователя"
           },
           "400": {
-            "description": "Невалидный запрос (VALIDATION_ERROR)",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
               }
-            }
+            },
+            "description": "Невалидный запрос (VALIDATION_ERROR) или email не подтверждён в Google (GOOGLE_EMAIL_NOT_VERIFIED)"
           },
           "401": {
-            "description": "Нет действительного access-токена (UNAUTHENTICATED) или ID token недействителен (INVALID_GOOGLE_TOKEN)",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
               }
-            }
+            },
+            "description": "ID token недействителен (INVALID_GOOGLE_TOKEN)"
           },
           "409": {
-            "description": "У пользователя уже есть Google-аккаунт (LOGIN_METHOD_ALREADY_LINKED) или этот Google-аккаунт привязан к другому пользователю (GOOGLE_ACCOUNT_ALREADY_LINKED)",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
+              }
+            },
+            "description": "Аккаунт с таким email уже есть: нужно войти и привязать Google явно (ACCOUNT_LINK_REQUIRED)"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Сервис аутентификации недоступен (SERVICE_UNAVAILABLE)"
+          }
+        },
+        "summary": "Вход через Google",
+        "tags": [
+          "Аутентификация"
+        ]
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "description": "Открывает сессию: ставит куки access_token (15 минут) и refresh_token (30 дней).",
+        "operationId": "login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
               }
             }
           },
-          "503": {
-            "description": "Сервис аутентификации недоступен (SERVICE_UNAVAILABLE)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/rooms/{roomId}/session": {
-      "post": {
-        "tags": [
-          "Игровые комнаты"
-        ],
-        "summary": "Начать партию",
-        "description": "Стартует партию с текущими игроками комнаты (места — по порядку входа). Только владелец, число игроков должно укладываться в ограничения игры (minPlayers–maxPlayers).",
-        "operationId": "startSession",
-        "parameters": [
-          {
-            "name": "roomId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
+          "required": true
+        },
         "responses": {
           "200": {
-            "description": "Партия началась",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RoomResponse"
+                  "$ref": "#/components/schemas/UserResponse"
                 }
               }
-            }
+            },
+            "description": "Вход выполнен, возвращены данные пользователя"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Невалидный запрос (VALIDATION_ERROR)"
           },
           "401": {
-            "description": "Нет действительного access-токена (UNAUTHENTICATED)",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
               }
-            }
+            },
+            "description": "Неверный email или пароль (INVALID_CREDENTIALS)"
           },
           "403": {
-            "description": "Пользователь не владелец (NOT_ROOM_OWNER)",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
               }
-            }
-          },
-          "404": {
-            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Партия уже идёт (ROOM_NOT_WAITING) или число игроков не подходит игре (NOT_ENOUGH_PLAYERS)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
+            },
+            "description": "Email не подтверждён (EMAIL_NOT_VERIFIED)"
           },
           "503": {
-            "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
               }
-            }
+            },
+            "description": "Сервис аутентификации недоступен (SERVICE_UNAVAILABLE)"
           }
-        }
-      },
-      "delete": {
+        },
+        "summary": "Вход по email и паролю",
         "tags": [
-          "Игровые комнаты"
-        ],
-        "summary": "Отменить партию",
-        "description": "Завершает идущую партию без результата и возвращает комнату в ожидание. Работает и на паузе. Только владелец.",
-        "operationId": "cancelSession",
-        "parameters": [
-          {
-            "name": "roomId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
+          "Аутентификация"
+        ]
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "description": "Отзывает сессию по куке refresh_token и удаляет обе куки. Без куки просто удаляет куки.",
+        "operationId": "logout",
         "responses": {
           "200": {
-            "description": "Партия отменена",
+            "description": "Сессия завершена, куки удалены"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Сервис аутентификации недоступен (SERVICE_UNAVAILABLE)"
+          }
+        },
+        "summary": "Выход",
+        "tags": [
+          "Аутентификация"
+        ]
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "description": "Берёт refresh-токен из куки refresh_token и ставит новые куки. Вызывать, когда access-токен истёк (защищённые ручки ответили 401). Параллельные вызовы из нескольких вкладок в течение 10 секунд допустимы. При ошибке обе куки удаляются.",
+        "operationId": "refresh",
+        "responses": {
+          "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RoomResponse"
+                  "$ref": "#/components/schemas/UserResponse"
                 }
               }
-            }
+            },
+            "description": "Сессия продлена, возвращены данные пользователя"
           },
           "401": {
-            "description": "Нет действительного access-токена (UNAUTHENTICATED)",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
               }
-            }
-          },
-          "403": {
-            "description": "Пользователь не владелец (NOT_ROOM_OWNER)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Партия не идёт (ROOM_NOT_IN_GAME)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
+            },
+            "description": "Куки нет, токен неизвестен или истёк (INVALID_REFRESH_TOKEN); токен уже использован, сессия отозвана (REFRESH_TOKEN_REUSED)"
           },
           "503": {
-            "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
               }
-            }
+            },
+            "description": "Сервис аутентификации недоступен (SERVICE_UNAVAILABLE)"
           }
-        }
+        },
+        "summary": "Обновление сессии",
+        "tags": [
+          "Аутентификация"
+        ]
       }
     },
-    "/api/rooms/{roomId}/session/resume": {
+    "/api/auth/register": {
       "post": {
-        "tags": [
-          "Игровые комнаты"
-        ],
-        "summary": "Продолжить партию",
-        "description": "Снимает паузу. Время хода и сроки возвращения вышедших игроков партии сдвигаются на длительность паузы: остаётся столько же времени, сколько было в момент паузы. Только владелец. Без паузы вызов ничего не меняет.",
-        "operationId": "resumeSession",
-        "parameters": [
-          {
-            "name": "roomId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
+        "description": "Создаёт аккаунт с ником (3–32 символа, не уникален) и аватаром и отправляет на email 6-значный код подтверждения. Сессия не открывается: войти можно после подтверждения email.",
+        "operationId": "register",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
             }
-          }
-        ],
+          },
+          "required": true
+        },
         "responses": {
           "200": {
-            "description": "Партия продолжается",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RoomResponse"
+                  "$ref": "#/components/schemas/RegistrationResponse"
                 }
               }
-            }
+            },
+            "description": "Аккаунт создан, письмо с кодом отправлено"
           },
-          "401": {
-            "description": "Нет действительного access-токена (UNAUTHENTICATED)",
+          "400": {
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
               }
-            }
-          },
-          "403": {
-            "description": "Пользователь не в комнате (NOT_ROOM_MEMBER) или не владелец (NOT_ROOM_OWNER)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
+            },
+            "description": "Невалидный email или пароль (VALIDATION_ERROR)"
           },
           "409": {
-            "description": "Партия не идёт (ROOM_NOT_IN_GAME)",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
+              }
+            },
+            "description": "Email уже зарегистрирован (EMAIL_ALREADY_REGISTERED)"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Сервис аутентификации недоступен (SERVICE_UNAVAILABLE)"
+          }
+        },
+        "summary": "Регистрация по email и паролю",
+        "tags": [
+          "Аутентификация"
+        ]
+      }
+    },
+    "/api/auth/resend-code": {
+      "post": {
+        "description": "Высылает новый код, прежний перестаёт действовать. Для неизвестного или уже подтверждённого email письмо не отправляется, ответ — 200.",
+        "operationId": "resendCode",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResendCodeRequest"
               }
             }
           },
-          "503": {
-            "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Запрос принят"
+          },
+          "400": {
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
               }
-            }
+            },
+            "description": "Невалидный email (VALIDATION_ERROR)"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Код отправлялся меньше минуты назад (RESEND_COOLDOWN)"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Сервис аутентификации недоступен (SERVICE_UNAVAILABLE)"
           }
-        }
+        },
+        "summary": "Повторная отправка кода подтверждения",
+        "tags": [
+          "Аутентификация"
+        ]
       }
     },
-    "/api/rooms/{roomId}/session/pause": {
+    "/api/auth/verify-email": {
       "post": {
-        "tags": [
-          "Игровые комнаты"
-        ],
-        "summary": "Поставить партию на паузу",
-        "description": "Замораживает идущую партию: ходы запрещены, время хода и сроки возвращения вышедших игроков партии не идут (session.pausedAt; остаток времени хода — moveDeadline − pausedAt). Вход, выход и отмена партии работают. Только владелец. Повторный вызов на паузе ничего не меняет.",
-        "operationId": "pauseSession",
-        "parameters": [
-          {
-            "name": "roomId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
+        "description": "Подтверждает email и сразу открывает сессию: ставит куки с токенами. Код действует 15 минут, на один код даётся 5 попыток.",
+        "operationId": "verifyEmail",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyEmailRequest"
+              }
             }
-          }
-        ],
+          },
+          "required": true
+        },
         "responses": {
           "200": {
-            "description": "Партия на паузе",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RoomResponse"
+                  "$ref": "#/components/schemas/UserResponse"
                 }
               }
-            }
+            },
+            "description": "Email подтверждён, сессия открыта, возвращены данные пользователя"
           },
-          "401": {
-            "description": "Нет действительного access-токена (UNAUTHENTICATED)",
+          "400": {
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
               }
-            }
-          },
-          "403": {
-            "description": "Пользователь не в комнате (NOT_ROOM_MEMBER) или не владелец (NOT_ROOM_OWNER)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
+            },
+            "description": "Невалидный запрос (VALIDATION_ERROR), неверный код или неизвестный email (INVALID_VERIFICATION_CODE), код истёк (VERIFICATION_CODE_EXPIRED)"
           },
           "409": {
-            "description": "Партия не идёт (ROOM_NOT_IN_GAME)",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
               }
-            }
+            },
+            "description": "Email уже подтверждён (EMAIL_ALREADY_VERIFIED)"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Попытки ввода кода исчерпаны (TOO_MANY_VERIFICATION_ATTEMPTS)"
           },
           "503": {
-            "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
               }
-            }
+            },
+            "description": "Сервис аутентификации недоступен (SERVICE_UNAVAILABLE)"
           }
-        }
+        },
+        "summary": "Подтверждение email кодом из письма",
+        "tags": [
+          "Аутентификация"
+        ]
       }
     },
-    "/api/rooms/{roomId}/leave": {
-      "post": {
-        "tags": [
-          "Игровые комнаты"
-        ],
-        "summary": "Выйти из комнаты",
-        "description": "Выйти можно всегда, но выход отложенный: участник помечается уходящим (leaving) и до истечения срока сохраняет роль, место и владение, а вход в комнату в пределах срока отменяет выход. Срок: игроку идущей партии его задаёт игра (в «игре в ничто» 30 с, на паузе отсчёт заморожен), владельцу вне игры — 5 с, остальным — 1 с. По истечении срока участник удаляется: игрок идущей партии сохраняет место и может вернуться, владение переходит к самому раннему из оставшихся: сначала к присутствующим, к уходящим — только если присутствующих нет; в каждой группе сначала игроки, затем наблюдатели. Пустая комната удаляется автоматически через 30 минут. Повторный выход срок не продлевает.",
-        "operationId": "leaveRoom",
+    "/api/games/{gameCode}": {
+      "get": {
+        "description": "Число игроков, поддерживаемые режимы времени и границы времени на ход, границы настроек игры и настройки по умолчанию. По ним строится форма создания комнаты и смены настроек.",
+        "operationId": "getGame",
         "parameters": [
           {
-            "name": "roomId",
+            "description": "Код игры",
             "in": "path",
+            "name": "gameCode",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "enum": [
+                "nothing"
+              ]
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "Пользователь вышел"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameInfoResponse"
+                }
+              }
+            },
+            "description": "Параметры игры"
           },
           "401": {
-            "description": "Нет действительного access-токена (UNAUTHENTICATED)",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
               }
-            }
-          },
-          "403": {
-            "description": "Пользователь не в комнате (NOT_ROOM_MEMBER)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
+            },
+            "description": "Нет действительного access-токена (UNAUTHENTICATED)"
           },
           "404": {
-            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND)",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
               }
-            }
+            },
+            "description": "Неизвестный код игры (GAME_NOT_FOUND)"
           },
           "503": {
-            "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
               }
-            }
+            },
+            "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)"
           }
-        }
+        },
+        "summary": "Параметры игры",
+        "tags": [
+          "Игры"
+        ]
       }
     },
     "/api/games/{gameCode}/rooms": {
       "post": {
-        "tags": [
-          "Игровые комнаты"
-        ],
-        "summary": "Создать комнату",
         "description": "Создаёт комнату под игру из пути с заданными настройками: правила времени и настройки игры. Создатель становится владельцем и первым игроком, ссылку на комнату (её id) можно отправить другим игрокам. Границы настроек и значения по умолчанию — в параметрах игры (GET /api/games/{gameCode}). Ошибки настроек отдаются по полям тела (например, settings.gameSettings.rounds), как у валидации запроса.",
         "operationId": "createRoom",
         "parameters": [
           {
-            "name": "gameCode",
-            "in": "path",
             "description": "Код игры",
+            "in": "path",
+            "name": "gameCode",
             "required": true,
             "schema": {
               "type": "string",
@@ -891,134 +525,71 @@
         },
         "responses": {
           "200": {
-            "description": "Комната создана",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RoomResponse"
                 }
               }
-            }
+            },
+            "description": "Комната создана"
           },
           "400": {
-            "description": "Настройки не подходят игре или запрос некорректен (VALIDATION_ERROR, поля — в errors)",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
               }
-            }
+            },
+            "description": "Настройки не подходят игре или запрос некорректен (VALIDATION_ERROR, поля — в errors)"
           },
           "401": {
-            "description": "Нет действительного access-токена (UNAUTHENTICATED)",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
               }
-            }
+            },
+            "description": "Нет действительного access-токена (UNAUTHENTICATED)"
           },
           "404": {
-            "description": "Неизвестный код игры (GAME_NOT_FOUND)",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
               }
-            }
+            },
+            "description": "Неизвестный код игры (GAME_NOT_FOUND)"
           },
           "503": {
-            "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
               }
-            }
+            },
+            "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)"
           }
-        }
-      }
-    },
-    "/api/rooms/{roomId}/join": {
-      "post": {
+        },
+        "summary": "Создать комнату",
         "tags": [
           "Игровые комнаты"
-        ],
-        "summary": "Войти в комнату",
-        "description": "Игрок идущей партии возвращается на своё место. Иначе, если партия не идёт и есть свободное место, пользователь становится игроком, в остальных случаях — наблюдателем. В пустой комнате вошедший становится владельцем. Вход вышедшего участника, пока не истёк срок выхода, отменяет выход: роль и владение сохраняются. Повторный вход ничего не меняет.",
-        "operationId": "joinRoom",
-        "parameters": [
-          {
-            "name": "roomId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Пользователь в комнате",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RoomResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Нет действительного access-токена (UNAUTHENTICATED)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          }
-        }
+        ]
       }
     },
     "/api/games/{gameCode}/rooms/{roomId}/moves": {
       "post": {
-        "tags": [
-          "Игровые комнаты"
-        ],
-        "summary": "Сделать ход",
         "description": "Ручка одна на все игры: код игры — в пути, ход — общий конверт `{type, data}`. `type` — вид действия (`PASS` в «игре в ничто»), `data` — его параметры в формате игры. Код игры должен совпадать с игрой комнаты. Ходить может только игрок партии, находящийся в комнате. Если у партии есть таймер, ход переставляет дедлайн (session.moveDeadline). Когда партия заканчивается, комната возвращается в ожидание, а законченная партия остаётся в ответе.",
         "operationId": "makeMove",
         "parameters": [
           {
-            "name": "gameCode",
-            "in": "path",
             "description": "Код игры",
+            "in": "path",
+            "name": "gameCode",
             "required": true,
             "schema": {
               "type": "string",
@@ -1028,8 +599,8 @@
             }
           },
           {
-            "name": "roomId",
             "in": "path",
+            "name": "roomId",
             "required": true,
             "schema": {
               "type": "string",
@@ -1049,101 +620,124 @@
         },
         "responses": {
           "200": {
-            "description": "Ход принят, возвращено новое состояние",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RoomResponse"
                 }
               }
-            }
+            },
+            "description": "Ход принят, возвращено новое состояние"
           },
           "400": {
-            "description": "Не указан вид хода или параметры не подходят игре (VALIDATION_ERROR)",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
               }
-            }
+            },
+            "description": "Не указан вид хода или параметры не подходят игре (VALIDATION_ERROR)"
           },
           "401": {
-            "description": "Нет действительного access-токена (UNAUTHENTICATED)",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
               }
-            }
+            },
+            "description": "Нет действительного access-токена (UNAUTHENTICATED)"
           },
           "403": {
-            "description": "Пользователь не в комнате (NOT_ROOM_MEMBER) или не игрок партии (NOT_SESSION_PLAYER)",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
               }
-            }
+            },
+            "description": "Пользователь не в комнате (NOT_ROOM_MEMBER) или не игрок партии (NOT_SESSION_PLAYER)"
           },
           "404": {
-            "description": "Неизвестный код игры (GAME_NOT_FOUND) или комнаты нет (ROOM_NOT_FOUND)",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
               }
-            }
+            },
+            "description": "Неизвестный код игры (GAME_NOT_FOUND) или комнаты нет (ROOM_NOT_FOUND)"
           },
           "409": {
-            "description": "Комната другой игры (GAME_TYPE_MISMATCH), партия не идёт (ROOM_NOT_IN_GAME), стоит на паузе (SESSION_PAUSED) или изменилась с момента, который видел клиент (SESSION_CONFLICT)",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
               }
-            }
+            },
+            "description": "Комната другой игры (GAME_TYPE_MISMATCH), партия не идёт (ROOM_NOT_IN_GAME), стоит на паузе (SESSION_PAUSED) или изменилась с момента, который видел клиент (SESSION_CONFLICT)"
           },
           "422": {
-            "description": "Ход нарушает правила игры (MOVE_REJECTED, причина — в поле reason, например NOT_YOUR_TURN)",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
               }
-            }
+            },
+            "description": "Ход нарушает правила игры (MOVE_REJECTED, причина — в поле reason, например NOT_YOUR_TURN)"
           },
           "503": {
-            "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
               }
-            }
+            },
+            "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)"
           }
-        }
+        },
+        "summary": "Сделать ход",
+        "tags": [
+          "Игровые комнаты"
+        ]
       }
     },
-    "/api/auth/verify-email": {
-      "post": {
-        "tags": [
-          "Аутентификация"
+    "/api/games/{gameCode}/rooms/{roomId}/settings": {
+      "put": {
+        "description": "Заменяет настройки комнаты целиком. Только владелец и только между партиями; следующая партия стартует с новыми настройками. Код игры в пути должен совпадать с игрой комнаты. Ошибки настроек отдаются по полям тела (например, gameSettings.rounds).",
+        "operationId": "updateRoomSettings",
+        "parameters": [
+          {
+            "description": "Код игры",
+            "in": "path",
+            "name": "gameCode",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "nothing"
+              ]
+            }
+          },
+          {
+            "in": "path",
+            "name": "roomId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
         ],
-        "summary": "Подтверждение email кодом из письма",
-        "description": "Подтверждает email и сразу открывает сессию: ставит куки с токенами. Код действует 15 минут, на один код даётся 5 попыток.",
-        "operationId": "verifyEmail",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/VerifyEmailRequest"
+                "$ref": "#/components/schemas/RoomSettingsDto"
               }
             }
           },
@@ -1151,322 +745,763 @@
         },
         "responses": {
           "200": {
-            "description": "Email подтверждён, сессия открыта, возвращены данные пользователя",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
+                  "$ref": "#/components/schemas/RoomResponse"
                 }
               }
-            }
+            },
+            "description": "Настройки изменены"
           },
           "400": {
-            "description": "Невалидный запрос (VALIDATION_ERROR), неверный код или неизвестный email (INVALID_VERIFICATION_CODE), код истёк (VERIFICATION_CODE_EXPIRED)",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
               }
-            }
-          },
-          "409": {
-            "description": "Email уже подтверждён (EMAIL_ALREADY_VERIFIED)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Попытки ввода кода исчерпаны (TOO_MANY_VERIFICATION_ATTEMPTS)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Сервис аутентификации недоступен (SERVICE_UNAVAILABLE)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/auth/resend-code": {
-      "post": {
-        "tags": [
-          "Аутентификация"
-        ],
-        "summary": "Повторная отправка кода подтверждения",
-        "description": "Высылает новый код, прежний перестаёт действовать. Для неизвестного или уже подтверждённого email письмо не отправляется, ответ — 200.",
-        "operationId": "resendCode",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ResendCodeRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Запрос принят"
-          },
-          "400": {
-            "description": "Невалидный email (VALIDATION_ERROR)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Код отправлялся меньше минуты назад (RESEND_COOLDOWN)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Сервис аутентификации недоступен (SERVICE_UNAVAILABLE)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/auth/register": {
-      "post": {
-        "tags": [
-          "Аутентификация"
-        ],
-        "summary": "Регистрация по email и паролю",
-        "description": "Создаёт аккаунт с ником (3–32 символа, не уникален) и аватаром и отправляет на email 6-значный код подтверждения. Сессия не открывается: войти можно после подтверждения email.",
-        "operationId": "register",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RegisterRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Аккаунт создан, письмо с кодом отправлено",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RegistrationResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Невалидный email или пароль (VALIDATION_ERROR)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Email уже зарегистрирован (EMAIL_ALREADY_REGISTERED)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Сервис аутентификации недоступен (SERVICE_UNAVAILABLE)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/auth/refresh": {
-      "post": {
-        "tags": [
-          "Аутентификация"
-        ],
-        "summary": "Обновление сессии",
-        "description": "Берёт refresh-токен из куки refresh_token и ставит новые куки. Вызывать, когда access-токен истёк (защищённые ручки ответили 401). Параллельные вызовы из нескольких вкладок в течение 10 секунд допустимы. При ошибке обе куки удаляются.",
-        "operationId": "refresh",
-        "responses": {
-          "200": {
-            "description": "Сессия продлена, возвращены данные пользователя",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
-                }
-              }
-            }
+            },
+            "description": "Настройки не подходят игре или запрос некорректен (VALIDATION_ERROR, поля — в errors)"
           },
           "401": {
-            "description": "Куки нет, токен неизвестен или истёк (INVALID_REFRESH_TOKEN); токен уже использован, сессия отозвана (REFRESH_TOKEN_REUSED)",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
               }
-            }
-          },
-          "503": {
-            "description": "Сервис аутентификации недоступен (SERVICE_UNAVAILABLE)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/auth/logout": {
-      "post": {
-        "tags": [
-          "Аутентификация"
-        ],
-        "summary": "Выход",
-        "description": "Отзывает сессию по куке refresh_token и удаляет обе куки. Без куки просто удаляет куки.",
-        "operationId": "logout",
-        "responses": {
-          "200": {
-            "description": "Сессия завершена, куки удалены"
-          },
-          "503": {
-            "description": "Сервис аутентификации недоступен (SERVICE_UNAVAILABLE)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/auth/login": {
-      "post": {
-        "tags": [
-          "Аутентификация"
-        ],
-        "summary": "Вход по email и паролю",
-        "description": "Открывает сессию: ставит куки access_token (15 минут) и refresh_token (30 дней).",
-        "operationId": "login",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LoginRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Вход выполнен, возвращены данные пользователя",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Невалидный запрос (VALIDATION_ERROR)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Неверный email или пароль (INVALID_CREDENTIALS)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
+            },
+            "description": "Нет действительного access-токена (UNAUTHENTICATED)"
           },
           "403": {
-            "description": "Email не подтверждён (EMAIL_NOT_VERIFIED)",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
+              }
+            },
+            "description": "Пользователь не в комнате (NOT_ROOM_MEMBER) или не владелец (NOT_ROOM_OWNER)"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Неизвестный код игры (GAME_NOT_FOUND) или комнаты нет (ROOM_NOT_FOUND)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Комната другой игры (GAME_TYPE_MISMATCH) или идёт партия (ROOM_NOT_WAITING)"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)"
+          }
+        },
+        "summary": "Изменить настройки комнаты",
+        "tags": [
+          "Игровые комнаты"
+        ]
+      }
+    },
+    "/api/rooms/{roomId}": {
+      "get": {
+        "description": "Участники с ролями, владелец, текущая или последняя партия. Доступно и до входа в комнату — так страница по ссылке показывает комнату ещё до входа.",
+        "operationId": "getRoom",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "roomId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomResponse"
+                }
+              }
+            },
+            "description": "Комната"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Нет действительного access-токена (UNAUTHENTICATED)"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND)"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)"
+          }
+        },
+        "summary": "Получить комнату",
+        "tags": [
+          "Игровые комнаты"
+        ]
+      }
+    },
+    "/api/rooms/{roomId}/join": {
+      "post": {
+        "description": "Игрок идущей партии возвращается на своё место. Иначе, если партия не идёт и есть свободное место, пользователь становится игроком, в остальных случаях — наблюдателем. В пустой комнате вошедший становится владельцем. Вход вышедшего участника, пока не истёк срок выхода, отменяет выход: роль и владение сохраняются. Повторный вход ничего не меняет.",
+        "operationId": "joinRoom",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "roomId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomResponse"
+                }
+              }
+            },
+            "description": "Пользователь в комнате"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Нет действительного access-токена (UNAUTHENTICATED)"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND)"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)"
+          }
+        },
+        "summary": "Войти в комнату",
+        "tags": [
+          "Игровые комнаты"
+        ]
+      }
+    },
+    "/api/rooms/{roomId}/leave": {
+      "post": {
+        "description": "Выйти можно всегда, но выход отложенный: участник помечается уходящим (leaving) и до истечения срока сохраняет роль, место и владение, а вход в комнату в пределах срока отменяет выход. Срок: игроку идущей партии его задаёт игра (в «игре в ничто» 30 с, на паузе отсчёт заморожен), владельцу вне игры — 5 с, остальным — 1 с. По истечении срока участник удаляется: игрок идущей партии сохраняет место и может вернуться, владение переходит к самому раннему из оставшихся: сначала к присутствующим, к уходящим — только если присутствующих нет; в каждой группе сначала игроки, затем наблюдатели. Пустая комната удаляется автоматически через 30 минут. Повторный выход срок не продлевает.",
+        "operationId": "leaveRoom",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "roomId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Пользователь вышел"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Нет действительного access-токена (UNAUTHENTICATED)"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Пользователь не в комнате (NOT_ROOM_MEMBER)"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND)"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)"
+          }
+        },
+        "summary": "Выйти из комнаты",
+        "tags": [
+          "Игровые комнаты"
+        ]
+      }
+    },
+    "/api/rooms/{roomId}/role": {
+      "put": {
+        "description": "Стать игроком или наблюдателем. Только между партиями; игроком — если есть свободное место. Владелец тоже может стать наблюдателем, владение при этом сохраняется.",
+        "operationId": "changeRole",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "roomId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeRoleRequest"
               }
             }
           },
-          "503": {
-            "description": "Сервис аутентификации недоступен (SERVICE_UNAVAILABLE)",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomResponse"
+                }
+              }
+            },
+            "description": "Роль изменена"
+          },
+          "400": {
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
               }
-            }
+            },
+            "description": "Не указана роль (VALIDATION_ERROR)"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Нет действительного access-токена (UNAUTHENTICATED)"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Пользователь не в комнате (NOT_ROOM_MEMBER)"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Идёт партия (ROOM_NOT_WAITING) или нет свободного места игрока (NO_FREE_SEAT)"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)"
           }
-        }
+        },
+        "summary": "Сменить роль",
+        "tags": [
+          "Игровые комнаты"
+        ]
       }
     },
-    "/api/auth/google": {
-      "post": {
-        "tags": [
-          "Аутентификация"
+    "/api/rooms/{roomId}/session": {
+      "delete": {
+        "description": "Завершает идущую партию без результата и возвращает комнату в ожидание. Работает и на паузе. Только владелец.",
+        "operationId": "cancelSession",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "roomId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
         ],
-        "summary": "Вход через Google",
-        "description": "Принимает Google ID token из Google Identity Services. Новый Google-аккаунт создаёт аккаунт или привязывается к существующему с тем же email, если email подтверждён и у нас, и в Google. Новый аккаунт получает ник вида player-a1b2c3 и аватар CAT — их можно сменить в профиле.",
-        "operationId": "loginWithGoogle",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomResponse"
+                }
+              }
+            },
+            "description": "Партия отменена"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Нет действительного access-токена (UNAUTHENTICATED)"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Пользователь не владелец (NOT_ROOM_OWNER)"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Партия не идёт (ROOM_NOT_IN_GAME)"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)"
+          }
+        },
+        "summary": "Отменить партию",
+        "tags": [
+          "Игровые комнаты"
+        ]
+      },
+      "post": {
+        "description": "Стартует партию с текущими игроками комнаты (места — по порядку входа). Только владелец, число игроков должно укладываться в ограничения игры (minPlayers–maxPlayers).",
+        "operationId": "startSession",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "roomId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomResponse"
+                }
+              }
+            },
+            "description": "Партия началась"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Нет действительного access-токена (UNAUTHENTICATED)"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Пользователь не владелец (NOT_ROOM_OWNER)"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Партия уже идёт (ROOM_NOT_WAITING) или число игроков не подходит игре (NOT_ENOUGH_PLAYERS)"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)"
+          }
+        },
+        "summary": "Начать партию",
+        "tags": [
+          "Игровые комнаты"
+        ]
+      }
+    },
+    "/api/rooms/{roomId}/session/pause": {
+      "post": {
+        "description": "Замораживает идущую партию: ходы запрещены, время хода и сроки возвращения вышедших игроков партии не идут (session.pausedAt; остаток времени хода — moveDeadline − pausedAt). Вход, выход и отмена партии работают. Только владелец. Повторный вызов на паузе ничего не меняет.",
+        "operationId": "pauseSession",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "roomId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomResponse"
+                }
+              }
+            },
+            "description": "Партия на паузе"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Нет действительного access-токена (UNAUTHENTICATED)"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Пользователь не в комнате (NOT_ROOM_MEMBER) или не владелец (NOT_ROOM_OWNER)"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Партия не идёт (ROOM_NOT_IN_GAME)"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)"
+          }
+        },
+        "summary": "Поставить партию на паузу",
+        "tags": [
+          "Игровые комнаты"
+        ]
+      }
+    },
+    "/api/rooms/{roomId}/session/resume": {
+      "post": {
+        "description": "Снимает паузу. Время хода и сроки возвращения вышедших игроков партии сдвигаются на длительность паузы: остаётся столько же времени, сколько было в момент паузы. Только владелец. Без паузы вызов ничего не меняет.",
+        "operationId": "resumeSession",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "roomId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomResponse"
+                }
+              }
+            },
+            "description": "Партия продолжается"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Нет действительного access-токена (UNAUTHENTICATED)"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Пользователь не в комнате (NOT_ROOM_MEMBER) или не владелец (NOT_ROOM_OWNER)"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Партия не идёт (ROOM_NOT_IN_GAME)"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)"
+          }
+        },
+        "summary": "Продолжить партию",
+        "tags": [
+          "Игровые комнаты"
+        ]
+      }
+    },
+    "/api/users/me": {
+      "get": {
+        "description": "Email, статус его подтверждения и привязанные способы входа. Подходит, чтобы проверить, залогинен ли пользователь.",
+        "operationId": "getCurrentUser",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            },
+            "description": "Данные пользователя"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Нет access-токена, он истёк или недействителен (UNAUTHENTICATED) — нужно вызвать /api/auth/refresh"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Пользователь не найден (USER_NOT_FOUND)"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Сервис аутентификации недоступен (SERVICE_UNAVAILABLE)"
+          }
+        },
+        "summary": "Данные текущего пользователя",
+        "tags": [
+          "Текущий пользователь"
+        ]
+      }
+    },
+    "/api/users/me/login-methods/google": {
+      "post": {
+        "description": "Явная привязка Google к текущему аккаунту. Email Google-аккаунта может отличаться от email аккаунта.",
+        "operationId": "addGoogleLogin",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1479,64 +1514,206 @@
         },
         "responses": {
           "200": {
-            "description": "Вход выполнен, возвращены данные пользователя",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UserResponse"
                 }
               }
-            }
+            },
+            "description": "Google привязан, возвращены обновлённые данные пользователя"
           },
           "400": {
-            "description": "Невалидный запрос (VALIDATION_ERROR) или email не подтверждён в Google (GOOGLE_EMAIL_NOT_VERIFIED)",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
               }
-            }
+            },
+            "description": "Невалидный запрос (VALIDATION_ERROR)"
           },
           "401": {
-            "description": "ID token недействителен (INVALID_GOOGLE_TOKEN)",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
               }
-            }
+            },
+            "description": "Нет действительного access-токена (UNAUTHENTICATED) или ID token недействителен (INVALID_GOOGLE_TOKEN)"
           },
           "409": {
-            "description": "Аккаунт с таким email уже есть: нужно войти и привязать Google явно (ACCOUNT_LINK_REQUIRED)",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
+              }
+            },
+            "description": "У пользователя уже есть Google-аккаунт (LOGIN_METHOD_ALREADY_LINKED) или этот Google-аккаунт привязан к другому пользователю (GOOGLE_ACCOUNT_ALREADY_LINKED)"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Сервис аутентификации недоступен (SERVICE_UNAVAILABLE)"
+          }
+        },
+        "summary": "Привязать Google-аккаунт",
+        "tags": [
+          "Текущий пользователь"
+        ]
+      }
+    },
+    "/api/users/me/login-methods/password": {
+      "post": {
+        "description": "Для аккаунта без пароля (например, созданного через Google).",
+        "operationId": "addPasswordLogin",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetPasswordRequest"
               }
             }
           },
-          "503": {
-            "description": "Сервис аутентификации недоступен (SERVICE_UNAVAILABLE)",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            },
+            "description": "Пароль добавлен, возвращены обновлённые данные пользователя"
+          },
+          "400": {
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
               }
-            }
+            },
+            "description": "Пароль не проходит требования (VALIDATION_ERROR)"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Нет действительного access-токена (UNAUTHENTICATED)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Пароль уже задан (LOGIN_METHOD_ALREADY_LINKED)"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Сервис аутентификации недоступен (SERVICE_UNAVAILABLE)"
           }
-        }
+        },
+        "summary": "Добавить вход по паролю",
+        "tags": [
+          "Текущий пользователь"
+        ]
+      },
+      "put": {
+        "description": "Проверяет текущий пароль и задаёт новый. Все сессии пользователя завершаются: другие устройства и вкладки потеряют доступ не позже чем через 15 минут (срок access-токена). Текущий клиент сразу получает новую сессию в куках и остаётся в системе.",
+        "operationId": "changePassword",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            },
+            "description": "Пароль изменён, куки сессии обновлены, возвращены данные пользователя"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Новый пароль не проходит требования (VALIDATION_ERROR) или текущий пароль неверен (INVALID_CURRENT_PASSWORD)"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Нет действительного access-токена (UNAUTHENTICATED)"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "У аккаунта нет пароля (PASSWORD_NOT_SET)"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Сервис аутентификации недоступен (SERVICE_UNAVAILABLE)"
+          }
+        },
+        "summary": "Сменить пароль",
+        "tags": [
+          "Текущий пользователь"
+        ]
       }
     },
     "/api/users/me/profile": {
       "patch": {
-        "tags": [
-          "Текущий пользователь"
-        ],
-        "summary": "Изменить профиль",
         "description": "Меняет ник и/или аватар: изменяется только переданное. Ник не уникален. В игровых комнатах новый ник появляется через несколько секунд.",
         "operationId": "updateProfile",
         "requestBody": {
@@ -1551,291 +1728,50 @@
         },
         "responses": {
           "200": {
-            "description": "Профиль изменён, возвращены обновлённые данные пользователя",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UserResponse"
                 }
               }
-            }
+            },
+            "description": "Профиль изменён, возвращены обновлённые данные пользователя"
           },
           "400": {
-            "description": "Ничего не передано или ник не проходит требования: 3–32 символа без пробелов по краям (VALIDATION_ERROR)",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
               }
-            }
+            },
+            "description": "Ничего не передано или ник не проходит требования: 3–32 символа без пробелов по краям (VALIDATION_ERROR)"
           },
           "401": {
-            "description": "Нет действительного access-токена (UNAUTHENTICATED)",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
               }
-            }
+            },
+            "description": "Нет действительного access-токена (UNAUTHENTICATED)"
           },
           "503": {
-            "description": "Сервис аутентификации недоступен (SERVICE_UNAVAILABLE)",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 }
               }
-            }
+            },
+            "description": "Сервис аутентификации недоступен (SERVICE_UNAVAILABLE)"
           }
-        }
-      }
-    },
-    "/api/users/me": {
-      "get": {
+        },
+        "summary": "Изменить профиль",
         "tags": [
           "Текущий пользователь"
-        ],
-        "summary": "Данные текущего пользователя",
-        "description": "Email, статус его подтверждения и привязанные способы входа. Подходит, чтобы проверить, залогинен ли пользователь.",
-        "operationId": "getCurrentUser",
-        "responses": {
-          "200": {
-            "description": "Данные пользователя",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Нет access-токена, он истёк или недействителен (UNAUTHENTICATED) — нужно вызвать /api/auth/refresh",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Пользователь не найден (USER_NOT_FOUND)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Сервис аутентификации недоступен (SERVICE_UNAVAILABLE)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/rooms/{roomId}": {
-      "get": {
-        "tags": [
-          "Игровые комнаты"
-        ],
-        "summary": "Получить комнату",
-        "description": "Участники с ролями, владелец, текущая или последняя партия. Доступно и до входа в комнату — так страница по ссылке показывает комнату ещё до входа.",
-        "operationId": "getRoom",
-        "parameters": [
-          {
-            "name": "roomId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Комната",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RoomResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Нет действительного access-токена (UNAUTHENTICATED)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "Игровые комнаты"
-        ],
-        "summary": "Удалить комнату",
-        "description": "Удаляет комнату вместе с историей партий. Только владелец.",
-        "operationId": "deleteRoom",
-        "parameters": [
-          {
-            "name": "roomId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Комната удалена"
-          },
-          "401": {
-            "description": "Нет действительного access-токена (UNAUTHENTICATED)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Пользователь не владелец (NOT_ROOM_OWNER)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Комнаты нет или она удалена (ROOM_NOT_FOUND)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/games/{gameCode}": {
-      "get": {
-        "tags": [
-          "Игры"
-        ],
-        "summary": "Параметры игры",
-        "description": "Число игроков, поддерживаемые режимы времени и границы времени на ход, границы настроек игры и настройки по умолчанию. По ним строится форма создания комнаты и смены настроек.",
-        "operationId": "getGame",
-        "parameters": [
-          {
-            "name": "gameCode",
-            "in": "path",
-            "description": "Код игры",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "nothing"
-              ]
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Параметры игры",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GameInfoResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Нет действительного access-токена (UNAUTHENTICATED)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Неизвестный код игры (GAME_NOT_FOUND)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Игровой сервис недоступен (SERVICE_UNAVAILABLE)",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                }
-              }
-            }
-          }
-        }
+        ]
       }
     }
   },
@@ -1859,49 +1795,6 @@
           "newPassword"
         ]
       },
-      "UserResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "email": {
-            "type": "string"
-          },
-          "emailVerified": {
-            "type": "boolean"
-          },
-          "nickname": {
-            "type": "string"
-          },
-          "avatar": {
-            "type": "string",
-            "enum": [
-              "CAT",
-              "DOG"
-            ]
-          },
-          "loginMethods": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "PASSWORD",
-                "GOOGLE"
-              ]
-            }
-          }
-        },
-        "required": [
-          "avatar",
-          "email",
-          "emailVerified",
-          "id",
-          "loginMethods",
-          "nickname"
-        ]
-      },
       "ChangeRoleRequest": {
         "type": "object",
         "properties": {
@@ -1917,18 +1810,152 @@
           "role"
         ]
       },
+      "CreateRoomRequest": {
+        "type": "object",
+        "properties": {
+          "settings": {
+            "$ref": "#/components/schemas/RoomSettingsDto"
+          }
+        },
+        "required": [
+          "settings"
+        ]
+      },
+      "GameInfoResponse": {
+        "type": "object",
+        "properties": {
+          "defaultSettings": {
+            "$ref": "#/components/schemas/RoomSettingsDto"
+          },
+          "gameSettingsLimits": {
+            "$ref": "#/components/schemas/GameSettingsLimitsDto"
+          },
+          "gameType": {
+            "type": "string",
+            "enum": [
+              "NOTHING"
+            ]
+          },
+          "maxPlayers": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "minPlayers": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "timeControl": {
+            "$ref": "#/components/schemas/TimeControlLimitsDto"
+          }
+        },
+        "required": [
+          "defaultSettings",
+          "gameSettingsLimits",
+          "gameType",
+          "maxPlayers",
+          "minPlayers",
+          "timeControl"
+        ]
+      },
       "GameSettingsDto": {
         "description": "Настройки конкретной игры, вид — по полю gameType",
         "discriminator": {
-          "propertyName": "gameType",
           "mapping": {
             "NOTHING": "#/components/schemas/NothingSettingsDto"
-          }
+          },
+          "propertyName": "gameType"
         },
         "oneOf": [
           {
             "$ref": "#/components/schemas/NothingSettingsDto"
           }
+        ]
+      },
+      "GameSettingsLimitsDto": {
+        "description": "Границы настроек конкретной игры, вид — по полю gameType",
+        "discriminator": {
+          "mapping": {
+            "NOTHING": "#/components/schemas/NothingSettingsLimitsDto"
+          },
+          "propertyName": "gameType"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/NothingSettingsLimitsDto"
+          }
+        ]
+      },
+      "GoogleIdTokenRequest": {
+        "type": "object",
+        "properties": {
+          "idToken": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "idToken"
+        ]
+      },
+      "IntRangeDto": {
+        "type": "object",
+        "properties": {
+          "max": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "min": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "max",
+          "min"
+        ]
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "minLength": 1
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "MoveRequest": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": {}
+          },
+          "expectedVersion": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "type": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "type"
         ]
       },
       "NothingSettingsDto": {
@@ -1950,19 +1977,134 @@
           "rounds"
         ]
       },
-      "RoomMemberResponse": {
+      "NothingSettingsLimitsDto": {
         "type": "object",
         "properties": {
+          "gameType": {
+            "type": "string",
+            "enum": [
+              "NOTHING"
+            ]
+          },
+          "rounds": {
+            "$ref": "#/components/schemas/IntRangeDto"
+          }
+        },
+        "required": [
+          "gameType",
+          "rounds"
+        ]
+      },
+      "ProblemDetail": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Машиночитаемый код ошибки"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Ошибки по полям запроса (у VALIDATION_ERROR): имя поля → сообщение"
+          },
+          "instance": {
+            "type": "string",
+            "format": "uri"
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object"
+            }
+          },
+          "reason": {
+            "type": "string",
+            "description": "Причина отказа правил игры (у MOVE_REJECTED), например NOT_YOUR_TURN"
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "title": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "properties": {
+          "avatar": {
+            "type": "string",
+            "enum": [
+              "CAT",
+              "DOG"
+            ]
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 320,
+            "minLength": 1
+          },
+          "nickname": {
+            "type": "string",
+            "maxLength": 32,
+            "minLength": 3,
+            "pattern": "^[^\\s\\p{Cc}]([^\\p{Cc}]*[^\\s\\p{Cc}])?$"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 8
+          }
+        },
+        "required": [
+          "avatar",
+          "email",
+          "nickname",
+          "password"
+        ]
+      },
+      "RegistrationResponse": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
           "userId": {
             "type": "string",
             "format": "uuid"
-          },
-          "nickname": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
+          }
+        },
+        "required": [
+          "email",
+          "userId"
+        ]
+      },
+      "ResendCodeRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "RoomMemberResponse": {
+        "type": "object",
+        "properties": {
           "avatar": {
             "type": [
               "string",
@@ -1973,6 +2115,22 @@
               "DOG"
             ]
           },
+          "joinedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "leaving": {
+            "type": "boolean"
+          },
+          "nickname": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "owner": {
+            "type": "boolean"
+          },
           "role": {
             "type": "string",
             "enum": [
@@ -1980,15 +2138,9 @@
               "SPECTATOR"
             ]
           },
-          "owner": {
-            "type": "boolean"
-          },
-          "leaving": {
-            "type": "boolean"
-          },
-          "joinedAt": {
+          "userId": {
             "type": "string",
-            "format": "date-time"
+            "format": "uuid"
           }
         },
         "required": [
@@ -2002,9 +2154,9 @@
       "RoomResponse": {
         "type": "object",
         "properties": {
-          "id": {
+          "createdAt": {
             "type": "string",
-            "format": "uuid"
+            "format": "date-time"
           },
           "gameType": {
             "type": "string",
@@ -2012,23 +2164,9 @@
               "NOTHING"
             ]
           },
-          "status": {
+          "id": {
             "type": "string",
-            "enum": [
-              "WAITING",
-              "IN_GAME"
-            ]
-          },
-          "ownerId": {
-            "type": [
-              "string",
-              "null"
-            ],
             "format": "uuid"
-          },
-          "minPlayers": {
-            "type": "integer",
-            "format": "int32"
           },
           "maxPlayers": {
             "type": "integer",
@@ -2040,6 +2178,21 @@
               "$ref": "#/components/schemas/RoomMemberResponse"
             }
           },
+          "minPlayers": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ownerId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "serverTime": {
+            "type": "string",
+            "format": "date-time"
+          },
           "session": {
             "oneOf": [
               {
@@ -2050,16 +2203,15 @@
               }
             ]
           },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
           "settings": {
             "$ref": "#/components/schemas/RoomSettingsDto"
           },
-          "serverTime": {
+          "status": {
             "type": "string",
-            "format": "date-time"
+            "enum": [
+              "WAITING",
+              "IN_GAME"
+            ]
           }
         },
         "required": [
@@ -2077,11 +2229,11 @@
       "RoomSettingsDto": {
         "type": "object",
         "properties": {
-          "timeControl": {
-            "$ref": "#/components/schemas/TimeControlDto"
-          },
           "gameSettings": {
             "$ref": "#/components/schemas/GameSettingsDto"
+          },
+          "timeControl": {
+            "$ref": "#/components/schemas/TimeControlDto"
           }
         },
         "required": [
@@ -2096,29 +2248,6 @@
             "type": "string",
             "format": "uuid"
           },
-          "status": {
-            "type": "string",
-            "enum": [
-              "IN_PROGRESS",
-              "FINISHED",
-              "CANCELLED"
-            ]
-          },
-          "players": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          "version": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "state": {
-            "type": "object",
-            "additionalProperties": {}
-          },
           "moveDeadline": {
             "type": [
               "string",
@@ -2132,6 +2261,29 @@
               "null"
             ],
             "format": "date-time"
+          },
+          "players": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "state": {
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "IN_PROGRESS",
+              "FINISHED",
+              "CANCELLED"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
           }
         },
         "required": [
@@ -2140,6 +2292,19 @@
           "state",
           "status",
           "version"
+        ]
+      },
+      "SetPasswordRequest": {
+        "type": "object",
+        "properties": {
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 8
+          }
+        },
+        "required": [
+          "password"
         ]
       },
       "TimeControlDto": {
@@ -2164,278 +2329,6 @@
           "mode"
         ]
       },
-      "SetPasswordRequest": {
-        "type": "object",
-        "properties": {
-          "password": {
-            "type": "string",
-            "maxLength": 128,
-            "minLength": 8
-          }
-        },
-        "required": [
-          "password"
-        ]
-      },
-      "GoogleIdTokenRequest": {
-        "type": "object",
-        "properties": {
-          "idToken": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "required": [
-          "idToken"
-        ]
-      },
-      "CreateRoomRequest": {
-        "type": "object",
-        "properties": {
-          "settings": {
-            "$ref": "#/components/schemas/RoomSettingsDto"
-          }
-        },
-        "required": [
-          "settings"
-        ]
-      },
-      "MoveRequest": {
-        "type": "object",
-        "properties": {
-          "type": {
-            "type": "string",
-            "minLength": 1
-          },
-          "data": {
-            "type": [
-              "object",
-              "null"
-            ],
-            "additionalProperties": {}
-          },
-          "expectedVersion": {
-            "type": [
-              "integer",
-              "null"
-            ],
-            "format": "int64"
-          }
-        },
-        "required": [
-          "type"
-        ]
-      },
-      "VerifyEmailRequest": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "format": "email",
-            "minLength": 1
-          },
-          "code": {
-            "type": "string",
-            "minLength": 1,
-            "pattern": "[0-9]{6}"
-          }
-        },
-        "required": [
-          "code",
-          "email"
-        ]
-      },
-      "ResendCodeRequest": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "format": "email",
-            "minLength": 1
-          }
-        },
-        "required": [
-          "email"
-        ]
-      },
-      "RegisterRequest": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "format": "email",
-            "maxLength": 320,
-            "minLength": 1
-          },
-          "password": {
-            "type": "string",
-            "maxLength": 128,
-            "minLength": 8
-          },
-          "nickname": {
-            "type": "string",
-            "maxLength": 32,
-            "minLength": 3,
-            "pattern": "^[^\\s\\p{Cc}]([^\\p{Cc}]*[^\\s\\p{Cc}])?$"
-          },
-          "avatar": {
-            "type": "string",
-            "enum": [
-              "CAT",
-              "DOG"
-            ]
-          }
-        },
-        "required": [
-          "avatar",
-          "email",
-          "nickname",
-          "password"
-        ]
-      },
-      "RegistrationResponse": {
-        "type": "object",
-        "properties": {
-          "userId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "email": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "email",
-          "userId"
-        ]
-      },
-      "LoginRequest": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "format": "email",
-            "minLength": 1
-          },
-          "password": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "required": [
-          "email",
-          "password"
-        ]
-      },
-      "UpdateProfileRequest": {
-        "type": "object",
-        "properties": {
-          "nickname": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "maxLength": 32,
-            "minLength": 3,
-            "pattern": "^[^\\s\\p{Cc}]([^\\p{Cc}]*[^\\s\\p{Cc}])?$"
-          },
-          "avatar": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "enum": [
-              "CAT",
-              "DOG"
-            ]
-          }
-        }
-      },
-      "GameInfoResponse": {
-        "type": "object",
-        "properties": {
-          "gameType": {
-            "type": "string",
-            "enum": [
-              "NOTHING"
-            ]
-          },
-          "minPlayers": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "maxPlayers": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "timeControl": {
-            "$ref": "#/components/schemas/TimeControlLimitsDto"
-          },
-          "gameSettingsLimits": {
-            "$ref": "#/components/schemas/GameSettingsLimitsDto"
-          },
-          "defaultSettings": {
-            "$ref": "#/components/schemas/RoomSettingsDto"
-          }
-        },
-        "required": [
-          "defaultSettings",
-          "gameSettingsLimits",
-          "gameType",
-          "maxPlayers",
-          "minPlayers",
-          "timeControl"
-        ]
-      },
-      "GameSettingsLimitsDto": {
-        "description": "Границы настроек конкретной игры, вид — по полю gameType",
-        "discriminator": {
-          "propertyName": "gameType",
-          "mapping": {
-            "NOTHING": "#/components/schemas/NothingSettingsLimitsDto"
-          }
-        },
-        "oneOf": [
-          {
-            "$ref": "#/components/schemas/NothingSettingsLimitsDto"
-          }
-        ]
-      },
-      "IntRangeDto": {
-        "type": "object",
-        "properties": {
-          "min": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "max": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "required": [
-          "max",
-          "min"
-        ]
-      },
-      "NothingSettingsLimitsDto": {
-        "type": "object",
-        "properties": {
-          "gameType": {
-            "type": "string",
-            "enum": [
-              "NOTHING"
-            ]
-          },
-          "rounds": {
-            "$ref": "#/components/schemas/IntRangeDto"
-          }
-        },
-        "required": [
-          "gameType",
-          "rounds"
-        ]
-      },
       "TimeControlLimitsDto": {
         "type": "object",
         "properties": {
@@ -2458,48 +2351,91 @@
           "moveSeconds"
         ]
       },
-      "ProblemDetail": {
+      "UpdateProfileRequest": {
+        "type": "object",
         "properties": {
-          "type": {
-            "type": "string",
-            "format": "uri"
+          "avatar": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "CAT",
+              "DOG"
+            ]
           },
-          "title": {
-            "type": "string"
-          },
-          "status": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "detail": {
-            "type": "string"
-          },
-          "instance": {
-            "type": "string",
-            "format": "uri"
-          },
-          "properties": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "object"
-            }
-          },
-          "code": {
-            "type": "string",
-            "description": "Машиночитаемый код ошибки"
-          },
-          "errors": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "string"
-            },
-            "description": "Ошибки по полям запроса (у VALIDATION_ERROR): имя поля → сообщение"
-          },
-          "reason": {
-            "type": "string",
-            "description": "Причина отказа правил игры (у MOVE_REJECTED), например NOT_YOUR_TURN"
+          "nickname": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 32,
+            "minLength": 3,
+            "pattern": "^[^\\s\\p{Cc}]([^\\p{Cc}]*[^\\s\\p{Cc}])?$"
           }
         }
+      },
+      "UserResponse": {
+        "type": "object",
+        "properties": {
+          "avatar": {
+            "type": "string",
+            "enum": [
+              "CAT",
+              "DOG"
+            ]
+          },
+          "email": {
+            "type": "string"
+          },
+          "emailVerified": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "loginMethods": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "PASSWORD",
+                "GOOGLE"
+              ]
+            }
+          },
+          "nickname": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "avatar",
+          "email",
+          "emailVerified",
+          "id",
+          "loginMethods",
+          "nickname"
+        ]
+      },
+      "VerifyEmailRequest": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "[0-9]{6}"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "code",
+          "email"
+        ]
       }
     }
   }

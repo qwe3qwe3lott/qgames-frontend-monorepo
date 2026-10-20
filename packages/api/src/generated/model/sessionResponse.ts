@@ -9,12 +9,12 @@ import type {SessionResponseStatus} from './sessionResponseStatus';
 
 export interface SessionResponse {
   id: string;
-  status: SessionResponseStatus;
-  players: string[];
-  version: number;
-  state: SessionResponseState;
   /** @nullable */
   moveDeadline?: string | null;
   /** @nullable */
   pausedAt?: string | null;
+  players: string[];
+  state: SessionResponseState;
+  status: SessionResponseStatus;
+  version: number;
 }

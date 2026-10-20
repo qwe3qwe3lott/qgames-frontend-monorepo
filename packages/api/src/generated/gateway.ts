@@ -63,501 +63,15 @@ const withQueryKey = <T extends object, K>(
   return result;
 };
 
-export const getChangePasswordUrl = () => {
-  return `/api/users/me/login-methods/password`;
+export const getLoginWithGoogleUrl = () => {
+  return `/api/auth/google`;
 };
 
 /**
- * Проверяет текущий пароль и задаёт новый. Все сессии пользователя завершаются: другие устройства и вкладки потеряют доступ не позже чем через 15 минут (срок access-токена). Текущий клиент сразу получает новую сессию в куках и остаётся в системе.
- * @summary Сменить пароль
+ * Принимает Google ID token из Google Identity Services. Новый Google-аккаунт создаёт аккаунт или привязывается к существующему с тем же email, если email подтверждён и у нас, и в Google. Новый аккаунт получает ник вида player-a1b2c3 и аватар CAT — их можно сменить в профиле.
+ * @summary Вход через Google
  */
-export const changePassword = async (
-  changePasswordRequest: ChangePasswordRequest,
-  options?: Parameters<typeof apiFetch>[1],
-): Promise<UserResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit['headers']>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          entry => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<
-      string | readonly string[] | undefined
-    >(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-  return apiFetch<UserResponse>(getChangePasswordUrl(), {
-    ...options,
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getHeaders(options?.headers),
-    },
-    body: JSON.stringify(changePasswordRequest),
-  });
-};
-
-export const getChangePasswordMutationKey = () => ['changePassword'] as const;
-
-export const getChangePasswordMutationOptions = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof changePassword>>,
-    TError,
-    ChangePasswordMutationVariables,
-    TContext
-  >;
-  request?: SecondParameter<typeof apiFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof changePassword>>,
-  TError,
-  ChangePasswordMutationVariables,
-  TContext
-> => {
-  const mutationKey = getChangePasswordMutationKey();
-  const {mutation: mutationOptions, request: requestOptions} = options
-    ? options.mutation &&
-      'mutationKey' in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-    : {mutation: {mutationKey}, request: undefined};
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof changePassword>>,
-    ChangePasswordMutationVariables
-  > = props => {
-    const {data} = props ?? {};
-
-    return changePassword(data, requestOptions);
-  };
-
-  return {mutationFn, ...mutationOptions};
-};
-
-export type ChangePasswordMutationResult = NonNullable<
-  Awaited<ReturnType<typeof changePassword>>
->;
-export type ChangePasswordMutationBody = ChangePasswordRequest;
-export type ChangePasswordMutationError = ErrorType<ProblemDetail>;
-export type ChangePasswordMutationVariables = {data: ChangePasswordRequest};
-
-/**
- * @summary Сменить пароль
- */
-export const useChangePassword = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof changePassword>>,
-      TError,
-      ChangePasswordMutationVariables,
-      TContext
-    >;
-    request?: SecondParameter<typeof apiFetch>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof changePassword>>,
-  TError,
-  ChangePasswordMutationVariables,
-  TContext
-> => {
-  return useMutation(getChangePasswordMutationOptions(options), queryClient);
-};
-
-export const getUpdateRoomSettingsUrl = (
-  gameCode: 'nothing',
-  roomId: string,
-) => {
-  return `/api/games/${gameCode}/rooms/${roomId}/settings`;
-};
-
-/**
- * Заменяет настройки комнаты целиком. Только владелец и только между партиями; следующая партия стартует с новыми настройками. Код игры в пути должен совпадать с игрой комнаты. Ошибки настроек отдаются по полям тела (например, gameSettings.rounds).
- * @summary Изменить настройки комнаты
- */
-export const updateRoomSettings = async (
-  gameCode: 'nothing',
-  roomId: string,
-  roomSettingsDto: RoomSettingsDto,
-  options?: Parameters<typeof apiFetch>[1],
-): Promise<RoomResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit['headers']>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          entry => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<
-      string | readonly string[] | undefined
-    >(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-  return apiFetch<RoomResponse>(getUpdateRoomSettingsUrl(gameCode, roomId), {
-    ...options,
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getHeaders(options?.headers),
-    },
-    body: JSON.stringify(roomSettingsDto),
-  });
-};
-
-export const getUpdateRoomSettingsMutationKey = () =>
-  ['updateRoomSettings'] as const;
-
-export const getUpdateRoomSettingsMutationOptions = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof updateRoomSettings>>,
-    TError,
-    UpdateRoomSettingsMutationVariables,
-    TContext
-  >;
-  request?: SecondParameter<typeof apiFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof updateRoomSettings>>,
-  TError,
-  UpdateRoomSettingsMutationVariables,
-  TContext
-> => {
-  const mutationKey = getUpdateRoomSettingsMutationKey();
-  const {mutation: mutationOptions, request: requestOptions} = options
-    ? options.mutation &&
-      'mutationKey' in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-    : {mutation: {mutationKey}, request: undefined};
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof updateRoomSettings>>,
-    UpdateRoomSettingsMutationVariables
-  > = props => {
-    const {gameCode, roomId, data} = props ?? {};
-
-    return updateRoomSettings(gameCode, roomId, data, requestOptions);
-  };
-
-  return {mutationFn, ...mutationOptions};
-};
-
-export type UpdateRoomSettingsMutationResult = NonNullable<
-  Awaited<ReturnType<typeof updateRoomSettings>>
->;
-export type UpdateRoomSettingsMutationBody = RoomSettingsDto;
-export type UpdateRoomSettingsMutationError = ErrorType<ProblemDetail>;
-export type UpdateRoomSettingsMutationVariables = {
-  gameCode: 'nothing';
-  roomId: string;
-  data: RoomSettingsDto;
-};
-
-/**
- * @summary Изменить настройки комнаты
- */
-export const useUpdateRoomSettings = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof updateRoomSettings>>,
-      TError,
-      UpdateRoomSettingsMutationVariables,
-      TContext
-    >;
-    request?: SecondParameter<typeof apiFetch>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof updateRoomSettings>>,
-  TError,
-  UpdateRoomSettingsMutationVariables,
-  TContext
-> => {
-  return useMutation(
-    getUpdateRoomSettingsMutationOptions(options),
-    queryClient,
-  );
-};
-
-export const getAddPasswordLoginUrl = () => {
-  return `/api/users/me/login-methods/password`;
-};
-
-/**
- * Для аккаунта без пароля (например, созданного через Google).
- * @summary Добавить вход по паролю
- */
-export const addPasswordLogin = async (
-  setPasswordRequest: SetPasswordRequest,
-  options?: Parameters<typeof apiFetch>[1],
-): Promise<UserResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit['headers']>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          entry => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<
-      string | readonly string[] | undefined
-    >(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-  return apiFetch<UserResponse>(getAddPasswordLoginUrl(), {
-    ...options,
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getHeaders(options?.headers),
-    },
-    body: JSON.stringify(setPasswordRequest),
-  });
-};
-
-export const getAddPasswordLoginMutationKey = () =>
-  ['addPasswordLogin'] as const;
-
-export const getAddPasswordLoginMutationOptions = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof addPasswordLogin>>,
-    TError,
-    AddPasswordLoginMutationVariables,
-    TContext
-  >;
-  request?: SecondParameter<typeof apiFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof addPasswordLogin>>,
-  TError,
-  AddPasswordLoginMutationVariables,
-  TContext
-> => {
-  const mutationKey = getAddPasswordLoginMutationKey();
-  const {mutation: mutationOptions, request: requestOptions} = options
-    ? options.mutation &&
-      'mutationKey' in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-    : {mutation: {mutationKey}, request: undefined};
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof addPasswordLogin>>,
-    AddPasswordLoginMutationVariables
-  > = props => {
-    const {data} = props ?? {};
-
-    return addPasswordLogin(data, requestOptions);
-  };
-
-  return {mutationFn, ...mutationOptions};
-};
-
-export type AddPasswordLoginMutationResult = NonNullable<
-  Awaited<ReturnType<typeof addPasswordLogin>>
->;
-export type AddPasswordLoginMutationBody = SetPasswordRequest;
-export type AddPasswordLoginMutationError = ErrorType<ProblemDetail>;
-export type AddPasswordLoginMutationVariables = {data: SetPasswordRequest};
-
-/**
- * @summary Добавить вход по паролю
- */
-export const useAddPasswordLogin = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof addPasswordLogin>>,
-      TError,
-      AddPasswordLoginMutationVariables,
-      TContext
-    >;
-    request?: SecondParameter<typeof apiFetch>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof addPasswordLogin>>,
-  TError,
-  AddPasswordLoginMutationVariables,
-  TContext
-> => {
-  return useMutation(getAddPasswordLoginMutationOptions(options), queryClient);
-};
-
-export const getChangeRoleUrl = (roomId: string) => {
-  return `/api/rooms/${roomId}/role`;
-};
-
-/**
- * Стать игроком или наблюдателем. Только между партиями; игроком — если есть свободное место. Владелец тоже может стать наблюдателем, владение при этом сохраняется.
- * @summary Сменить роль
- */
-export const changeRole = async (
-  roomId: string,
-  changeRoleRequest: ChangeRoleRequest,
-  options?: Parameters<typeof apiFetch>[1],
-): Promise<RoomResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit['headers']>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          entry => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<
-      string | readonly string[] | undefined
-    >(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-  return apiFetch<RoomResponse>(getChangeRoleUrl(roomId), {
-    ...options,
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getHeaders(options?.headers),
-    },
-    body: JSON.stringify(changeRoleRequest),
-  });
-};
-
-export const getChangeRoleMutationKey = () => ['changeRole'] as const;
-
-export const getChangeRoleMutationOptions = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof changeRole>>,
-    TError,
-    ChangeRoleMutationVariables,
-    TContext
-  >;
-  request?: SecondParameter<typeof apiFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof changeRole>>,
-  TError,
-  ChangeRoleMutationVariables,
-  TContext
-> => {
-  const mutationKey = getChangeRoleMutationKey();
-  const {mutation: mutationOptions, request: requestOptions} = options
-    ? options.mutation &&
-      'mutationKey' in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-    : {mutation: {mutationKey}, request: undefined};
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof changeRole>>,
-    ChangeRoleMutationVariables
-  > = props => {
-    const {roomId, data} = props ?? {};
-
-    return changeRole(roomId, data, requestOptions);
-  };
-
-  return {mutationFn, ...mutationOptions};
-};
-
-export type ChangeRoleMutationResult = NonNullable<
-  Awaited<ReturnType<typeof changeRole>>
->;
-export type ChangeRoleMutationBody = ChangeRoleRequest;
-export type ChangeRoleMutationError = ErrorType<ProblemDetail>;
-export type ChangeRoleMutationVariables = {
-  roomId: string;
-  data: ChangeRoleRequest;
-};
-
-/**
- * @summary Сменить роль
- */
-export const useChangeRole = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof changeRole>>,
-      TError,
-      ChangeRoleMutationVariables,
-      TContext
-    >;
-    request?: SecondParameter<typeof apiFetch>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof changeRole>>,
-  TError,
-  ChangeRoleMutationVariables,
-  TContext
-> => {
-  return useMutation(getChangeRoleMutationOptions(options), queryClient);
-};
-
-export const getAddGoogleLoginUrl = () => {
-  return `/api/users/me/login-methods/google`;
-};
-
-/**
- * Явная привязка Google к текущему аккаунту. Email Google-аккаунта может отличаться от email аккаунта.
- * @summary Привязать Google-аккаунт
- */
-export const addGoogleLogin = async (
+export const loginWithGoogle = async (
   googleIdTokenRequest: GoogleIdTokenRequest,
   options?: Parameters<typeof apiFetch>[1],
 ): Promise<UserResponse> => {
@@ -582,7 +96,7 @@ export const addGoogleLogin = async (
     }
     return headers;
   };
-  return apiFetch<UserResponse>(getAddGoogleLoginUrl(), {
+  return apiFetch<UserResponse>(getLoginWithGoogleUrl(), {
     ...options,
     method: 'POST',
     headers: {
@@ -593,26 +107,26 @@ export const addGoogleLogin = async (
   });
 };
 
-export const getAddGoogleLoginMutationKey = () => ['addGoogleLogin'] as const;
+export const getLoginWithGoogleMutationKey = () => ['loginWithGoogle'] as const;
 
-export const getAddGoogleLoginMutationOptions = <
+export const getLoginWithGoogleMutationOptions = <
   TError = ErrorType<ProblemDetail>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof addGoogleLogin>>,
+    Awaited<ReturnType<typeof loginWithGoogle>>,
     TError,
-    AddGoogleLoginMutationVariables,
+    LoginWithGoogleMutationVariables,
     TContext
   >;
   request?: SecondParameter<typeof apiFetch>;
 }): UseMutationOptions<
-  Awaited<ReturnType<typeof addGoogleLogin>>,
+  Awaited<ReturnType<typeof loginWithGoogle>>,
   TError,
-  AddGoogleLoginMutationVariables,
+  LoginWithGoogleMutationVariables,
   TContext
 > => {
-  const mutationKey = getAddGoogleLoginMutationKey();
+  const mutationKey = getLoginWithGoogleMutationKey();
   const {mutation: mutationOptions, request: requestOptions} = options
     ? options.mutation &&
       'mutationKey' in options.mutation &&
@@ -622,88 +136,114 @@ export const getAddGoogleLoginMutationOptions = <
     : {mutation: {mutationKey}, request: undefined};
 
   const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof addGoogleLogin>>,
-    AddGoogleLoginMutationVariables
+    Awaited<ReturnType<typeof loginWithGoogle>>,
+    LoginWithGoogleMutationVariables
   > = props => {
     const {data} = props ?? {};
 
-    return addGoogleLogin(data, requestOptions);
+    return loginWithGoogle(data, requestOptions);
   };
 
   return {mutationFn, ...mutationOptions};
 };
 
-export type AddGoogleLoginMutationResult = NonNullable<
-  Awaited<ReturnType<typeof addGoogleLogin>>
+export type LoginWithGoogleMutationResult = NonNullable<
+  Awaited<ReturnType<typeof loginWithGoogle>>
 >;
-export type AddGoogleLoginMutationBody = GoogleIdTokenRequest;
-export type AddGoogleLoginMutationError = ErrorType<ProblemDetail>;
-export type AddGoogleLoginMutationVariables = {data: GoogleIdTokenRequest};
+export type LoginWithGoogleMutationBody = GoogleIdTokenRequest;
+export type LoginWithGoogleMutationError = ErrorType<ProblemDetail>;
+export type LoginWithGoogleMutationVariables = {data: GoogleIdTokenRequest};
 
 /**
- * @summary Привязать Google-аккаунт
+ * @summary Вход через Google
  */
-export const useAddGoogleLogin = <
+export const useLoginWithGoogle = <
   TError = ErrorType<ProblemDetail>,
   TContext = unknown,
 >(
   options?: {
     mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof addGoogleLogin>>,
+      Awaited<ReturnType<typeof loginWithGoogle>>,
       TError,
-      AddGoogleLoginMutationVariables,
+      LoginWithGoogleMutationVariables,
       TContext
     >;
     request?: SecondParameter<typeof apiFetch>;
   },
   queryClient?: QueryClient,
 ): UseMutationResult<
-  Awaited<ReturnType<typeof addGoogleLogin>>,
+  Awaited<ReturnType<typeof loginWithGoogle>>,
   TError,
-  AddGoogleLoginMutationVariables,
+  LoginWithGoogleMutationVariables,
   TContext
 > => {
-  return useMutation(getAddGoogleLoginMutationOptions(options), queryClient);
+  return useMutation(getLoginWithGoogleMutationOptions(options), queryClient);
 };
 
-export const getStartSessionUrl = (roomId: string) => {
-  return `/api/rooms/${roomId}/session`;
+export const getLoginUrl = () => {
+  return `/api/auth/login`;
 };
 
 /**
- * Стартует партию с текущими игроками комнаты (места — по порядку входа). Только владелец, число игроков должно укладываться в ограничения игры (minPlayers–maxPlayers).
- * @summary Начать партию
+ * Открывает сессию: ставит куки access_token (15 минут) и refresh_token (30 дней).
+ * @summary Вход по email и паролю
  */
-export const startSession = async (
-  roomId: string,
+export const login = async (
+  loginRequest: LoginRequest,
   options?: Parameters<typeof apiFetch>[1],
-): Promise<RoomResponse> => {
-  return apiFetch<RoomResponse>(getStartSessionUrl(roomId), {
+): Promise<UserResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit['headers']>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          entry => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<
+      string | readonly string[] | undefined
+    >(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<UserResponse>(getLoginUrl(), {
     ...options,
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getHeaders(options?.headers),
+    },
+    body: JSON.stringify(loginRequest),
   });
 };
 
-export const getStartSessionMutationKey = () => ['startSession'] as const;
+export const getLoginMutationKey = () => ['login'] as const;
 
-export const getStartSessionMutationOptions = <
+export const getLoginMutationOptions = <
   TError = ErrorType<ProblemDetail>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof startSession>>,
+    Awaited<ReturnType<typeof login>>,
     TError,
-    StartSessionMutationVariables,
+    LoginMutationVariables,
     TContext
   >;
   request?: SecondParameter<typeof apiFetch>;
 }): UseMutationOptions<
-  Awaited<ReturnType<typeof startSession>>,
+  Awaited<ReturnType<typeof login>>,
   TError,
-  StartSessionMutationVariables,
+  LoginMutationVariables,
   TContext
 > => {
-  const mutationKey = getStartSessionMutationKey();
+  const mutationKey = getLoginMutationKey();
   const {mutation: mutationOptions, request: requestOptions} = options
     ? options.mutation &&
       'mutationKey' in options.mutation &&
@@ -713,361 +253,84 @@ export const getStartSessionMutationOptions = <
     : {mutation: {mutationKey}, request: undefined};
 
   const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof startSession>>,
-    StartSessionMutationVariables
+    Awaited<ReturnType<typeof login>>,
+    LoginMutationVariables
   > = props => {
-    const {roomId} = props ?? {};
+    const {data} = props ?? {};
 
-    return startSession(roomId, requestOptions);
+    return login(data, requestOptions);
   };
 
   return {mutationFn, ...mutationOptions};
 };
 
-export type StartSessionMutationResult = NonNullable<
-  Awaited<ReturnType<typeof startSession>>
+export type LoginMutationResult = NonNullable<
+  Awaited<ReturnType<typeof login>>
 >;
-
-export type StartSessionMutationError = ErrorType<ProblemDetail>;
-export type StartSessionMutationVariables = {roomId: string};
+export type LoginMutationBody = LoginRequest;
+export type LoginMutationError = ErrorType<ProblemDetail>;
+export type LoginMutationVariables = {data: LoginRequest};
 
 /**
- * @summary Начать партию
+ * @summary Вход по email и паролю
  */
-export const useStartSession = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(
+export const useLogin = <TError = ErrorType<ProblemDetail>, TContext = unknown>(
   options?: {
     mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof startSession>>,
+      Awaited<ReturnType<typeof login>>,
       TError,
-      StartSessionMutationVariables,
+      LoginMutationVariables,
       TContext
     >;
     request?: SecondParameter<typeof apiFetch>;
   },
   queryClient?: QueryClient,
 ): UseMutationResult<
-  Awaited<ReturnType<typeof startSession>>,
+  Awaited<ReturnType<typeof login>>,
   TError,
-  StartSessionMutationVariables,
+  LoginMutationVariables,
   TContext
 > => {
-  return useMutation(getStartSessionMutationOptions(options), queryClient);
+  return useMutation(getLoginMutationOptions(options), queryClient);
 };
 
-export const getCancelSessionUrl = (roomId: string) => {
-  return `/api/rooms/${roomId}/session`;
+export const getLogoutUrl = () => {
+  return `/api/auth/logout`;
 };
 
 /**
- * Завершает идущую партию без результата и возвращает комнату в ожидание. Работает и на паузе. Только владелец.
- * @summary Отменить партию
+ * Отзывает сессию по куке refresh_token и удаляет обе куки. Без куки просто удаляет куки.
+ * @summary Выход
  */
-export const cancelSession = async (
-  roomId: string,
-  options?: Parameters<typeof apiFetch>[1],
-): Promise<RoomResponse> => {
-  return apiFetch<RoomResponse>(getCancelSessionUrl(roomId), {
-    ...options,
-    method: 'DELETE',
-  });
-};
-
-export const getCancelSessionMutationKey = () => ['cancelSession'] as const;
-
-export const getCancelSessionMutationOptions = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof cancelSession>>,
-    TError,
-    CancelSessionMutationVariables,
-    TContext
-  >;
-  request?: SecondParameter<typeof apiFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof cancelSession>>,
-  TError,
-  CancelSessionMutationVariables,
-  TContext
-> => {
-  const mutationKey = getCancelSessionMutationKey();
-  const {mutation: mutationOptions, request: requestOptions} = options
-    ? options.mutation &&
-      'mutationKey' in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-    : {mutation: {mutationKey}, request: undefined};
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof cancelSession>>,
-    CancelSessionMutationVariables
-  > = props => {
-    const {roomId} = props ?? {};
-
-    return cancelSession(roomId, requestOptions);
-  };
-
-  return {mutationFn, ...mutationOptions};
-};
-
-export type CancelSessionMutationResult = NonNullable<
-  Awaited<ReturnType<typeof cancelSession>>
->;
-
-export type CancelSessionMutationError = ErrorType<ProblemDetail>;
-export type CancelSessionMutationVariables = {roomId: string};
-
-/**
- * @summary Отменить партию
- */
-export const useCancelSession = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof cancelSession>>,
-      TError,
-      CancelSessionMutationVariables,
-      TContext
-    >;
-    request?: SecondParameter<typeof apiFetch>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof cancelSession>>,
-  TError,
-  CancelSessionMutationVariables,
-  TContext
-> => {
-  return useMutation(getCancelSessionMutationOptions(options), queryClient);
-};
-
-export const getResumeSessionUrl = (roomId: string) => {
-  return `/api/rooms/${roomId}/session/resume`;
-};
-
-/**
- * Снимает паузу. Время хода и сроки возвращения вышедших игроков партии сдвигаются на длительность паузы: остаётся столько же времени, сколько было в момент паузы. Только владелец. Без паузы вызов ничего не меняет.
- * @summary Продолжить партию
- */
-export const resumeSession = async (
-  roomId: string,
-  options?: Parameters<typeof apiFetch>[1],
-): Promise<RoomResponse> => {
-  return apiFetch<RoomResponse>(getResumeSessionUrl(roomId), {
-    ...options,
-    method: 'POST',
-  });
-};
-
-export const getResumeSessionMutationKey = () => ['resumeSession'] as const;
-
-export const getResumeSessionMutationOptions = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof resumeSession>>,
-    TError,
-    ResumeSessionMutationVariables,
-    TContext
-  >;
-  request?: SecondParameter<typeof apiFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof resumeSession>>,
-  TError,
-  ResumeSessionMutationVariables,
-  TContext
-> => {
-  const mutationKey = getResumeSessionMutationKey();
-  const {mutation: mutationOptions, request: requestOptions} = options
-    ? options.mutation &&
-      'mutationKey' in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-    : {mutation: {mutationKey}, request: undefined};
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof resumeSession>>,
-    ResumeSessionMutationVariables
-  > = props => {
-    const {roomId} = props ?? {};
-
-    return resumeSession(roomId, requestOptions);
-  };
-
-  return {mutationFn, ...mutationOptions};
-};
-
-export type ResumeSessionMutationResult = NonNullable<
-  Awaited<ReturnType<typeof resumeSession>>
->;
-
-export type ResumeSessionMutationError = ErrorType<ProblemDetail>;
-export type ResumeSessionMutationVariables = {roomId: string};
-
-/**
- * @summary Продолжить партию
- */
-export const useResumeSession = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof resumeSession>>,
-      TError,
-      ResumeSessionMutationVariables,
-      TContext
-    >;
-    request?: SecondParameter<typeof apiFetch>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof resumeSession>>,
-  TError,
-  ResumeSessionMutationVariables,
-  TContext
-> => {
-  return useMutation(getResumeSessionMutationOptions(options), queryClient);
-};
-
-export const getPauseSessionUrl = (roomId: string) => {
-  return `/api/rooms/${roomId}/session/pause`;
-};
-
-/**
- * Замораживает идущую партию: ходы запрещены, время хода и сроки возвращения вышедших игроков партии не идут (session.pausedAt; остаток времени хода — moveDeadline − pausedAt). Вход, выход и отмена партии работают. Только владелец. Повторный вызов на паузе ничего не меняет.
- * @summary Поставить партию на паузу
- */
-export const pauseSession = async (
-  roomId: string,
-  options?: Parameters<typeof apiFetch>[1],
-): Promise<RoomResponse> => {
-  return apiFetch<RoomResponse>(getPauseSessionUrl(roomId), {
-    ...options,
-    method: 'POST',
-  });
-};
-
-export const getPauseSessionMutationKey = () => ['pauseSession'] as const;
-
-export const getPauseSessionMutationOptions = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof pauseSession>>,
-    TError,
-    PauseSessionMutationVariables,
-    TContext
-  >;
-  request?: SecondParameter<typeof apiFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof pauseSession>>,
-  TError,
-  PauseSessionMutationVariables,
-  TContext
-> => {
-  const mutationKey = getPauseSessionMutationKey();
-  const {mutation: mutationOptions, request: requestOptions} = options
-    ? options.mutation &&
-      'mutationKey' in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-    : {mutation: {mutationKey}, request: undefined};
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof pauseSession>>,
-    PauseSessionMutationVariables
-  > = props => {
-    const {roomId} = props ?? {};
-
-    return pauseSession(roomId, requestOptions);
-  };
-
-  return {mutationFn, ...mutationOptions};
-};
-
-export type PauseSessionMutationResult = NonNullable<
-  Awaited<ReturnType<typeof pauseSession>>
->;
-
-export type PauseSessionMutationError = ErrorType<ProblemDetail>;
-export type PauseSessionMutationVariables = {roomId: string};
-
-/**
- * @summary Поставить партию на паузу
- */
-export const usePauseSession = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof pauseSession>>,
-      TError,
-      PauseSessionMutationVariables,
-      TContext
-    >;
-    request?: SecondParameter<typeof apiFetch>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof pauseSession>>,
-  TError,
-  PauseSessionMutationVariables,
-  TContext
-> => {
-  return useMutation(getPauseSessionMutationOptions(options), queryClient);
-};
-
-export const getLeaveRoomUrl = (roomId: string) => {
-  return `/api/rooms/${roomId}/leave`;
-};
-
-/**
- * Выйти можно всегда, но выход отложенный: участник помечается уходящим (leaving) и до истечения срока сохраняет роль, место и владение, а вход в комнату в пределах срока отменяет выход. Срок: игроку идущей партии его задаёт игра (в «игре в ничто» 30 с, на паузе отсчёт заморожен), владельцу вне игры — 5 с, остальным — 1 с. По истечении срока участник удаляется: игрок идущей партии сохраняет место и может вернуться, владение переходит к самому раннему из оставшихся: сначала к присутствующим, к уходящим — только если присутствующих нет; в каждой группе сначала игроки, затем наблюдатели. Пустая комната удаляется автоматически через 30 минут. Повторный выход срок не продлевает.
- * @summary Выйти из комнаты
- */
-export const leaveRoom = async (
-  roomId: string,
+export const logout = async (
   options?: Parameters<typeof apiFetch>[1],
 ): Promise<void> => {
-  return apiFetch<void>(getLeaveRoomUrl(roomId), {
+  return apiFetch<void>(getLogoutUrl(), {
     ...options,
     method: 'POST',
   });
 };
 
-export const getLeaveRoomMutationKey = () => ['leaveRoom'] as const;
+export const getLogoutMutationKey = () => ['logout'] as const;
 
-export const getLeaveRoomMutationOptions = <
+export const getLogoutMutationOptions = <
   TError = ErrorType<ProblemDetail>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof leaveRoom>>,
+    Awaited<ReturnType<typeof logout>>,
     TError,
-    LeaveRoomMutationVariables,
+    void,
     TContext
   >;
   request?: SecondParameter<typeof apiFetch>;
 }): UseMutationOptions<
-  Awaited<ReturnType<typeof leaveRoom>>,
+  Awaited<ReturnType<typeof logout>>,
   TError,
-  LeaveRoomMutationVariables,
+  void,
   TContext
 > => {
-  const mutationKey = getLeaveRoomMutationKey();
+  const mutationKey = getLogoutMutationKey();
   const {mutation: mutationOptions, request: requestOptions} = options
     ? options.mutation &&
       'mutationKey' in options.mutation &&
@@ -1077,88 +340,84 @@ export const getLeaveRoomMutationOptions = <
     : {mutation: {mutationKey}, request: undefined};
 
   const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof leaveRoom>>,
-    LeaveRoomMutationVariables
-  > = props => {
-    const {roomId} = props ?? {};
-
-    return leaveRoom(roomId, requestOptions);
+    Awaited<ReturnType<typeof logout>>,
+    void
+  > = () => {
+    return logout(requestOptions);
   };
 
   return {mutationFn, ...mutationOptions};
 };
 
-export type LeaveRoomMutationResult = NonNullable<
-  Awaited<ReturnType<typeof leaveRoom>>
+export type LogoutMutationResult = NonNullable<
+  Awaited<ReturnType<typeof logout>>
 >;
 
-export type LeaveRoomMutationError = ErrorType<ProblemDetail>;
-export type LeaveRoomMutationVariables = {roomId: string};
+export type LogoutMutationError = ErrorType<ProblemDetail>;
 
 /**
- * @summary Выйти из комнаты
+ * @summary Выход
  */
-export const useLeaveRoom = <
+export const useLogout = <
   TError = ErrorType<ProblemDetail>,
   TContext = unknown,
 >(
   options?: {
     mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof leaveRoom>>,
+      Awaited<ReturnType<typeof logout>>,
       TError,
-      LeaveRoomMutationVariables,
+      void,
       TContext
     >;
     request?: SecondParameter<typeof apiFetch>;
   },
   queryClient?: QueryClient,
 ): UseMutationResult<
-  Awaited<ReturnType<typeof leaveRoom>>,
+  Awaited<ReturnType<typeof logout>>,
   TError,
-  LeaveRoomMutationVariables,
+  void,
   TContext
 > => {
-  return useMutation(getLeaveRoomMutationOptions(options), queryClient);
+  return useMutation(getLogoutMutationOptions(options), queryClient);
 };
 
-export const getJoinRoomUrl = (roomId: string) => {
-  return `/api/rooms/${roomId}/join`;
+export const getRefreshUrl = () => {
+  return `/api/auth/refresh`;
 };
 
 /**
- * Игрок идущей партии возвращается на своё место. Иначе, если партия не идёт и есть свободное место, пользователь становится игроком, в остальных случаях — наблюдателем. В пустой комнате вошедший становится владельцем. Вход вышедшего участника, пока не истёк срок выхода, отменяет выход: роль и владение сохраняются. Повторный вход ничего не меняет.
- * @summary Войти в комнату
+ * Берёт refresh-токен из куки refresh_token и ставит новые куки. Вызывать, когда access-токен истёк (защищённые ручки ответили 401). Параллельные вызовы из нескольких вкладок в течение 10 секунд допустимы. При ошибке обе куки удаляются.
+ * @summary Обновление сессии
  */
-export const joinRoom = async (
-  roomId: string,
+export const refresh = async (
   options?: Parameters<typeof apiFetch>[1],
-): Promise<RoomResponse> => {
-  return apiFetch<RoomResponse>(getJoinRoomUrl(roomId), {
+): Promise<UserResponse> => {
+  return apiFetch<UserResponse>(getRefreshUrl(), {
     ...options,
     method: 'POST',
   });
 };
 
-export const getJoinRoomMutationKey = () => ['joinRoom'] as const;
+export const getRefreshMutationKey = () => ['refresh'] as const;
 
-export const getJoinRoomMutationOptions = <
+export const getRefreshMutationOptions = <
   TError = ErrorType<ProblemDetail>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof joinRoom>>,
+    Awaited<ReturnType<typeof refresh>>,
     TError,
-    JoinRoomMutationVariables,
+    void,
     TContext
   >;
   request?: SecondParameter<typeof apiFetch>;
 }): UseMutationOptions<
-  Awaited<ReturnType<typeof joinRoom>>,
+  Awaited<ReturnType<typeof refresh>>,
   TError,
-  JoinRoomMutationVariables,
+  void,
   TContext
 > => {
-  const mutationKey = getJoinRoomMutationKey();
+  const mutationKey = getRefreshMutationKey();
   const {mutation: mutationOptions, request: requestOptions} = options
     ? options.mutation &&
       'mutationKey' in options.mutation &&
@@ -1168,49 +427,540 @@ export const getJoinRoomMutationOptions = <
     : {mutation: {mutationKey}, request: undefined};
 
   const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof joinRoom>>,
-    JoinRoomMutationVariables
-  > = props => {
-    const {roomId} = props ?? {};
-
-    return joinRoom(roomId, requestOptions);
+    Awaited<ReturnType<typeof refresh>>,
+    void
+  > = () => {
+    return refresh(requestOptions);
   };
 
   return {mutationFn, ...mutationOptions};
 };
 
-export type JoinRoomMutationResult = NonNullable<
-  Awaited<ReturnType<typeof joinRoom>>
+export type RefreshMutationResult = NonNullable<
+  Awaited<ReturnType<typeof refresh>>
 >;
 
-export type JoinRoomMutationError = ErrorType<ProblemDetail>;
-export type JoinRoomMutationVariables = {roomId: string};
+export type RefreshMutationError = ErrorType<ProblemDetail>;
 
 /**
- * @summary Войти в комнату
+ * @summary Обновление сессии
  */
-export const useJoinRoom = <
+export const useRefresh = <
   TError = ErrorType<ProblemDetail>,
   TContext = unknown,
 >(
   options?: {
     mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof joinRoom>>,
+      Awaited<ReturnType<typeof refresh>>,
       TError,
-      JoinRoomMutationVariables,
+      void,
       TContext
     >;
     request?: SecondParameter<typeof apiFetch>;
   },
   queryClient?: QueryClient,
 ): UseMutationResult<
-  Awaited<ReturnType<typeof joinRoom>>,
+  Awaited<ReturnType<typeof refresh>>,
   TError,
-  JoinRoomMutationVariables,
+  void,
   TContext
 > => {
-  return useMutation(getJoinRoomMutationOptions(options), queryClient);
+  return useMutation(getRefreshMutationOptions(options), queryClient);
 };
+
+export const getRegisterUrl = () => {
+  return `/api/auth/register`;
+};
+
+/**
+ * Создаёт аккаунт с ником (3–32 символа, не уникален) и аватаром и отправляет на email 6-значный код подтверждения. Сессия не открывается: войти можно после подтверждения email.
+ * @summary Регистрация по email и паролю
+ */
+export const register = async (
+  registerRequest: RegisterRequest,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<RegistrationResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit['headers']>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          entry => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<
+      string | readonly string[] | undefined
+    >(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<RegistrationResponse>(getRegisterUrl(), {
+    ...options,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getHeaders(options?.headers),
+    },
+    body: JSON.stringify(registerRequest),
+  });
+};
+
+export const getRegisterMutationKey = () => ['register'] as const;
+
+export const getRegisterMutationOptions = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof register>>,
+    TError,
+    RegisterMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof register>>,
+  TError,
+  RegisterMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRegisterMutationKey();
+  const {mutation: mutationOptions, request: requestOptions} = options
+    ? options.mutation &&
+      'mutationKey' in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+    : {mutation: {mutationKey}, request: undefined};
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof register>>,
+    RegisterMutationVariables
+  > = props => {
+    const {data} = props ?? {};
+
+    return register(data, requestOptions);
+  };
+
+  return {mutationFn, ...mutationOptions};
+};
+
+export type RegisterMutationResult = NonNullable<
+  Awaited<ReturnType<typeof register>>
+>;
+export type RegisterMutationBody = RegisterRequest;
+export type RegisterMutationError = ErrorType<ProblemDetail>;
+export type RegisterMutationVariables = {data: RegisterRequest};
+
+/**
+ * @summary Регистрация по email и паролю
+ */
+export const useRegister = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof register>>,
+      TError,
+      RegisterMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof register>>,
+  TError,
+  RegisterMutationVariables,
+  TContext
+> => {
+  return useMutation(getRegisterMutationOptions(options), queryClient);
+};
+
+export const getResendCodeUrl = () => {
+  return `/api/auth/resend-code`;
+};
+
+/**
+ * Высылает новый код, прежний перестаёт действовать. Для неизвестного или уже подтверждённого email письмо не отправляется, ответ — 200.
+ * @summary Повторная отправка кода подтверждения
+ */
+export const resendCode = async (
+  resendCodeRequest: ResendCodeRequest,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<void> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit['headers']>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          entry => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<
+      string | readonly string[] | undefined
+    >(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<void>(getResendCodeUrl(), {
+    ...options,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getHeaders(options?.headers),
+    },
+    body: JSON.stringify(resendCodeRequest),
+  });
+};
+
+export const getResendCodeMutationKey = () => ['resendCode'] as const;
+
+export const getResendCodeMutationOptions = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof resendCode>>,
+    TError,
+    ResendCodeMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof resendCode>>,
+  TError,
+  ResendCodeMutationVariables,
+  TContext
+> => {
+  const mutationKey = getResendCodeMutationKey();
+  const {mutation: mutationOptions, request: requestOptions} = options
+    ? options.mutation &&
+      'mutationKey' in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+    : {mutation: {mutationKey}, request: undefined};
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof resendCode>>,
+    ResendCodeMutationVariables
+  > = props => {
+    const {data} = props ?? {};
+
+    return resendCode(data, requestOptions);
+  };
+
+  return {mutationFn, ...mutationOptions};
+};
+
+export type ResendCodeMutationResult = NonNullable<
+  Awaited<ReturnType<typeof resendCode>>
+>;
+export type ResendCodeMutationBody = ResendCodeRequest;
+export type ResendCodeMutationError = ErrorType<ProblemDetail>;
+export type ResendCodeMutationVariables = {data: ResendCodeRequest};
+
+/**
+ * @summary Повторная отправка кода подтверждения
+ */
+export const useResendCode = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof resendCode>>,
+      TError,
+      ResendCodeMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof resendCode>>,
+  TError,
+  ResendCodeMutationVariables,
+  TContext
+> => {
+  return useMutation(getResendCodeMutationOptions(options), queryClient);
+};
+
+export const getVerifyEmailUrl = () => {
+  return `/api/auth/verify-email`;
+};
+
+/**
+ * Подтверждает email и сразу открывает сессию: ставит куки с токенами. Код действует 15 минут, на один код даётся 5 попыток.
+ * @summary Подтверждение email кодом из письма
+ */
+export const verifyEmail = async (
+  verifyEmailRequest: VerifyEmailRequest,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<UserResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit['headers']>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          entry => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<
+      string | readonly string[] | undefined
+    >(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<UserResponse>(getVerifyEmailUrl(), {
+    ...options,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getHeaders(options?.headers),
+    },
+    body: JSON.stringify(verifyEmailRequest),
+  });
+};
+
+export const getVerifyEmailMutationKey = () => ['verifyEmail'] as const;
+
+export const getVerifyEmailMutationOptions = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof verifyEmail>>,
+    TError,
+    VerifyEmailMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof verifyEmail>>,
+  TError,
+  VerifyEmailMutationVariables,
+  TContext
+> => {
+  const mutationKey = getVerifyEmailMutationKey();
+  const {mutation: mutationOptions, request: requestOptions} = options
+    ? options.mutation &&
+      'mutationKey' in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+    : {mutation: {mutationKey}, request: undefined};
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof verifyEmail>>,
+    VerifyEmailMutationVariables
+  > = props => {
+    const {data} = props ?? {};
+
+    return verifyEmail(data, requestOptions);
+  };
+
+  return {mutationFn, ...mutationOptions};
+};
+
+export type VerifyEmailMutationResult = NonNullable<
+  Awaited<ReturnType<typeof verifyEmail>>
+>;
+export type VerifyEmailMutationBody = VerifyEmailRequest;
+export type VerifyEmailMutationError = ErrorType<ProblemDetail>;
+export type VerifyEmailMutationVariables = {data: VerifyEmailRequest};
+
+/**
+ * @summary Подтверждение email кодом из письма
+ */
+export const useVerifyEmail = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof verifyEmail>>,
+      TError,
+      VerifyEmailMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof verifyEmail>>,
+  TError,
+  VerifyEmailMutationVariables,
+  TContext
+> => {
+  return useMutation(getVerifyEmailMutationOptions(options), queryClient);
+};
+
+export const getGetGameUrl = (gameCode: 'nothing') => {
+  return `/api/games/${gameCode}`;
+};
+
+/**
+ * Число игроков, поддерживаемые режимы времени и границы времени на ход, границы настроек игры и настройки по умолчанию. По ним строится форма создания комнаты и смены настроек.
+ * @summary Параметры игры
+ */
+export const getGame = async (
+  gameCode: 'nothing',
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<GameInfoResponse> => {
+  return apiFetch<GameInfoResponse>(getGetGameUrl(gameCode), {
+    ...options,
+    method: 'GET',
+  });
+};
+
+export const getGetGameQueryKey = (gameCode: 'nothing') => {
+  return [`/api/games/${gameCode}`] as const;
+};
+
+export const getGetGameQueryOptions = <
+  TData = Awaited<ReturnType<typeof getGame>>,
+  TError = ErrorType<ProblemDetail>,
+>(
+  gameCode: 'nothing',
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getGame>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetGameQueryKey(gameCode);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getGame>>> = ({
+    signal,
+  }) => getGame(gameCode, {signal, ...requestOptions});
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: gameCode !== null && gameCode !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getGame>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetGameQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getGame>>
+>;
+export type GetGameQueryError = ErrorType<ProblemDetail>;
+
+export function useGetGame<
+  TData = Awaited<ReturnType<typeof getGame>>,
+  TError = ErrorType<ProblemDetail>,
+>(
+  gameCode: 'nothing',
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getGame>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGame>>,
+          TError,
+          Awaited<ReturnType<typeof getGame>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetGame<
+  TData = Awaited<ReturnType<typeof getGame>>,
+  TError = ErrorType<ProblemDetail>,
+>(
+  gameCode: 'nothing',
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getGame>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGame>>,
+          TError,
+          Awaited<ReturnType<typeof getGame>>
+        >,
+        'initialData'
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {queryKey: DataTag<QueryKey, TData, TError>};
+export function useGetGame<
+  TData = Awaited<ReturnType<typeof getGame>>,
+  TError = ErrorType<ProblemDetail>,
+>(
+  gameCode: 'nothing',
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getGame>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {queryKey: DataTag<QueryKey, TData, TError>};
+/**
+ * @summary Параметры игры
+ */
+
+export function useGetGame<
+  TData = Awaited<ReturnType<typeof getGame>>,
+  TError = ErrorType<ProblemDetail>,
+>(
+  gameCode: 'nothing',
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getGame>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getGetGameQueryOptions(gameCode, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & {queryKey: DataTag<QueryKey, TData, TError>};
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
 export const getCreateRoomUrl = (gameCode: 'nothing') => {
   return `/api/games/${gameCode}/rooms`;
@@ -1456,18 +1206,23 @@ export const useMakeMove = <
   return useMutation(getMakeMoveMutationOptions(options), queryClient);
 };
 
-export const getVerifyEmailUrl = () => {
-  return `/api/auth/verify-email`;
+export const getUpdateRoomSettingsUrl = (
+  gameCode: 'nothing',
+  roomId: string,
+) => {
+  return `/api/games/${gameCode}/rooms/${roomId}/settings`;
 };
 
 /**
- * Подтверждает email и сразу открывает сессию: ставит куки с токенами. Код действует 15 минут, на один код даётся 5 попыток.
- * @summary Подтверждение email кодом из письма
+ * Заменяет настройки комнаты целиком. Только владелец и только между партиями; следующая партия стартует с новыми настройками. Код игры в пути должен совпадать с игрой комнаты. Ошибки настроек отдаются по полям тела (например, gameSettings.rounds).
+ * @summary Изменить настройки комнаты
  */
-export const verifyEmail = async (
-  verifyEmailRequest: VerifyEmailRequest,
+export const updateRoomSettings = async (
+  gameCode: 'nothing',
+  roomId: string,
+  roomSettingsDto: RoomSettingsDto,
   options?: Parameters<typeof apiFetch>[1],
-): Promise<UserResponse> => {
+): Promise<RoomResponse> => {
   const getHeaders = (
     h?: NonNullable<RequestInit['headers']>,
   ): Record<string, string | readonly string[]> => {
@@ -1489,37 +1244,38 @@ export const verifyEmail = async (
     }
     return headers;
   };
-  return apiFetch<UserResponse>(getVerifyEmailUrl(), {
+  return apiFetch<RoomResponse>(getUpdateRoomSettingsUrl(gameCode, roomId), {
     ...options,
-    method: 'POST',
+    method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
       ...getHeaders(options?.headers),
     },
-    body: JSON.stringify(verifyEmailRequest),
+    body: JSON.stringify(roomSettingsDto),
   });
 };
 
-export const getVerifyEmailMutationKey = () => ['verifyEmail'] as const;
+export const getUpdateRoomSettingsMutationKey = () =>
+  ['updateRoomSettings'] as const;
 
-export const getVerifyEmailMutationOptions = <
+export const getUpdateRoomSettingsMutationOptions = <
   TError = ErrorType<ProblemDetail>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof verifyEmail>>,
+    Awaited<ReturnType<typeof updateRoomSettings>>,
     TError,
-    VerifyEmailMutationVariables,
+    UpdateRoomSettingsMutationVariables,
     TContext
   >;
   request?: SecondParameter<typeof apiFetch>;
 }): UseMutationOptions<
-  Awaited<ReturnType<typeof verifyEmail>>,
+  Awaited<ReturnType<typeof updateRoomSettings>>,
   TError,
-  VerifyEmailMutationVariables,
+  UpdateRoomSettingsMutationVariables,
   TContext
 > => {
-  const mutationKey = getVerifyEmailMutationKey();
+  const mutationKey = getUpdateRoomSettingsMutationKey();
   const {mutation: mutationOptions, request: requestOptions} = options
     ? options.mutation &&
       'mutationKey' in options.mutation &&
@@ -1529,937 +1285,56 @@ export const getVerifyEmailMutationOptions = <
     : {mutation: {mutationKey}, request: undefined};
 
   const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof verifyEmail>>,
-    VerifyEmailMutationVariables
+    Awaited<ReturnType<typeof updateRoomSettings>>,
+    UpdateRoomSettingsMutationVariables
   > = props => {
-    const {data} = props ?? {};
+    const {gameCode, roomId, data} = props ?? {};
 
-    return verifyEmail(data, requestOptions);
+    return updateRoomSettings(gameCode, roomId, data, requestOptions);
   };
 
   return {mutationFn, ...mutationOptions};
 };
 
-export type VerifyEmailMutationResult = NonNullable<
-  Awaited<ReturnType<typeof verifyEmail>>
+export type UpdateRoomSettingsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateRoomSettings>>
 >;
-export type VerifyEmailMutationBody = VerifyEmailRequest;
-export type VerifyEmailMutationError = ErrorType<ProblemDetail>;
-export type VerifyEmailMutationVariables = {data: VerifyEmailRequest};
+export type UpdateRoomSettingsMutationBody = RoomSettingsDto;
+export type UpdateRoomSettingsMutationError = ErrorType<ProblemDetail>;
+export type UpdateRoomSettingsMutationVariables = {
+  gameCode: 'nothing';
+  roomId: string;
+  data: RoomSettingsDto;
+};
 
 /**
- * @summary Подтверждение email кодом из письма
+ * @summary Изменить настройки комнаты
  */
-export const useVerifyEmail = <
+export const useUpdateRoomSettings = <
   TError = ErrorType<ProblemDetail>,
   TContext = unknown,
 >(
   options?: {
     mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof verifyEmail>>,
+      Awaited<ReturnType<typeof updateRoomSettings>>,
       TError,
-      VerifyEmailMutationVariables,
+      UpdateRoomSettingsMutationVariables,
       TContext
     >;
     request?: SecondParameter<typeof apiFetch>;
   },
   queryClient?: QueryClient,
 ): UseMutationResult<
-  Awaited<ReturnType<typeof verifyEmail>>,
+  Awaited<ReturnType<typeof updateRoomSettings>>,
   TError,
-  VerifyEmailMutationVariables,
+  UpdateRoomSettingsMutationVariables,
   TContext
 > => {
-  return useMutation(getVerifyEmailMutationOptions(options), queryClient);
+  return useMutation(
+    getUpdateRoomSettingsMutationOptions(options),
+    queryClient,
+  );
 };
-
-export const getResendCodeUrl = () => {
-  return `/api/auth/resend-code`;
-};
-
-/**
- * Высылает новый код, прежний перестаёт действовать. Для неизвестного или уже подтверждённого email письмо не отправляется, ответ — 200.
- * @summary Повторная отправка кода подтверждения
- */
-export const resendCode = async (
-  resendCodeRequest: ResendCodeRequest,
-  options?: Parameters<typeof apiFetch>[1],
-): Promise<void> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit['headers']>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          entry => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<
-      string | readonly string[] | undefined
-    >(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-  return apiFetch<void>(getResendCodeUrl(), {
-    ...options,
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getHeaders(options?.headers),
-    },
-    body: JSON.stringify(resendCodeRequest),
-  });
-};
-
-export const getResendCodeMutationKey = () => ['resendCode'] as const;
-
-export const getResendCodeMutationOptions = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof resendCode>>,
-    TError,
-    ResendCodeMutationVariables,
-    TContext
-  >;
-  request?: SecondParameter<typeof apiFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof resendCode>>,
-  TError,
-  ResendCodeMutationVariables,
-  TContext
-> => {
-  const mutationKey = getResendCodeMutationKey();
-  const {mutation: mutationOptions, request: requestOptions} = options
-    ? options.mutation &&
-      'mutationKey' in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-    : {mutation: {mutationKey}, request: undefined};
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof resendCode>>,
-    ResendCodeMutationVariables
-  > = props => {
-    const {data} = props ?? {};
-
-    return resendCode(data, requestOptions);
-  };
-
-  return {mutationFn, ...mutationOptions};
-};
-
-export type ResendCodeMutationResult = NonNullable<
-  Awaited<ReturnType<typeof resendCode>>
->;
-export type ResendCodeMutationBody = ResendCodeRequest;
-export type ResendCodeMutationError = ErrorType<ProblemDetail>;
-export type ResendCodeMutationVariables = {data: ResendCodeRequest};
-
-/**
- * @summary Повторная отправка кода подтверждения
- */
-export const useResendCode = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof resendCode>>,
-      TError,
-      ResendCodeMutationVariables,
-      TContext
-    >;
-    request?: SecondParameter<typeof apiFetch>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof resendCode>>,
-  TError,
-  ResendCodeMutationVariables,
-  TContext
-> => {
-  return useMutation(getResendCodeMutationOptions(options), queryClient);
-};
-
-export const getRegisterUrl = () => {
-  return `/api/auth/register`;
-};
-
-/**
- * Создаёт аккаунт с ником (3–32 символа, не уникален) и аватаром и отправляет на email 6-значный код подтверждения. Сессия не открывается: войти можно после подтверждения email.
- * @summary Регистрация по email и паролю
- */
-export const register = async (
-  registerRequest: RegisterRequest,
-  options?: Parameters<typeof apiFetch>[1],
-): Promise<RegistrationResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit['headers']>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          entry => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<
-      string | readonly string[] | undefined
-    >(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-  return apiFetch<RegistrationResponse>(getRegisterUrl(), {
-    ...options,
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getHeaders(options?.headers),
-    },
-    body: JSON.stringify(registerRequest),
-  });
-};
-
-export const getRegisterMutationKey = () => ['register'] as const;
-
-export const getRegisterMutationOptions = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof register>>,
-    TError,
-    RegisterMutationVariables,
-    TContext
-  >;
-  request?: SecondParameter<typeof apiFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof register>>,
-  TError,
-  RegisterMutationVariables,
-  TContext
-> => {
-  const mutationKey = getRegisterMutationKey();
-  const {mutation: mutationOptions, request: requestOptions} = options
-    ? options.mutation &&
-      'mutationKey' in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-    : {mutation: {mutationKey}, request: undefined};
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof register>>,
-    RegisterMutationVariables
-  > = props => {
-    const {data} = props ?? {};
-
-    return register(data, requestOptions);
-  };
-
-  return {mutationFn, ...mutationOptions};
-};
-
-export type RegisterMutationResult = NonNullable<
-  Awaited<ReturnType<typeof register>>
->;
-export type RegisterMutationBody = RegisterRequest;
-export type RegisterMutationError = ErrorType<ProblemDetail>;
-export type RegisterMutationVariables = {data: RegisterRequest};
-
-/**
- * @summary Регистрация по email и паролю
- */
-export const useRegister = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof register>>,
-      TError,
-      RegisterMutationVariables,
-      TContext
-    >;
-    request?: SecondParameter<typeof apiFetch>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof register>>,
-  TError,
-  RegisterMutationVariables,
-  TContext
-> => {
-  return useMutation(getRegisterMutationOptions(options), queryClient);
-};
-
-export const getRefreshUrl = () => {
-  return `/api/auth/refresh`;
-};
-
-/**
- * Берёт refresh-токен из куки refresh_token и ставит новые куки. Вызывать, когда access-токен истёк (защищённые ручки ответили 401). Параллельные вызовы из нескольких вкладок в течение 10 секунд допустимы. При ошибке обе куки удаляются.
- * @summary Обновление сессии
- */
-export const refresh = async (
-  options?: Parameters<typeof apiFetch>[1],
-): Promise<UserResponse> => {
-  return apiFetch<UserResponse>(getRefreshUrl(), {
-    ...options,
-    method: 'POST',
-  });
-};
-
-export const getRefreshMutationKey = () => ['refresh'] as const;
-
-export const getRefreshMutationOptions = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof refresh>>,
-    TError,
-    void,
-    TContext
-  >;
-  request?: SecondParameter<typeof apiFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof refresh>>,
-  TError,
-  void,
-  TContext
-> => {
-  const mutationKey = getRefreshMutationKey();
-  const {mutation: mutationOptions, request: requestOptions} = options
-    ? options.mutation &&
-      'mutationKey' in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-    : {mutation: {mutationKey}, request: undefined};
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof refresh>>,
-    void
-  > = () => {
-    return refresh(requestOptions);
-  };
-
-  return {mutationFn, ...mutationOptions};
-};
-
-export type RefreshMutationResult = NonNullable<
-  Awaited<ReturnType<typeof refresh>>
->;
-
-export type RefreshMutationError = ErrorType<ProblemDetail>;
-
-/**
- * @summary Обновление сессии
- */
-export const useRefresh = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof refresh>>,
-      TError,
-      void,
-      TContext
-    >;
-    request?: SecondParameter<typeof apiFetch>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof refresh>>,
-  TError,
-  void,
-  TContext
-> => {
-  return useMutation(getRefreshMutationOptions(options), queryClient);
-};
-
-export const getLogoutUrl = () => {
-  return `/api/auth/logout`;
-};
-
-/**
- * Отзывает сессию по куке refresh_token и удаляет обе куки. Без куки просто удаляет куки.
- * @summary Выход
- */
-export const logout = async (
-  options?: Parameters<typeof apiFetch>[1],
-): Promise<void> => {
-  return apiFetch<void>(getLogoutUrl(), {
-    ...options,
-    method: 'POST',
-  });
-};
-
-export const getLogoutMutationKey = () => ['logout'] as const;
-
-export const getLogoutMutationOptions = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof logout>>,
-    TError,
-    void,
-    TContext
-  >;
-  request?: SecondParameter<typeof apiFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof logout>>,
-  TError,
-  void,
-  TContext
-> => {
-  const mutationKey = getLogoutMutationKey();
-  const {mutation: mutationOptions, request: requestOptions} = options
-    ? options.mutation &&
-      'mutationKey' in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-    : {mutation: {mutationKey}, request: undefined};
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof logout>>,
-    void
-  > = () => {
-    return logout(requestOptions);
-  };
-
-  return {mutationFn, ...mutationOptions};
-};
-
-export type LogoutMutationResult = NonNullable<
-  Awaited<ReturnType<typeof logout>>
->;
-
-export type LogoutMutationError = ErrorType<ProblemDetail>;
-
-/**
- * @summary Выход
- */
-export const useLogout = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof logout>>,
-      TError,
-      void,
-      TContext
-    >;
-    request?: SecondParameter<typeof apiFetch>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof logout>>,
-  TError,
-  void,
-  TContext
-> => {
-  return useMutation(getLogoutMutationOptions(options), queryClient);
-};
-
-export const getLoginUrl = () => {
-  return `/api/auth/login`;
-};
-
-/**
- * Открывает сессию: ставит куки access_token (15 минут) и refresh_token (30 дней).
- * @summary Вход по email и паролю
- */
-export const login = async (
-  loginRequest: LoginRequest,
-  options?: Parameters<typeof apiFetch>[1],
-): Promise<UserResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit['headers']>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          entry => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<
-      string | readonly string[] | undefined
-    >(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-  return apiFetch<UserResponse>(getLoginUrl(), {
-    ...options,
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getHeaders(options?.headers),
-    },
-    body: JSON.stringify(loginRequest),
-  });
-};
-
-export const getLoginMutationKey = () => ['login'] as const;
-
-export const getLoginMutationOptions = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof login>>,
-    TError,
-    LoginMutationVariables,
-    TContext
-  >;
-  request?: SecondParameter<typeof apiFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof login>>,
-  TError,
-  LoginMutationVariables,
-  TContext
-> => {
-  const mutationKey = getLoginMutationKey();
-  const {mutation: mutationOptions, request: requestOptions} = options
-    ? options.mutation &&
-      'mutationKey' in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-    : {mutation: {mutationKey}, request: undefined};
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof login>>,
-    LoginMutationVariables
-  > = props => {
-    const {data} = props ?? {};
-
-    return login(data, requestOptions);
-  };
-
-  return {mutationFn, ...mutationOptions};
-};
-
-export type LoginMutationResult = NonNullable<
-  Awaited<ReturnType<typeof login>>
->;
-export type LoginMutationBody = LoginRequest;
-export type LoginMutationError = ErrorType<ProblemDetail>;
-export type LoginMutationVariables = {data: LoginRequest};
-
-/**
- * @summary Вход по email и паролю
- */
-export const useLogin = <TError = ErrorType<ProblemDetail>, TContext = unknown>(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof login>>,
-      TError,
-      LoginMutationVariables,
-      TContext
-    >;
-    request?: SecondParameter<typeof apiFetch>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof login>>,
-  TError,
-  LoginMutationVariables,
-  TContext
-> => {
-  return useMutation(getLoginMutationOptions(options), queryClient);
-};
-
-export const getLoginWithGoogleUrl = () => {
-  return `/api/auth/google`;
-};
-
-/**
- * Принимает Google ID token из Google Identity Services. Новый Google-аккаунт создаёт аккаунт или привязывается к существующему с тем же email, если email подтверждён и у нас, и в Google. Новый аккаунт получает ник вида player-a1b2c3 и аватар CAT — их можно сменить в профиле.
- * @summary Вход через Google
- */
-export const loginWithGoogle = async (
-  googleIdTokenRequest: GoogleIdTokenRequest,
-  options?: Parameters<typeof apiFetch>[1],
-): Promise<UserResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit['headers']>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          entry => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<
-      string | readonly string[] | undefined
-    >(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-  return apiFetch<UserResponse>(getLoginWithGoogleUrl(), {
-    ...options,
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getHeaders(options?.headers),
-    },
-    body: JSON.stringify(googleIdTokenRequest),
-  });
-};
-
-export const getLoginWithGoogleMutationKey = () => ['loginWithGoogle'] as const;
-
-export const getLoginWithGoogleMutationOptions = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof loginWithGoogle>>,
-    TError,
-    LoginWithGoogleMutationVariables,
-    TContext
-  >;
-  request?: SecondParameter<typeof apiFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof loginWithGoogle>>,
-  TError,
-  LoginWithGoogleMutationVariables,
-  TContext
-> => {
-  const mutationKey = getLoginWithGoogleMutationKey();
-  const {mutation: mutationOptions, request: requestOptions} = options
-    ? options.mutation &&
-      'mutationKey' in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-    : {mutation: {mutationKey}, request: undefined};
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof loginWithGoogle>>,
-    LoginWithGoogleMutationVariables
-  > = props => {
-    const {data} = props ?? {};
-
-    return loginWithGoogle(data, requestOptions);
-  };
-
-  return {mutationFn, ...mutationOptions};
-};
-
-export type LoginWithGoogleMutationResult = NonNullable<
-  Awaited<ReturnType<typeof loginWithGoogle>>
->;
-export type LoginWithGoogleMutationBody = GoogleIdTokenRequest;
-export type LoginWithGoogleMutationError = ErrorType<ProblemDetail>;
-export type LoginWithGoogleMutationVariables = {data: GoogleIdTokenRequest};
-
-/**
- * @summary Вход через Google
- */
-export const useLoginWithGoogle = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof loginWithGoogle>>,
-      TError,
-      LoginWithGoogleMutationVariables,
-      TContext
-    >;
-    request?: SecondParameter<typeof apiFetch>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof loginWithGoogle>>,
-  TError,
-  LoginWithGoogleMutationVariables,
-  TContext
-> => {
-  return useMutation(getLoginWithGoogleMutationOptions(options), queryClient);
-};
-
-export const getUpdateProfileUrl = () => {
-  return `/api/users/me/profile`;
-};
-
-/**
- * Меняет ник и/или аватар: изменяется только переданное. Ник не уникален. В игровых комнатах новый ник появляется через несколько секунд.
- * @summary Изменить профиль
- */
-export const updateProfile = async (
-  updateProfileRequest: UpdateProfileRequest,
-  options?: Parameters<typeof apiFetch>[1],
-): Promise<UserResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit['headers']>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          entry => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<
-      string | readonly string[] | undefined
-    >(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-  return apiFetch<UserResponse>(getUpdateProfileUrl(), {
-    ...options,
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getHeaders(options?.headers),
-    },
-    body: JSON.stringify(updateProfileRequest),
-  });
-};
-
-export const getUpdateProfileMutationKey = () => ['updateProfile'] as const;
-
-export const getUpdateProfileMutationOptions = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof updateProfile>>,
-    TError,
-    UpdateProfileMutationVariables,
-    TContext
-  >;
-  request?: SecondParameter<typeof apiFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof updateProfile>>,
-  TError,
-  UpdateProfileMutationVariables,
-  TContext
-> => {
-  const mutationKey = getUpdateProfileMutationKey();
-  const {mutation: mutationOptions, request: requestOptions} = options
-    ? options.mutation &&
-      'mutationKey' in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-    : {mutation: {mutationKey}, request: undefined};
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof updateProfile>>,
-    UpdateProfileMutationVariables
-  > = props => {
-    const {data} = props ?? {};
-
-    return updateProfile(data, requestOptions);
-  };
-
-  return {mutationFn, ...mutationOptions};
-};
-
-export type UpdateProfileMutationResult = NonNullable<
-  Awaited<ReturnType<typeof updateProfile>>
->;
-export type UpdateProfileMutationBody = UpdateProfileRequest;
-export type UpdateProfileMutationError = ErrorType<ProblemDetail>;
-export type UpdateProfileMutationVariables = {data: UpdateProfileRequest};
-
-/**
- * @summary Изменить профиль
- */
-export const useUpdateProfile = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof updateProfile>>,
-      TError,
-      UpdateProfileMutationVariables,
-      TContext
-    >;
-    request?: SecondParameter<typeof apiFetch>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof updateProfile>>,
-  TError,
-  UpdateProfileMutationVariables,
-  TContext
-> => {
-  return useMutation(getUpdateProfileMutationOptions(options), queryClient);
-};
-
-export const getGetCurrentUserUrl = () => {
-  return `/api/users/me`;
-};
-
-/**
- * Email, статус его подтверждения и привязанные способы входа. Подходит, чтобы проверить, залогинен ли пользователь.
- * @summary Данные текущего пользователя
- */
-export const getCurrentUser = async (
-  options?: Parameters<typeof apiFetch>[1],
-): Promise<UserResponse> => {
-  return apiFetch<UserResponse>(getGetCurrentUserUrl(), {
-    ...options,
-    method: 'GET',
-  });
-};
-
-export const getGetCurrentUserQueryKey = () => {
-  return [`/api/users/me`] as const;
-};
-
-export const getGetCurrentUserQueryOptions = <
-  TData = Awaited<ReturnType<typeof getCurrentUser>>,
-  TError = ErrorType<ProblemDetail>,
->(options?: {
-  query?: Partial<
-    UseQueryOptions<Awaited<ReturnType<typeof getCurrentUser>>, TError, TData>
-  >;
-  request?: SecondParameter<typeof apiFetch>;
-}) => {
-  const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getGetCurrentUserQueryKey();
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getCurrentUser>>> = ({
-    signal,
-  }) => getCurrentUser({signal, ...requestOptions});
-
-  return {queryKey, queryFn, ...queryOptions} as UseQueryOptions<
-    Awaited<ReturnType<typeof getCurrentUser>>,
-    TError,
-    TData
-  > & {queryKey: DataTag<QueryKey, TData, TError>};
-};
-
-export type GetCurrentUserQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getCurrentUser>>
->;
-export type GetCurrentUserQueryError = ErrorType<ProblemDetail>;
-
-export function useGetCurrentUser<
-  TData = Awaited<ReturnType<typeof getCurrentUser>>,
-  TError = ErrorType<ProblemDetail>,
->(
-  options: {
-    query: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getCurrentUser>>, TError, TData>
-    > &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getCurrentUser>>,
-          TError,
-          Awaited<ReturnType<typeof getCurrentUser>>
-        >,
-        'initialData'
-      >;
-    request?: SecondParameter<typeof apiFetch>;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-};
-export function useGetCurrentUser<
-  TData = Awaited<ReturnType<typeof getCurrentUser>>,
-  TError = ErrorType<ProblemDetail>,
->(
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getCurrentUser>>, TError, TData>
-    > &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getCurrentUser>>,
-          TError,
-          Awaited<ReturnType<typeof getCurrentUser>>
-        >,
-        'initialData'
-      >;
-    request?: SecondParameter<typeof apiFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & {queryKey: DataTag<QueryKey, TData, TError>};
-export function useGetCurrentUser<
-  TData = Awaited<ReturnType<typeof getCurrentUser>>,
-  TError = ErrorType<ProblemDetail>,
->(
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getCurrentUser>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof apiFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & {queryKey: DataTag<QueryKey, TData, TError>};
-/**
- * @summary Данные текущего пользователя
- */
-
-export function useGetCurrentUser<
-  TData = Awaited<ReturnType<typeof getCurrentUser>>,
-  TError = ErrorType<ProblemDetail>,
->(
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getCurrentUser>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof apiFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-} {
-  const queryOptions = getGetCurrentUserQueryOptions(options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
-    TData,
-    TError
-  > & {queryKey: DataTag<QueryKey, TData, TError>};
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
 
 export const getGetRoomUrl = (roomId: string) => {
   return `/api/rooms/${roomId}`;
@@ -2604,44 +1479,44 @@ export function useGetRoom<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-export const getDeleteRoomUrl = (roomId: string) => {
-  return `/api/rooms/${roomId}`;
+export const getJoinRoomUrl = (roomId: string) => {
+  return `/api/rooms/${roomId}/join`;
 };
 
 /**
- * Удаляет комнату вместе с историей партий. Только владелец.
- * @summary Удалить комнату
+ * Игрок идущей партии возвращается на своё место. Иначе, если партия не идёт и есть свободное место, пользователь становится игроком, в остальных случаях — наблюдателем. В пустой комнате вошедший становится владельцем. Вход вышедшего участника, пока не истёк срок выхода, отменяет выход: роль и владение сохраняются. Повторный вход ничего не меняет.
+ * @summary Войти в комнату
  */
-export const deleteRoom = async (
+export const joinRoom = async (
   roomId: string,
   options?: Parameters<typeof apiFetch>[1],
-): Promise<void> => {
-  return apiFetch<void>(getDeleteRoomUrl(roomId), {
+): Promise<RoomResponse> => {
+  return apiFetch<RoomResponse>(getJoinRoomUrl(roomId), {
     ...options,
-    method: 'DELETE',
+    method: 'POST',
   });
 };
 
-export const getDeleteRoomMutationKey = () => ['deleteRoom'] as const;
+export const getJoinRoomMutationKey = () => ['joinRoom'] as const;
 
-export const getDeleteRoomMutationOptions = <
+export const getJoinRoomMutationOptions = <
   TError = ErrorType<ProblemDetail>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof deleteRoom>>,
+    Awaited<ReturnType<typeof joinRoom>>,
     TError,
-    DeleteRoomMutationVariables,
+    JoinRoomMutationVariables,
     TContext
   >;
   request?: SecondParameter<typeof apiFetch>;
 }): UseMutationOptions<
-  Awaited<ReturnType<typeof deleteRoom>>,
+  Awaited<ReturnType<typeof joinRoom>>,
   TError,
-  DeleteRoomMutationVariables,
+  JoinRoomMutationVariables,
   TContext
 > => {
-  const mutationKey = getDeleteRoomMutationKey();
+  const mutationKey = getJoinRoomMutationKey();
   const {mutation: mutationOptions, request: requestOptions} = options
     ? options.mutation &&
       'mutationKey' in options.mutation &&
@@ -2651,121 +1526,689 @@ export const getDeleteRoomMutationOptions = <
     : {mutation: {mutationKey}, request: undefined};
 
   const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof deleteRoom>>,
-    DeleteRoomMutationVariables
+    Awaited<ReturnType<typeof joinRoom>>,
+    JoinRoomMutationVariables
   > = props => {
     const {roomId} = props ?? {};
 
-    return deleteRoom(roomId, requestOptions);
+    return joinRoom(roomId, requestOptions);
   };
 
   return {mutationFn, ...mutationOptions};
 };
 
-export type DeleteRoomMutationResult = NonNullable<
-  Awaited<ReturnType<typeof deleteRoom>>
+export type JoinRoomMutationResult = NonNullable<
+  Awaited<ReturnType<typeof joinRoom>>
 >;
 
-export type DeleteRoomMutationError = ErrorType<ProblemDetail>;
-export type DeleteRoomMutationVariables = {roomId: string};
+export type JoinRoomMutationError = ErrorType<ProblemDetail>;
+export type JoinRoomMutationVariables = {roomId: string};
 
 /**
- * @summary Удалить комнату
+ * @summary Войти в комнату
  */
-export const useDeleteRoom = <
+export const useJoinRoom = <
   TError = ErrorType<ProblemDetail>,
   TContext = unknown,
 >(
   options?: {
     mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof deleteRoom>>,
+      Awaited<ReturnType<typeof joinRoom>>,
       TError,
-      DeleteRoomMutationVariables,
+      JoinRoomMutationVariables,
       TContext
     >;
     request?: SecondParameter<typeof apiFetch>;
   },
   queryClient?: QueryClient,
 ): UseMutationResult<
-  Awaited<ReturnType<typeof deleteRoom>>,
+  Awaited<ReturnType<typeof joinRoom>>,
   TError,
-  DeleteRoomMutationVariables,
+  JoinRoomMutationVariables,
   TContext
 > => {
-  return useMutation(getDeleteRoomMutationOptions(options), queryClient);
+  return useMutation(getJoinRoomMutationOptions(options), queryClient);
 };
 
-export const getGetGameUrl = (gameCode: 'nothing') => {
-  return `/api/games/${gameCode}`;
+export const getLeaveRoomUrl = (roomId: string) => {
+  return `/api/rooms/${roomId}/leave`;
 };
 
 /**
- * Число игроков, поддерживаемые режимы времени и границы времени на ход, границы настроек игры и настройки по умолчанию. По ним строится форма создания комнаты и смены настроек.
- * @summary Параметры игры
+ * Выйти можно всегда, но выход отложенный: участник помечается уходящим (leaving) и до истечения срока сохраняет роль, место и владение, а вход в комнату в пределах срока отменяет выход. Срок: игроку идущей партии его задаёт игра (в «игре в ничто» 30 с, на паузе отсчёт заморожен), владельцу вне игры — 5 с, остальным — 1 с. По истечении срока участник удаляется: игрок идущей партии сохраняет место и может вернуться, владение переходит к самому раннему из оставшихся: сначала к присутствующим, к уходящим — только если присутствующих нет; в каждой группе сначала игроки, затем наблюдатели. Пустая комната удаляется автоматически через 30 минут. Повторный выход срок не продлевает.
+ * @summary Выйти из комнаты
  */
-export const getGame = async (
-  gameCode: 'nothing',
+export const leaveRoom = async (
+  roomId: string,
   options?: Parameters<typeof apiFetch>[1],
-): Promise<GameInfoResponse> => {
-  return apiFetch<GameInfoResponse>(getGetGameUrl(gameCode), {
+): Promise<void> => {
+  return apiFetch<void>(getLeaveRoomUrl(roomId), {
+    ...options,
+    method: 'POST',
+  });
+};
+
+export const getLeaveRoomMutationKey = () => ['leaveRoom'] as const;
+
+export const getLeaveRoomMutationOptions = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof leaveRoom>>,
+    TError,
+    LeaveRoomMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof leaveRoom>>,
+  TError,
+  LeaveRoomMutationVariables,
+  TContext
+> => {
+  const mutationKey = getLeaveRoomMutationKey();
+  const {mutation: mutationOptions, request: requestOptions} = options
+    ? options.mutation &&
+      'mutationKey' in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+    : {mutation: {mutationKey}, request: undefined};
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof leaveRoom>>,
+    LeaveRoomMutationVariables
+  > = props => {
+    const {roomId} = props ?? {};
+
+    return leaveRoom(roomId, requestOptions);
+  };
+
+  return {mutationFn, ...mutationOptions};
+};
+
+export type LeaveRoomMutationResult = NonNullable<
+  Awaited<ReturnType<typeof leaveRoom>>
+>;
+
+export type LeaveRoomMutationError = ErrorType<ProblemDetail>;
+export type LeaveRoomMutationVariables = {roomId: string};
+
+/**
+ * @summary Выйти из комнаты
+ */
+export const useLeaveRoom = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof leaveRoom>>,
+      TError,
+      LeaveRoomMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof leaveRoom>>,
+  TError,
+  LeaveRoomMutationVariables,
+  TContext
+> => {
+  return useMutation(getLeaveRoomMutationOptions(options), queryClient);
+};
+
+export const getChangeRoleUrl = (roomId: string) => {
+  return `/api/rooms/${roomId}/role`;
+};
+
+/**
+ * Стать игроком или наблюдателем. Только между партиями; игроком — если есть свободное место. Владелец тоже может стать наблюдателем, владение при этом сохраняется.
+ * @summary Сменить роль
+ */
+export const changeRole = async (
+  roomId: string,
+  changeRoleRequest: ChangeRoleRequest,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<RoomResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit['headers']>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          entry => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<
+      string | readonly string[] | undefined
+    >(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<RoomResponse>(getChangeRoleUrl(roomId), {
+    ...options,
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getHeaders(options?.headers),
+    },
+    body: JSON.stringify(changeRoleRequest),
+  });
+};
+
+export const getChangeRoleMutationKey = () => ['changeRole'] as const;
+
+export const getChangeRoleMutationOptions = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof changeRole>>,
+    TError,
+    ChangeRoleMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof changeRole>>,
+  TError,
+  ChangeRoleMutationVariables,
+  TContext
+> => {
+  const mutationKey = getChangeRoleMutationKey();
+  const {mutation: mutationOptions, request: requestOptions} = options
+    ? options.mutation &&
+      'mutationKey' in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+    : {mutation: {mutationKey}, request: undefined};
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof changeRole>>,
+    ChangeRoleMutationVariables
+  > = props => {
+    const {roomId, data} = props ?? {};
+
+    return changeRole(roomId, data, requestOptions);
+  };
+
+  return {mutationFn, ...mutationOptions};
+};
+
+export type ChangeRoleMutationResult = NonNullable<
+  Awaited<ReturnType<typeof changeRole>>
+>;
+export type ChangeRoleMutationBody = ChangeRoleRequest;
+export type ChangeRoleMutationError = ErrorType<ProblemDetail>;
+export type ChangeRoleMutationVariables = {
+  roomId: string;
+  data: ChangeRoleRequest;
+};
+
+/**
+ * @summary Сменить роль
+ */
+export const useChangeRole = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof changeRole>>,
+      TError,
+      ChangeRoleMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof changeRole>>,
+  TError,
+  ChangeRoleMutationVariables,
+  TContext
+> => {
+  return useMutation(getChangeRoleMutationOptions(options), queryClient);
+};
+
+export const getCancelSessionUrl = (roomId: string) => {
+  return `/api/rooms/${roomId}/session`;
+};
+
+/**
+ * Завершает идущую партию без результата и возвращает комнату в ожидание. Работает и на паузе. Только владелец.
+ * @summary Отменить партию
+ */
+export const cancelSession = async (
+  roomId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<RoomResponse> => {
+  return apiFetch<RoomResponse>(getCancelSessionUrl(roomId), {
+    ...options,
+    method: 'DELETE',
+  });
+};
+
+export const getCancelSessionMutationKey = () => ['cancelSession'] as const;
+
+export const getCancelSessionMutationOptions = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof cancelSession>>,
+    TError,
+    CancelSessionMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof cancelSession>>,
+  TError,
+  CancelSessionMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCancelSessionMutationKey();
+  const {mutation: mutationOptions, request: requestOptions} = options
+    ? options.mutation &&
+      'mutationKey' in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+    : {mutation: {mutationKey}, request: undefined};
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof cancelSession>>,
+    CancelSessionMutationVariables
+  > = props => {
+    const {roomId} = props ?? {};
+
+    return cancelSession(roomId, requestOptions);
+  };
+
+  return {mutationFn, ...mutationOptions};
+};
+
+export type CancelSessionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof cancelSession>>
+>;
+
+export type CancelSessionMutationError = ErrorType<ProblemDetail>;
+export type CancelSessionMutationVariables = {roomId: string};
+
+/**
+ * @summary Отменить партию
+ */
+export const useCancelSession = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof cancelSession>>,
+      TError,
+      CancelSessionMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof cancelSession>>,
+  TError,
+  CancelSessionMutationVariables,
+  TContext
+> => {
+  return useMutation(getCancelSessionMutationOptions(options), queryClient);
+};
+
+export const getStartSessionUrl = (roomId: string) => {
+  return `/api/rooms/${roomId}/session`;
+};
+
+/**
+ * Стартует партию с текущими игроками комнаты (места — по порядку входа). Только владелец, число игроков должно укладываться в ограничения игры (minPlayers–maxPlayers).
+ * @summary Начать партию
+ */
+export const startSession = async (
+  roomId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<RoomResponse> => {
+  return apiFetch<RoomResponse>(getStartSessionUrl(roomId), {
+    ...options,
+    method: 'POST',
+  });
+};
+
+export const getStartSessionMutationKey = () => ['startSession'] as const;
+
+export const getStartSessionMutationOptions = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof startSession>>,
+    TError,
+    StartSessionMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof startSession>>,
+  TError,
+  StartSessionMutationVariables,
+  TContext
+> => {
+  const mutationKey = getStartSessionMutationKey();
+  const {mutation: mutationOptions, request: requestOptions} = options
+    ? options.mutation &&
+      'mutationKey' in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+    : {mutation: {mutationKey}, request: undefined};
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof startSession>>,
+    StartSessionMutationVariables
+  > = props => {
+    const {roomId} = props ?? {};
+
+    return startSession(roomId, requestOptions);
+  };
+
+  return {mutationFn, ...mutationOptions};
+};
+
+export type StartSessionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof startSession>>
+>;
+
+export type StartSessionMutationError = ErrorType<ProblemDetail>;
+export type StartSessionMutationVariables = {roomId: string};
+
+/**
+ * @summary Начать партию
+ */
+export const useStartSession = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof startSession>>,
+      TError,
+      StartSessionMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof startSession>>,
+  TError,
+  StartSessionMutationVariables,
+  TContext
+> => {
+  return useMutation(getStartSessionMutationOptions(options), queryClient);
+};
+
+export const getPauseSessionUrl = (roomId: string) => {
+  return `/api/rooms/${roomId}/session/pause`;
+};
+
+/**
+ * Замораживает идущую партию: ходы запрещены, время хода и сроки возвращения вышедших игроков партии не идут (session.pausedAt; остаток времени хода — moveDeadline − pausedAt). Вход, выход и отмена партии работают. Только владелец. Повторный вызов на паузе ничего не меняет.
+ * @summary Поставить партию на паузу
+ */
+export const pauseSession = async (
+  roomId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<RoomResponse> => {
+  return apiFetch<RoomResponse>(getPauseSessionUrl(roomId), {
+    ...options,
+    method: 'POST',
+  });
+};
+
+export const getPauseSessionMutationKey = () => ['pauseSession'] as const;
+
+export const getPauseSessionMutationOptions = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof pauseSession>>,
+    TError,
+    PauseSessionMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof pauseSession>>,
+  TError,
+  PauseSessionMutationVariables,
+  TContext
+> => {
+  const mutationKey = getPauseSessionMutationKey();
+  const {mutation: mutationOptions, request: requestOptions} = options
+    ? options.mutation &&
+      'mutationKey' in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+    : {mutation: {mutationKey}, request: undefined};
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof pauseSession>>,
+    PauseSessionMutationVariables
+  > = props => {
+    const {roomId} = props ?? {};
+
+    return pauseSession(roomId, requestOptions);
+  };
+
+  return {mutationFn, ...mutationOptions};
+};
+
+export type PauseSessionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof pauseSession>>
+>;
+
+export type PauseSessionMutationError = ErrorType<ProblemDetail>;
+export type PauseSessionMutationVariables = {roomId: string};
+
+/**
+ * @summary Поставить партию на паузу
+ */
+export const usePauseSession = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof pauseSession>>,
+      TError,
+      PauseSessionMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof pauseSession>>,
+  TError,
+  PauseSessionMutationVariables,
+  TContext
+> => {
+  return useMutation(getPauseSessionMutationOptions(options), queryClient);
+};
+
+export const getResumeSessionUrl = (roomId: string) => {
+  return `/api/rooms/${roomId}/session/resume`;
+};
+
+/**
+ * Снимает паузу. Время хода и сроки возвращения вышедших игроков партии сдвигаются на длительность паузы: остаётся столько же времени, сколько было в момент паузы. Только владелец. Без паузы вызов ничего не меняет.
+ * @summary Продолжить партию
+ */
+export const resumeSession = async (
+  roomId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<RoomResponse> => {
+  return apiFetch<RoomResponse>(getResumeSessionUrl(roomId), {
+    ...options,
+    method: 'POST',
+  });
+};
+
+export const getResumeSessionMutationKey = () => ['resumeSession'] as const;
+
+export const getResumeSessionMutationOptions = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof resumeSession>>,
+    TError,
+    ResumeSessionMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof resumeSession>>,
+  TError,
+  ResumeSessionMutationVariables,
+  TContext
+> => {
+  const mutationKey = getResumeSessionMutationKey();
+  const {mutation: mutationOptions, request: requestOptions} = options
+    ? options.mutation &&
+      'mutationKey' in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+    : {mutation: {mutationKey}, request: undefined};
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof resumeSession>>,
+    ResumeSessionMutationVariables
+  > = props => {
+    const {roomId} = props ?? {};
+
+    return resumeSession(roomId, requestOptions);
+  };
+
+  return {mutationFn, ...mutationOptions};
+};
+
+export type ResumeSessionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof resumeSession>>
+>;
+
+export type ResumeSessionMutationError = ErrorType<ProblemDetail>;
+export type ResumeSessionMutationVariables = {roomId: string};
+
+/**
+ * @summary Продолжить партию
+ */
+export const useResumeSession = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof resumeSession>>,
+      TError,
+      ResumeSessionMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof resumeSession>>,
+  TError,
+  ResumeSessionMutationVariables,
+  TContext
+> => {
+  return useMutation(getResumeSessionMutationOptions(options), queryClient);
+};
+
+export const getGetCurrentUserUrl = () => {
+  return `/api/users/me`;
+};
+
+/**
+ * Email, статус его подтверждения и привязанные способы входа. Подходит, чтобы проверить, залогинен ли пользователь.
+ * @summary Данные текущего пользователя
+ */
+export const getCurrentUser = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<UserResponse> => {
+  return apiFetch<UserResponse>(getGetCurrentUserUrl(), {
     ...options,
     method: 'GET',
   });
 };
 
-export const getGetGameQueryKey = (gameCode: 'nothing') => {
-  return [`/api/games/${gameCode}`] as const;
+export const getGetCurrentUserQueryKey = () => {
+  return [`/api/users/me`] as const;
 };
 
-export const getGetGameQueryOptions = <
-  TData = Awaited<ReturnType<typeof getGame>>,
+export const getGetCurrentUserQueryOptions = <
+  TData = Awaited<ReturnType<typeof getCurrentUser>>,
   TError = ErrorType<ProblemDetail>,
->(
-  gameCode: 'nothing',
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getGame>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof apiFetch>;
-  },
-) => {
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<Awaited<ReturnType<typeof getCurrentUser>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
   const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetGameQueryKey(gameCode);
+  const queryKey = queryOptions?.queryKey ?? getGetCurrentUserQueryKey();
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getGame>>> = ({
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getCurrentUser>>> = ({
     signal,
-  }) => getGame(gameCode, {signal, ...requestOptions});
+  }) => getCurrentUser({signal, ...requestOptions});
 
-  return {
-    queryKey,
-    queryFn,
-    enabled: gameCode !== null && gameCode !== undefined,
-    ...queryOptions,
-  } as UseQueryOptions<Awaited<ReturnType<typeof getGame>>, TError, TData> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
+  return {queryKey, queryFn, ...queryOptions} as UseQueryOptions<
+    Awaited<ReturnType<typeof getCurrentUser>>,
+    TError,
+    TData
+  > & {queryKey: DataTag<QueryKey, TData, TError>};
 };
 
-export type GetGameQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getGame>>
+export type GetCurrentUserQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getCurrentUser>>
 >;
-export type GetGameQueryError = ErrorType<ProblemDetail>;
+export type GetCurrentUserQueryError = ErrorType<ProblemDetail>;
 
-export function useGetGame<
-  TData = Awaited<ReturnType<typeof getGame>>,
+export function useGetCurrentUser<
+  TData = Awaited<ReturnType<typeof getCurrentUser>>,
   TError = ErrorType<ProblemDetail>,
 >(
-  gameCode: 'nothing',
   options: {
     query: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getGame>>, TError, TData>
+      UseQueryOptions<Awaited<ReturnType<typeof getCurrentUser>>, TError, TData>
     > &
       Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getGame>>,
+          Awaited<ReturnType<typeof getCurrentUser>>,
           TError,
-          Awaited<ReturnType<typeof getGame>>
+          Awaited<ReturnType<typeof getCurrentUser>>
         >,
         'initialData'
       >;
@@ -2775,20 +2218,19 @@ export function useGetGame<
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
-export function useGetGame<
-  TData = Awaited<ReturnType<typeof getGame>>,
+export function useGetCurrentUser<
+  TData = Awaited<ReturnType<typeof getCurrentUser>>,
   TError = ErrorType<ProblemDetail>,
 >(
-  gameCode: 'nothing',
   options?: {
     query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getGame>>, TError, TData>
+      UseQueryOptions<Awaited<ReturnType<typeof getCurrentUser>>, TError, TData>
     > &
       Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getGame>>,
+          Awaited<ReturnType<typeof getCurrentUser>>,
           TError,
-          Awaited<ReturnType<typeof getGame>>
+          Awaited<ReturnType<typeof getCurrentUser>>
         >,
         'initialData'
       >;
@@ -2796,31 +2238,29 @@ export function useGetGame<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & {queryKey: DataTag<QueryKey, TData, TError>};
-export function useGetGame<
-  TData = Awaited<ReturnType<typeof getGame>>,
+export function useGetCurrentUser<
+  TData = Awaited<ReturnType<typeof getCurrentUser>>,
   TError = ErrorType<ProblemDetail>,
 >(
-  gameCode: 'nothing',
   options?: {
     query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getGame>>, TError, TData>
+      UseQueryOptions<Awaited<ReturnType<typeof getCurrentUser>>, TError, TData>
     >;
     request?: SecondParameter<typeof apiFetch>;
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & {queryKey: DataTag<QueryKey, TData, TError>};
 /**
- * @summary Параметры игры
+ * @summary Данные текущего пользователя
  */
 
-export function useGetGame<
-  TData = Awaited<ReturnType<typeof getGame>>,
+export function useGetCurrentUser<
+  TData = Awaited<ReturnType<typeof getCurrentUser>>,
   TError = ErrorType<ProblemDetail>,
 >(
-  gameCode: 'nothing',
   options?: {
     query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getGame>>, TError, TData>
+      UseQueryOptions<Awaited<ReturnType<typeof getCurrentUser>>, TError, TData>
     >;
     request?: SecondParameter<typeof apiFetch>;
   },
@@ -2828,7 +2268,7 @@ export function useGetGame<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
-  const queryOptions = getGetGameQueryOptions(gameCode, options);
+  const queryOptions = getGetCurrentUserQueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,
@@ -2837,3 +2277,472 @@ export function useGetGame<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export const getAddGoogleLoginUrl = () => {
+  return `/api/users/me/login-methods/google`;
+};
+
+/**
+ * Явная привязка Google к текущему аккаунту. Email Google-аккаунта может отличаться от email аккаунта.
+ * @summary Привязать Google-аккаунт
+ */
+export const addGoogleLogin = async (
+  googleIdTokenRequest: GoogleIdTokenRequest,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<UserResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit['headers']>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          entry => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<
+      string | readonly string[] | undefined
+    >(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<UserResponse>(getAddGoogleLoginUrl(), {
+    ...options,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getHeaders(options?.headers),
+    },
+    body: JSON.stringify(googleIdTokenRequest),
+  });
+};
+
+export const getAddGoogleLoginMutationKey = () => ['addGoogleLogin'] as const;
+
+export const getAddGoogleLoginMutationOptions = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof addGoogleLogin>>,
+    TError,
+    AddGoogleLoginMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof addGoogleLogin>>,
+  TError,
+  AddGoogleLoginMutationVariables,
+  TContext
+> => {
+  const mutationKey = getAddGoogleLoginMutationKey();
+  const {mutation: mutationOptions, request: requestOptions} = options
+    ? options.mutation &&
+      'mutationKey' in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+    : {mutation: {mutationKey}, request: undefined};
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof addGoogleLogin>>,
+    AddGoogleLoginMutationVariables
+  > = props => {
+    const {data} = props ?? {};
+
+    return addGoogleLogin(data, requestOptions);
+  };
+
+  return {mutationFn, ...mutationOptions};
+};
+
+export type AddGoogleLoginMutationResult = NonNullable<
+  Awaited<ReturnType<typeof addGoogleLogin>>
+>;
+export type AddGoogleLoginMutationBody = GoogleIdTokenRequest;
+export type AddGoogleLoginMutationError = ErrorType<ProblemDetail>;
+export type AddGoogleLoginMutationVariables = {data: GoogleIdTokenRequest};
+
+/**
+ * @summary Привязать Google-аккаунт
+ */
+export const useAddGoogleLogin = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof addGoogleLogin>>,
+      TError,
+      AddGoogleLoginMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof addGoogleLogin>>,
+  TError,
+  AddGoogleLoginMutationVariables,
+  TContext
+> => {
+  return useMutation(getAddGoogleLoginMutationOptions(options), queryClient);
+};
+
+export const getAddPasswordLoginUrl = () => {
+  return `/api/users/me/login-methods/password`;
+};
+
+/**
+ * Для аккаунта без пароля (например, созданного через Google).
+ * @summary Добавить вход по паролю
+ */
+export const addPasswordLogin = async (
+  setPasswordRequest: SetPasswordRequest,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<UserResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit['headers']>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          entry => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<
+      string | readonly string[] | undefined
+    >(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<UserResponse>(getAddPasswordLoginUrl(), {
+    ...options,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getHeaders(options?.headers),
+    },
+    body: JSON.stringify(setPasswordRequest),
+  });
+};
+
+export const getAddPasswordLoginMutationKey = () =>
+  ['addPasswordLogin'] as const;
+
+export const getAddPasswordLoginMutationOptions = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof addPasswordLogin>>,
+    TError,
+    AddPasswordLoginMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof addPasswordLogin>>,
+  TError,
+  AddPasswordLoginMutationVariables,
+  TContext
+> => {
+  const mutationKey = getAddPasswordLoginMutationKey();
+  const {mutation: mutationOptions, request: requestOptions} = options
+    ? options.mutation &&
+      'mutationKey' in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+    : {mutation: {mutationKey}, request: undefined};
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof addPasswordLogin>>,
+    AddPasswordLoginMutationVariables
+  > = props => {
+    const {data} = props ?? {};
+
+    return addPasswordLogin(data, requestOptions);
+  };
+
+  return {mutationFn, ...mutationOptions};
+};
+
+export type AddPasswordLoginMutationResult = NonNullable<
+  Awaited<ReturnType<typeof addPasswordLogin>>
+>;
+export type AddPasswordLoginMutationBody = SetPasswordRequest;
+export type AddPasswordLoginMutationError = ErrorType<ProblemDetail>;
+export type AddPasswordLoginMutationVariables = {data: SetPasswordRequest};
+
+/**
+ * @summary Добавить вход по паролю
+ */
+export const useAddPasswordLogin = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof addPasswordLogin>>,
+      TError,
+      AddPasswordLoginMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof addPasswordLogin>>,
+  TError,
+  AddPasswordLoginMutationVariables,
+  TContext
+> => {
+  return useMutation(getAddPasswordLoginMutationOptions(options), queryClient);
+};
+
+export const getChangePasswordUrl = () => {
+  return `/api/users/me/login-methods/password`;
+};
+
+/**
+ * Проверяет текущий пароль и задаёт новый. Все сессии пользователя завершаются: другие устройства и вкладки потеряют доступ не позже чем через 15 минут (срок access-токена). Текущий клиент сразу получает новую сессию в куках и остаётся в системе.
+ * @summary Сменить пароль
+ */
+export const changePassword = async (
+  changePasswordRequest: ChangePasswordRequest,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<UserResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit['headers']>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          entry => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<
+      string | readonly string[] | undefined
+    >(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<UserResponse>(getChangePasswordUrl(), {
+    ...options,
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getHeaders(options?.headers),
+    },
+    body: JSON.stringify(changePasswordRequest),
+  });
+};
+
+export const getChangePasswordMutationKey = () => ['changePassword'] as const;
+
+export const getChangePasswordMutationOptions = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof changePassword>>,
+    TError,
+    ChangePasswordMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof changePassword>>,
+  TError,
+  ChangePasswordMutationVariables,
+  TContext
+> => {
+  const mutationKey = getChangePasswordMutationKey();
+  const {mutation: mutationOptions, request: requestOptions} = options
+    ? options.mutation &&
+      'mutationKey' in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+    : {mutation: {mutationKey}, request: undefined};
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof changePassword>>,
+    ChangePasswordMutationVariables
+  > = props => {
+    const {data} = props ?? {};
+
+    return changePassword(data, requestOptions);
+  };
+
+  return {mutationFn, ...mutationOptions};
+};
+
+export type ChangePasswordMutationResult = NonNullable<
+  Awaited<ReturnType<typeof changePassword>>
+>;
+export type ChangePasswordMutationBody = ChangePasswordRequest;
+export type ChangePasswordMutationError = ErrorType<ProblemDetail>;
+export type ChangePasswordMutationVariables = {data: ChangePasswordRequest};
+
+/**
+ * @summary Сменить пароль
+ */
+export const useChangePassword = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof changePassword>>,
+      TError,
+      ChangePasswordMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof changePassword>>,
+  TError,
+  ChangePasswordMutationVariables,
+  TContext
+> => {
+  return useMutation(getChangePasswordMutationOptions(options), queryClient);
+};
+
+export const getUpdateProfileUrl = () => {
+  return `/api/users/me/profile`;
+};
+
+/**
+ * Меняет ник и/или аватар: изменяется только переданное. Ник не уникален. В игровых комнатах новый ник появляется через несколько секунд.
+ * @summary Изменить профиль
+ */
+export const updateProfile = async (
+  updateProfileRequest: UpdateProfileRequest,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<UserResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit['headers']>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          entry => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<
+      string | readonly string[] | undefined
+    >(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<UserResponse>(getUpdateProfileUrl(), {
+    ...options,
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getHeaders(options?.headers),
+    },
+    body: JSON.stringify(updateProfileRequest),
+  });
+};
+
+export const getUpdateProfileMutationKey = () => ['updateProfile'] as const;
+
+export const getUpdateProfileMutationOptions = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateProfile>>,
+    TError,
+    UpdateProfileMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateProfile>>,
+  TError,
+  UpdateProfileMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateProfileMutationKey();
+  const {mutation: mutationOptions, request: requestOptions} = options
+    ? options.mutation &&
+      'mutationKey' in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+    : {mutation: {mutationKey}, request: undefined};
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateProfile>>,
+    UpdateProfileMutationVariables
+  > = props => {
+    const {data} = props ?? {};
+
+    return updateProfile(data, requestOptions);
+  };
+
+  return {mutationFn, ...mutationOptions};
+};
+
+export type UpdateProfileMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateProfile>>
+>;
+export type UpdateProfileMutationBody = UpdateProfileRequest;
+export type UpdateProfileMutationError = ErrorType<ProblemDetail>;
+export type UpdateProfileMutationVariables = {data: UpdateProfileRequest};
+
+/**
+ * @summary Изменить профиль
+ */
+export const useUpdateProfile = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateProfile>>,
+      TError,
+      UpdateProfileMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateProfile>>,
+  TError,
+  UpdateProfileMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateProfileMutationOptions(options), queryClient);
+};

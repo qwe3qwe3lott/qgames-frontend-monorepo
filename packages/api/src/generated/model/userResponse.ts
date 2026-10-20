@@ -8,10 +8,10 @@ import type {UserResponseAvatar} from './userResponseAvatar';
 import type {UserResponseLoginMethodsItem} from './userResponseLoginMethodsItem';
 
 export interface UserResponse {
-  id: string;
+  avatar: UserResponseAvatar;
   email: string;
   emailVerified: boolean;
-  nickname: string;
-  avatar: UserResponseAvatar;
+  id: string;
   loginMethods: UserResponseLoginMethodsItem[];
+  nickname: string;
 }
