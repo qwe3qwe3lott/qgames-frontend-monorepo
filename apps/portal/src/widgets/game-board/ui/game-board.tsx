@@ -57,7 +57,7 @@ function Board({
     gameCode: room.gameCode,
     roomId: room.id,
     sessionId: session.id,
-    reduce: module.reduce,
+    rules: module,
   });
   const data = useSession(session.id);
   const controls = useMoveControls(room);

@@ -1,38 +1,48 @@
-// Ядро партии: конверт событий потока, слой сессии и модули-механики.
+// Ядро партии: конверт событий потока, общий применитель событий журнала
+// (патчей документа), модули-механики (guard'ы блоков состояния и помощники)
+// и проверка состояния по модулям игры.
 // Только чистые функции, без React и запросов.
 
-export {composeReducers, type StateReducer} from './compose';
 export {
+  coreModule,
+  isCoreBlock,
   moveOptionsOf,
-  reduceCore,
   type CoreBlock,
   type MoveOption,
   type SessionPlayer,
 } from './modules/core';
+export type {SessionModule, SessionModuleName} from './modules/module';
 export {
   activeTimer,
-  reduceTimer,
+  isTimerBlock,
+  timerModule,
   type ActiveTimer,
   type SessionTimer,
   type TimerBlock,
 } from './modules/timer';
 export {
   currentPlayerId,
-  reduceTurns,
+  isTurnsBlock,
+  turnsModule,
   type SessionTurns,
   type TurnsBlock,
 } from './modules/turns';
+export {applySessionEvent, type ApplySessionEventResult} from './patch';
 export {
   checkSeq,
   isSessionOver,
-  reduceSession,
   sessionFromSnapshot,
-  type GameReducer,
   type SeqCheck,
   type SessionData,
+  type SessionDocument,
   type SessionLogEvent,
   type SessionMeta,
   type SessionState,
   type SessionStatus,
   type SessionStreamEvent,
 } from './session';
+export {
+  checkSessionState,
+  parseSessionDocument,
+  type GameStateRules,
+} from './validate';

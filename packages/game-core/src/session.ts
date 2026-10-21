@@ -1,15 +1,19 @@
 import type {
   SessionMetaDtoOutput,
+  SessionPatchEventOutput,
   SessionSnapshotDtoOutput,
-  SessionStateDtoOutput,
   SessionStreamEventOutput,
 } from '@qgames/api/gateway/zod';
 
 /** Сообщение потока партии `{type, data}` после проверки Zod-схемой контракта. */
 export type SessionStreamEvent = SessionStreamEventOutput;
 
-/** Событие журнала партии (всё, кроме снапшота): `data` — кадр `{seq, at, data}`. */
-export type SessionLogEvent = Exclude<SessionStreamEvent, {type: 'snapshot'}>;
+/**
+ * Событие журнала партии `{seq, at, method, code, data}`: одна операция над
+ * документом партии. Состояние меняется только по `method`, `code` — что
+ * произошло (для журнала и логов).
+ */
+export type SessionLogEvent = SessionPatchEventOutput;
 
 export type SessionStatus = SessionSnapshotDtoOutput['status'];
 
@@ -17,31 +21,30 @@ export type SessionStatus = SessionSnapshotDtoOutput['status'];
 export type SessionMeta = SessionMetaDtoOutput;
 
 /**
- * Состояние партии любой игры (union схем игр без дискриминатора). Игра
- * определяется по `meta.game.code`, тип сужает guard пакета игры.
+ * Состояние партии любой игры: объект из блоков модулей-механик (`players`,
+ * `turns`, `timer`) и полей игры. Блоки проверяют guard'ы модулей
+ * (`checkSessionState`), поля игры — guard пакета игры; конкретный тип сужает
+ * guard игры по `meta.game.code` (например, `isNothingSession`).
  */
-export type SessionState = SessionStateDtoOutput;
+export type SessionState = Readonly<Record<string, unknown>>;
 
-/** Партия для зрителя: снапшот, к которому применены события журнала. */
-export interface SessionData {
-  /** seq последнего применённого события. */
-  seq: number;
+/**
+ * Документ партии — корень путей событий журнала: снапшот без служебных полей
+ * (`seq`, `serverTime`).
+ */
+export interface SessionDocument {
   status: SessionStatus;
   meta: SessionMeta;
   state: SessionState;
+}
+
+/** Партия для зрителя: снапшот, к которому применены события журнала. */
+export interface SessionData extends SessionDocument {
+  /** seq последнего применённого события. */
+  seq: number;
   /** Смещение часов: время сервера минус `Date.now()` клиента, мс. */
   clockOffsetMs: number;
 }
-
-/**
- * Редьюсер состояния игры: применяет событие журнала к состоянию. Игра
- * выбирает себя по `session.meta.game.code` и возвращает новое состояние;
- * событие не по её части возвращает состояние как есть.
- */
-export type GameReducer = (
-  session: SessionData,
-  event: SessionLogEvent,
-) => SessionState;
 
 /**
  * Партия из снапшота. `receivedAt` — момент получения снапшота (`Date.now()`):
@@ -76,34 +79,9 @@ export function checkSeq(lastSeq: number, seq: number): SeqCheck {
 }
 
 /**
- * Слой сессии: применяет событие журнала (seq уже сверен `checkSeq`).
- * Конец и отмена партии меняют статус, `started` задаёт описание и начальное
- * состояние, остальное — события модулей и игры (`reduceGame`).
+ * Партия закончилась (или отменена): дальше событий не будет. Конец партии —
+ * тоже патч документа (`PATCH [] {status}`), поэтому решает только статус.
  */
-export function reduceSession(
-  session: SessionData,
-  event: SessionLogEvent,
-  reduceGame: GameReducer,
-): SessionData {
-  const seq = event.data.seq;
-  switch (event.type) {
-    case 'session-finished':
-      return {...session, seq, status: 'FINISHED'};
-    case 'session-cancelled':
-      return {...session, seq, status: 'CANCELLED'};
-    case 'started':
-      return {
-        ...session,
-        seq,
-        meta: event.data.data.meta,
-        state: event.data.data.state,
-      };
-    default:
-      return {...session, seq, state: reduceGame(session, event)};
-  }
-}
-
-/** Партия закончилась (или отменена): дальше событий не будет. */
-export function isSessionOver(session: SessionData): boolean {
+export function isSessionOver(session: SessionDocument): boolean {
   return session.status !== 'IN_PROGRESS';
 }

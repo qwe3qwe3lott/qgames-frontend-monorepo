@@ -5,8 +5,6 @@
  * OpenAPI spec version: v0
  */
 
-export interface NothingMovedDto {
-  playerId: string;
-  timeout: boolean;
-  type: string;
+export interface PathSegmentId {
+  id: string;
 }

@@ -8,7 +8,7 @@ import type {SessionSnapshotDto} from './sessionSnapshotDto';
 import type {SessionSnapshotEventType} from './sessionSnapshotEventType';
 
 /**
- * Состояние партии для этого зрителя на seq; всегда первое сообщение потока
+ * Документ партии для этого зрителя на seq; всегда первое сообщение потока
  */
 export interface SessionSnapshotEvent {
   data: SessionSnapshotDto;

@@ -5,11 +5,14 @@ import {
   type SessionStreamEventOutput,
 } from '@qgames/api/gateway/zod';
 import {
+  applySessionEvent,
   checkSeq,
+  checkSessionState,
   isSessionOver,
-  reduceSession,
+  parseSessionDocument,
   sessionFromSnapshot,
-  type GameReducer,
+  type GameStateRules,
+  type SessionLogEvent,
 } from '@qgames/game-core';
 import {useQueryClient, type QueryClient} from '@tanstack/react-query';
 import {useEffect, useState} from 'react';
@@ -59,22 +62,66 @@ export type SessionEventsStatus =
 
 /**
  * Итог применения сообщения: `applied` — кеш обновлён, `skipped` — повтор
- * (seq уже применён), `resync` — событие потеряно, нужен свежий снапшот,
- * `ended` — партия закончилась, поток больше не нужен.
+ * (seq уже применён), `resync` — событие потеряно или не применилось
+ * (рассинхронизация), нужен свежий снапшот, `ended` — партия закончилась,
+ * поток больше не нужен.
  */
 type ApplyResult = 'applied' | 'skipped' | 'resync' | 'ended';
 
-/** Применяет сообщение потока к партии в кеше Query. */
-function applySessionEvent(
+/**
+ * Отладочный лог событий журнала: `code` — что произошло. Состояние по нему
+ * не меняется (только по `method`); журнал на экране — отдельная задача.
+ */
+function logSessionEvent(event: SessionLogEvent, error?: string): void {
+  if (!import.meta.env.DEV) {
+    return;
+  }
+  if (error === undefined) {
+    console.debug(
+      `[session] #${String(event.seq)} ${event.method} ${event.code}`,
+      event.data,
+    );
+  } else {
+    console.warn(
+      `[session] #${String(event.seq)} не применилось: ${error}`,
+      event.data,
+    );
+  }
+}
+
+/**
+ * Партия игры этой комнаты: проверяется по модулям, которые объявила игра
+ * (`GameStateRules`).
+ */
+interface SessionGame {
+  gameCode: RoomResponseGameCode;
+  rules: GameStateRules;
+}
+
+/**
+ * Применяет сообщение потока к партии в кеше Query: снапшот заменяет партию,
+ * событие журнала применяется общим `applySessionEvent` (по `method`).
+ * Снапшот и документ после каждого события проверяются: `status` и `meta` —
+ * общей схемой контракта, код игры — по комнате, состояние — guard'ами core,
+ * объявленных игрой модулей и игровых полей. Событие, которое не применилось
+ * или дало документ не по контракту, — рассинхронизация.
+ */
+function applyStreamMessage(
   queryClient: QueryClient,
   sessionId: string,
+  game: SessionGame,
   event: SessionStreamEventOutput,
-  reduce: GameReducer,
   receivedAt: number,
 ): ApplyResult {
   const {queryKey} = sessionStreamQueryOptions(sessionId);
   if (event.type === 'snapshot') {
     const session = sessionFromSnapshot(event.data, receivedAt);
+    if (
+      session.meta.game.code !== game.gameCode ||
+      !checkSessionState(session.state, game.rules)
+    ) {
+      return 'resync';
+    }
     queryClient.setQueryData(queryKey, session);
     return isSessionOver(session) ? 'ended' : 'applied';
   }
@@ -88,8 +135,20 @@ function applySessionEvent(
     case 'gap':
       return 'resync';
     case 'next': {
-      const next = reduceSession(current, event, reduce);
+      const result = applySessionEvent(current, event.data);
+      if (!result.ok) {
+        logSessionEvent(event.data, result.error);
+        return 'resync';
+      }
+      const document = parseSessionDocument(result.document, game.rules);
+      if (document?.meta.game.code !== game.gameCode) {
+        logSessionEvent(event.data, 'документ не по контракту');
+        return 'resync';
+      }
+      logSessionEvent(event.data);
+      const next = {...current, ...document, seq: event.data.seq};
       queryClient.setQueryData(queryKey, next);
+      // Конец и отмена партии — патч статуса (`PATCH [] {status}`).
       return isSessionOver(next) ? 'ended' : 'applied';
     }
   }
@@ -99,8 +158,8 @@ export interface SessionEventsParams {
   gameCode: RoomResponseGameCode;
   roomId: string;
   sessionId: string;
-  /** Редьюсер игры партии (модули и события игры). */
-  reduce: GameReducer;
+  /** Что игра объявляет о состоянии: модули и guard игровых полей. */
+  rules: GameStateRules;
 }
 
 /** Состояние, сообщённое потоком; `stream` — какой поток его сообщил. */
@@ -120,7 +179,7 @@ export function useSessionEvents({
   gameCode,
   roomId,
   sessionId,
-  reduce,
+  rules,
 }: SessionEventsParams): SessionEventsStatus {
   const queryClient = useQueryClient();
   const streamKey = `${gameCode}/${roomId}/${sessionId}`;
@@ -173,11 +232,11 @@ export function useSessionEvents({
           if (stream !== current) {
             return;
           }
-          const result = applySessionEvent(
+          const result = applyStreamMessage(
             queryClient,
             sessionId,
+            {gameCode, rules},
             event,
-            reduce,
             Date.now(),
           );
           switch (result) {
@@ -212,7 +271,7 @@ export function useSessionEvents({
 
     open();
     return stop;
-  }, [gameCode, queryClient, reduce, roomId, sessionId, streamKey]);
+  }, [gameCode, queryClient, roomId, rules, sessionId, streamKey]);
 
   // Новый поток ещё ничего не сообщил — он подключается.
   return state?.stream === streamKey ? state.status : 'connecting';

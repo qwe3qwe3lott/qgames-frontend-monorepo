@@ -756,7 +756,7 @@
     },
     "/api/games/{gameCode}/rooms/{roomId}/sessions/{sessionId}/events": {
       "get": {
-        "description": "Server-Sent Events (EventSource с withCredentials): сообщения `event: <тип>` + `data: <json>`, без `id:`, раз в ~5 с комментарий `: ping`. Схема пары тип + данные — SessionStreamEvent ({type, data}, дискриминатор type).\n\nПервое сообщение — snapshot: состояние партии для этого зрителя `{seq, status, serverTime, meta, state}`; так же после каждого переподключения. meta.game — код игры и правила партии, закреплённые при старте; по meta.game.code клиент выбирает схемы состояния и игровых событий (NothingSessionStateDto, NothingMovedDto). state — блоки модулей (players с moveOptions, timer, turns) и поля игры.\n\nДальше — события журнала партии в кадре `{seq, at, data}`, seq непрерывен и продолжает seq снапшота: дыра означает потерю (переподключиться), повтор с уже применённым seq отбрасывается. События модулей заменяют блок целиком: player-changed — игрок (по id), turns-changed — очерёдность, timer-changed — таймер, в том числе пауза и продолжение. moved — ход (данные задаёт игра). started — первое событие журнала (обычно уже в снапшоте). session-finished и session-cancelled — конец партии, после них сервер закрывает поток.\n\nСобытия маскируются под зрителя: варианты ходов (moveOptions) видит только сам игрок, остальным приходит пустой список, но событие доставляется. После конца партии всё публично: на завершённую или отменённую партию приходит полный снапшот, и поток закрывается. Подписаться может участник комнаты (открытый поток комнаты). Access-токен проверяется только при подключении.",
+        "description": "Server-Sent Events (EventSource с withCredentials): сообщения `event: <тип>` + `data: <json>`, без `id:`, раз в ~5 с комментарий `: ping`. Схема пары тип + данные — SessionStreamEvent ({type, data}, дискриминатор type).\n\nПервое сообщение — snapshot: документ партии для этого зрителя `{seq, status, serverTime, meta, state}`; так же после каждого переподключения. meta.game — код игры и правила партии, закреплённые при старте; по meta.game.code клиент выбирает схему состояния (NothingSessionStateDto). state — блоки модулей (players с moveOptions, timer, turns) и поля игры.\n\nДальше — события журнала партии `{seq, at, method, code, data}` (SessionPatchEvent), тип сообщения — method в нижнем регистре (put, patch, delete, info). seq непрерывен и продолжает seq снапшота: дыра означает потерю (переподключиться), повтор с уже применённым seq отбрасывается. Каждое событие — одна операция над документом `{status, meta, state}` по пути data.path (строка — ключ объекта, {id} — элемент массива по id): PUT заменяет или создаёт значение, PATCH сливает поля объекта неглубоко, DELETE удаляет, INFO состояние не меняет. Клиент применяет события по method, code — для журнала и логов. Начало и конец партии — тоже патчи: session-started (PUT []), session-finished и session-cancelled (PATCH [] {status}), после конца сервер закрывает поток. Несуществующий путь или состояние не по схеме игры — переподключиться за свежим снапшотом.\n\nСобытия маскируются под зрителя: варианты ходов (moveOptions) видит только сам игрок, остальным приходит пустой список, но событие доставляется. После конца партии всё публично: на завершённую или отменённую партию приходит полный снапшот, и поток закрывается. Подписаться может участник комнаты (открытый поток комнаты). Access-токен проверяется только при подключении.",
         "operationId": "sessionEvents",
         "parameters": [
           {
@@ -1040,7 +1040,7 @@
     },
     "/api/rooms/{roomId}/events": {
       "get": {
-        "description": "Server-Sent Events (EventSource с withCredentials): сообщения `event: <тип>` + `data: <json>`, без `id:`, раз в ~5 с комментарий `: ping`. Первое сообщение — snapshot: комната целиком для этого пользователя, как в GET /api/rooms/{roomId}; так же после каждого переподключения. Дальше — users-changed (владелец и полный список участников: вход, выход, уход, смена роли, ника, владельца), settings-changed (настройки комнаты), session-changed (старт, отмена, конец партии — перечитать комнату через GET и подписаться на поток партии session.id; пауза и продолжение — timer-changed потока партии) и room-deleted (комната удалена, после него сервер закрывает поток). События несут полное значение, повтор безопасен. Схема пары тип + данные — RoomStreamEvent ({type, data}, дискриминатор type).\n\nОткрытый поток и есть нахождение в комнате: подключение входит в комнату (игрок идущей партии возвращается на своё место; иначе игрок, если партия не идёт и есть место, или наблюдатель; в пустой комнате — владелец; повторное подключение, в том числе в пределах срока выхода, роль и владение не меняет). Подключений у пользователя может быть несколько (вкладки, устройства). Когда закрывается последнее, выход отложенный: участник помечается уходящим (leaving) и до истечения срока сохраняет роль, место и владение. Срок: игроку идущей партии его задаёт игра (в «игре в ничто» 30 с, на паузе отсчёт заморожен), владельцу вне игры — 15 с, остальным — 1 с. По истечении срока участник удаляется: игрок идущей партии сохраняет место, владение переходит к самому раннему из оставшихся (сначала присутствующие, в каждой группе сначала игроки). Создатель комнаты, так и не подключившийся к потоку, удаляется через 15 с. Пустая комната удаляется через 30 минут. Обрыв соединения сервер замечает с задержкой (по неудачной записи ping, обычно 10–30 с). Access-токен проверяется только при подключении: при истечении поток не рвётся.",
+        "description": "Server-Sent Events (EventSource с withCredentials): сообщения `event: <тип>` + `data: <json>`, без `id:`, раз в ~5 с комментарий `: ping`. Первое сообщение — snapshot: комната целиком для этого пользователя, как в GET /api/rooms/{roomId}; так же после каждого переподключения. Дальше — users-changed (владелец и полный список участников: вход, выход, уход, смена роли, ника, владельца), settings-changed (настройки комнаты), session-changed (старт, отмена, конец партии — перечитать комнату через GET и подписаться на поток партии session.id; пауза и продолжение — game-paused и game-resumed потока партии) и room-deleted (комната удалена, после него сервер закрывает поток). События несут полное значение, повтор безопасен. Схема пары тип + данные — RoomStreamEvent ({type, data}, дискриминатор type).\n\nОткрытый поток и есть нахождение в комнате: подключение входит в комнату (игрок идущей партии возвращается на своё место; иначе игрок, если партия не идёт и есть место, или наблюдатель; в пустой комнате — владелец; повторное подключение, в том числе в пределах срока выхода, роль и владение не меняет). Подключений у пользователя может быть несколько (вкладки, устройства). Когда закрывается последнее, выход отложенный: участник помечается уходящим (leaving) и до истечения срока сохраняет роль, место и владение. Срок: игроку идущей партии его задаёт игра (в «игре в ничто» 30 с, на паузе отсчёт заморожен), владельцу вне игры — 15 с, остальным — 1 с. По истечении срока участник удаляется: игрок идущей партии сохраняет место, владение переходит к самому раннему из оставшихся (сначала присутствующие, в каждой группе сначала игроки). Создатель комнаты, так и не подключившийся к потоку, удаляется через 15 с. Пустая комната удаляется через 30 минут. Обрыв соединения сервер замечает с задержкой (по неудачной записи ping, обычно 10–30 с). Access-токен проверяется только при подключении: при истечении поток не рвётся.",
         "operationId": "roomEvents",
         "parameters": [
           {
@@ -1363,7 +1363,7 @@
     },
     "/api/rooms/{roomId}/session/pause": {
       "post": {
-        "description": "Пауза — действие таймера партии: ходы запрещены, время хода и сроки возвращения вышедших игроков партии не идут (state.timer: status PAUSED, pausedAt; остаток времени хода — deadline − pausedAt). Вход, выход и отмена партии работают. Только владелец. Ответ без тела: изменение приходит событием timer-changed потока партии. Повторный вызов на паузе ничего не меняет. У партии без таймера паузы нет.",
+        "description": "Пауза — действие таймера партии: ходы запрещены, время хода и сроки возвращения вышедших игроков партии не идут (state.timer: status PAUSED, pausedAt; остаток времени хода — deadline − pausedAt). Вход, выход и отмена партии работают. Только владелец. Ответ без тела: изменение приходит событием game-paused потока партии. Повторный вызов на паузе ничего не меняет. У партии без таймера паузы нет.",
         "operationId": "pauseSession",
         "parameters": [
           {
@@ -1439,7 +1439,7 @@
     },
     "/api/rooms/{roomId}/session/resume": {
       "post": {
-        "description": "Снимает паузу таймера. Время хода и сроки возвращения вышедших игроков партии сдвигаются на длительность паузы: остаётся столько же времени, сколько было в момент паузы. Только владелец. Ответ без тела: изменение приходит событием timer-changed потока партии. Без паузы вызов ничего не меняет.",
+        "description": "Снимает паузу таймера. Время хода и сроки возвращения вышедших игроков партии сдвигаются на длительность паузы: остаётся столько же времени, сколько было в момент паузы. Только владелец. Ответ без тела: изменение приходит событием game-resumed потока партии. Без паузы вызов ничего не меняет.",
         "operationId": "resumeSession",
         "parameters": [
           {
@@ -1888,6 +1888,22 @@
           "settings"
         ]
       },
+      "DeleteData": {
+        "type": "object",
+        "description": "Данные DELETE: путь к полю объекта или элементу массива",
+        "properties": {
+          "path": {
+            "type": "array",
+            "description": "Путь от корня документа {status, meta, state}: [] — весь документ, [\"state\", \"timer\"], [\"state\", \"players\", {\"id\": \"…\"}, \"moveOptions\"]",
+            "items": {
+              "$ref": "#/components/schemas/PathSegment"
+            }
+          }
+        },
+        "required": [
+          "path"
+        ]
+      },
       "EmptyEventDataDto": {
         "type": "object",
         "description": "Событие без данных: {}"
@@ -2043,6 +2059,11 @@
           "idToken"
         ]
       },
+      "InfoData": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Данные INFO: произвольный объект для журнала и логов, состояние не меняет"
+      },
       "IntRangeDto": {
         "type": "object",
         "properties": {
@@ -2112,26 +2133,6 @@
           }
         },
         "required": [
-          "type"
-        ]
-      },
-      "NothingMovedDto": {
-        "type": "object",
-        "properties": {
-          "playerId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "timeout": {
-            "type": "boolean"
-          },
-          "type": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "playerId",
-          "timeout",
           "type"
         ]
       },
@@ -2205,6 +2206,50 @@
           "rounds"
         ]
       },
+      "PatchData": {
+        "type": "object",
+        "description": "Данные PATCH: путь к объекту и поля для неглубокого слияния",
+        "properties": {
+          "path": {
+            "type": "array",
+            "description": "Путь от корня документа {status, meta, state}: [] — весь документ, [\"state\", \"timer\"], [\"state\", \"players\", {\"id\": \"…\"}, \"moveOptions\"]",
+            "items": {
+              "$ref": "#/components/schemas/PathSegment"
+            }
+          },
+          "value": {
+            "type": "object",
+            "additionalProperties": {},
+            "description": "Поля, которые заменяют поля объекта по пути (вложенные значения — целиком, null — как значение)"
+          }
+        },
+        "required": [
+          "path",
+          "value"
+        ]
+      },
+      "PathSegment": {
+        "description": "Сегмент пути: строка — ключ объекта, {id} — элемент массива с этим id (адрес не зависит от индекса)",
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "$ref": "#/components/schemas/PathSegmentId"
+          }
+        ]
+      },
+      "PathSegmentId": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
       "ProblemDetail": {
         "properties": {
           "code": {
@@ -2247,6 +2292,25 @@
             "format": "uri"
           }
         }
+      },
+      "PutData": {
+        "type": "object",
+        "description": "Данные PUT: путь и новое значение (любой JSON, в том числе null)",
+        "properties": {
+          "path": {
+            "type": "array",
+            "description": "Путь от корня документа {status, meta, state}: [] — весь документ, [\"state\", \"timer\"], [\"state\", \"players\", {\"id\": \"…\"}, \"moveOptions\"]",
+            "items": {
+              "$ref": "#/components/schemas/PathSegment"
+            }
+          },
+          "value": {
+            "description": "Новое значение: любой JSON, в том числе null. Схема — схема состояния игры по пути"
+          }
+        },
+        "required": [
+          "path"
+        ]
       },
       "RegisterRequest": {
         "type": "object",
@@ -2458,7 +2522,7 @@
       },
       "RoomSessionChangedEvent": {
         "type": "object",
-        "description": "Партия началась, отменена или закончилась: клиент перечитывает комнату (GET) и подписывается на поток партии. Пауза и продолжение — timer-changed потока партии",
+        "description": "Партия началась, отменена или закончилась: клиент перечитывает комнату (GET) и подписывается на поток партии. Пауза и продолжение — game-paused и game-resumed потока партии",
         "properties": {
           "data": {
             "$ref": "#/components/schemas/EmptyEventDataDto"
@@ -2609,34 +2673,26 @@
           "members"
         ]
       },
-      "SessionCancelledEvent": {
+      "SessionEventDelete": {
         "type": "object",
-        "description": "Партию отменил владелец; после события сервер закрывает поток",
-        "properties": {
-          "data": {
-            "$ref": "#/components/schemas/SessionEndedFrame"
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "session-cancelled"
-            ]
-          }
-        },
-        "required": [
-          "data",
-          "type"
-        ]
-      },
-      "SessionEndedFrame": {
-        "type": "object",
+        "description": "DELETE: удалить поле объекта или элемент массива по id (путь должен существовать)",
         "properties": {
           "at": {
             "type": "string",
             "format": "date-time"
           },
+          "code": {
+            "type": "string",
+            "description": "Что произошло (см. описание SessionPatchEvent); набор кодов зависит от игры и её версии, состояние по коду не меняется"
+          },
           "data": {
-            "$ref": "#/components/schemas/EmptyEventDataDto"
+            "$ref": "#/components/schemas/DeleteData"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "DELETE"
+            ]
           },
           "seq": {
             "type": "integer",
@@ -2645,27 +2701,112 @@
         },
         "required": [
           "at",
+          "code",
           "data",
+          "method",
           "seq"
         ]
       },
-      "SessionFinishedEvent": {
+      "SessionEventInfo": {
         "type": "object",
-        "description": "Партия закончилась по правилам; после события сервер закрывает поток",
+        "description": "INFO: документ не меняется, data — данные для журнала и логов (seq всё равно сдвигается)",
         "properties": {
-          "data": {
-            "$ref": "#/components/schemas/SessionEndedFrame"
+          "at": {
+            "type": "string",
+            "format": "date-time"
           },
-          "type": {
+          "code": {
+            "type": "string",
+            "description": "Что произошло (см. описание SessionPatchEvent); набор кодов зависит от игры и её версии, состояние по коду не меняется"
+          },
+          "data": {
+            "$ref": "#/components/schemas/InfoData"
+          },
+          "method": {
             "type": "string",
             "enum": [
-              "session-finished"
+              "INFO"
             ]
+          },
+          "seq": {
+            "type": "integer",
+            "format": "int64"
           }
         },
         "required": [
+          "at",
+          "code",
           "data",
-          "type"
+          "method",
+          "seq"
+        ]
+      },
+      "SessionEventPatch": {
+        "type": "object",
+        "description": "PATCH: неглубокое слияние объекта по пути с value (путь должен существовать)",
+        "properties": {
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "code": {
+            "type": "string",
+            "description": "Что произошло (см. описание SessionPatchEvent); набор кодов зависит от игры и её версии, состояние по коду не меняется"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PatchData"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "PATCH"
+            ]
+          },
+          "seq": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "at",
+          "code",
+          "data",
+          "method",
+          "seq"
+        ]
+      },
+      "SessionEventPut": {
+        "type": "object",
+        "description": "PUT: заменить или создать значение по пути целиком; {id} в конце пути, которого нет, — добавить элемент в конец массива",
+        "properties": {
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "code": {
+            "type": "string",
+            "description": "Что произошло (см. описание SessionPatchEvent); набор кодов зависит от игры и её версии, состояние по коду не меняется"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PutData"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "PUT"
+            ]
+          },
+          "seq": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "at",
+          "code",
+          "data",
+          "method",
+          "seq"
         ]
       },
       "SessionGameDto": {
@@ -2698,92 +2839,52 @@
           "game"
         ]
       },
-      "SessionMovedDto": {
-        "description": "Данные события moved конкретной игры (игра — meta.game.code)",
+      "SessionPatchEvent": {
+        "description": "Событие журнала партии {seq, at, method, code, data}: одна операция над документом партии {status, meta, state}. Состояние меняется только по method (PUT, PATCH, DELETE; INFO не меняет), code — что произошло, для журнала и логов. Несуществующий путь у PATCH/DELETE или неподходящий тип — рассинхронизация, клиент переподключается за свежим снапшотом.\n\nИзвестные коды (code):\n- session-started — PUT [] {status, meta, state}: первое событие журнала (обычно уже в снапшоте);\n- session-finished — PATCH [] {status: FINISHED}: партия закончилась, последнее событие, поток закрывается;\n- session-cancelled — PATCH [] {status: CANCELLED}: партию отменил владелец, последнее событие, поток закрывается;\n- move-options-changed — PUT [\"state\", \"players\", {id}, \"moveOptions\"]: варианты ходов игрока (чужим зрителям — пустой список);\n- turn-changed — PUT [\"state\", \"turns\"]: сменился текущий игрок или раунд;\n- timer-started — PUT [\"state\", \"timer\"]: таймер следующего хода;\n- game-paused — PATCH [\"state\", \"timer\"] {status: PAUSED, pausedAt}: пауза;\n- game-resumed — PATCH [\"state\", \"timer\"] {status: RUNNING, deadline, pausedAt: null}: продолжение;\n- timer-stopped — PUT [\"state\", \"timer\"]: таймер остановлен перед концом или отменой партии;\n- player-passed («игра в ничто») — PATCH [\"state\"] {moves}: игрок пропустил ход; по истечении времени — INFO {playerId, timeout: true}.",
+        "discriminator": {
+          "mapping": {
+            "DELETE": "#/components/schemas/SessionEventDelete",
+            "INFO": "#/components/schemas/SessionEventInfo",
+            "PATCH": "#/components/schemas/SessionEventPatch",
+            "PUT": "#/components/schemas/SessionEventPut"
+          },
+          "propertyName": "method"
+        },
         "oneOf": [
           {
-            "$ref": "#/components/schemas/NothingMovedDto"
+            "$ref": "#/components/schemas/SessionEventPut"
+          },
+          {
+            "$ref": "#/components/schemas/SessionEventPatch"
+          },
+          {
+            "$ref": "#/components/schemas/SessionEventDelete"
+          },
+          {
+            "$ref": "#/components/schemas/SessionEventInfo"
           }
         ]
       },
-      "SessionMovedEvent": {
+      "SessionPatchStreamEvent": {
         "type": "object",
-        "description": "Игра: игрок сделал ход; данные задаёт игра (meta.game.code)",
+        "description": "Событие журнала партии; тип сообщения — метод события в нижнем регистре",
         "properties": {
           "data": {
-            "$ref": "#/components/schemas/SessionMovedFrame"
+            "$ref": "#/components/schemas/SessionPatchEvent"
           },
           "type": {
             "type": "string",
             "enum": [
-              "moved"
+              "put",
+              "patch",
+              "delete",
+              "info"
             ]
           }
         },
         "required": [
           "data",
           "type"
-        ]
-      },
-      "SessionMovedFrame": {
-        "type": "object",
-        "properties": {
-          "at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "data": {
-            "$ref": "#/components/schemas/SessionMovedDto"
-          },
-          "seq": {
-            "type": "integer",
-            "format": "int64"
-          }
-        },
-        "required": [
-          "at",
-          "data",
-          "seq"
-        ]
-      },
-      "SessionPlayerChangedEvent": {
-        "type": "object",
-        "description": "Модуль core: игрок целиком (замена по id); чужим зрителям moveOptions — пустой список",
-        "properties": {
-          "data": {
-            "$ref": "#/components/schemas/SessionPlayerChangedFrame"
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "player-changed"
-            ]
-          }
-        },
-        "required": [
-          "data",
-          "type"
-        ]
-      },
-      "SessionPlayerChangedFrame": {
-        "type": "object",
-        "properties": {
-          "at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "data": {
-            "$ref": "#/components/schemas/SessionPlayerDto"
-          },
-          "seq": {
-            "type": "integer",
-            "format": "int64"
-          }
-        },
-        "required": [
-          "at",
-          "data",
-          "seq"
         ]
       },
       "SessionPlayerDto": {
@@ -2862,7 +2963,7 @@
       },
       "SessionSnapshotEvent": {
         "type": "object",
-        "description": "Состояние партии для этого зрителя на seq; всегда первое сообщение потока",
+        "description": "Документ партии для этого зрителя на seq; всегда первое сообщение потока",
         "properties": {
           "data": {
             "$ref": "#/components/schemas/SessionSnapshotDto"
@@ -2879,63 +2980,8 @@
           "type"
         ]
       },
-      "SessionStartedDto": {
-        "type": "object",
-        "properties": {
-          "meta": {
-            "$ref": "#/components/schemas/SessionMetaDto"
-          },
-          "state": {
-            "$ref": "#/components/schemas/SessionStateDto"
-          }
-        },
-        "required": [
-          "meta",
-          "state"
-        ]
-      },
-      "SessionStartedEvent": {
-        "type": "object",
-        "description": "Первое событие журнала: описание партии и начальное состояние. Обычно уже входит в снапшот",
-        "properties": {
-          "data": {
-            "$ref": "#/components/schemas/SessionStartedFrame"
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "started"
-            ]
-          }
-        },
-        "required": [
-          "data",
-          "type"
-        ]
-      },
-      "SessionStartedFrame": {
-        "type": "object",
-        "properties": {
-          "at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "data": {
-            "$ref": "#/components/schemas/SessionStartedDto"
-          },
-          "seq": {
-            "type": "integer",
-            "format": "int64"
-          }
-        },
-        "required": [
-          "at",
-          "data",
-          "seq"
-        ]
-      },
       "SessionStateDto": {
-        "description": "Состояние партии конкретной игры: блоки модулей (players, timer, turns) и поля игры. Игра — meta.game.code снапшота или started",
+        "description": "Состояние партии конкретной игры: блоки модулей (players, timer, turns) и поля игры. Игра — meta.game.code снапшота; этой схемой клиент проверяет состояние после каждого события",
         "oneOf": [
           {
             "$ref": "#/components/schemas/NothingSessionStateDto"
@@ -2943,17 +2989,14 @@
         ]
       },
       "SessionStreamEvent": {
-        "description": "Событие потока партии: тип — поле event: в SSE, data — JSON в поле data:",
+        "description": "Сообщение потока партии: тип — поле event: в SSE, data — JSON в поле data:. snapshot — документ партии, put/patch/delete/info — событие журнала (патч документа)",
         "discriminator": {
           "mapping": {
-            "moved": "#/components/schemas/SessionMovedEvent",
-            "player-changed": "#/components/schemas/SessionPlayerChangedEvent",
-            "session-cancelled": "#/components/schemas/SessionCancelledEvent",
-            "session-finished": "#/components/schemas/SessionFinishedEvent",
-            "snapshot": "#/components/schemas/SessionSnapshotEvent",
-            "started": "#/components/schemas/SessionStartedEvent",
-            "timer-changed": "#/components/schemas/SessionTimerChangedEvent",
-            "turns-changed": "#/components/schemas/SessionTurnsChangedEvent"
+            "delete": "#/components/schemas/SessionPatchStreamEvent",
+            "info": "#/components/schemas/SessionPatchStreamEvent",
+            "patch": "#/components/schemas/SessionPatchStreamEvent",
+            "put": "#/components/schemas/SessionPatchStreamEvent",
+            "snapshot": "#/components/schemas/SessionSnapshotEvent"
           },
           "propertyName": "type"
         },
@@ -2962,66 +3005,8 @@
             "$ref": "#/components/schemas/SessionSnapshotEvent"
           },
           {
-            "$ref": "#/components/schemas/SessionStartedEvent"
-          },
-          {
-            "$ref": "#/components/schemas/SessionFinishedEvent"
-          },
-          {
-            "$ref": "#/components/schemas/SessionCancelledEvent"
-          },
-          {
-            "$ref": "#/components/schemas/SessionPlayerChangedEvent"
-          },
-          {
-            "$ref": "#/components/schemas/SessionTurnsChangedEvent"
-          },
-          {
-            "$ref": "#/components/schemas/SessionTimerChangedEvent"
-          },
-          {
-            "$ref": "#/components/schemas/SessionMovedEvent"
+            "$ref": "#/components/schemas/SessionPatchStreamEvent"
           }
-        ]
-      },
-      "SessionTimerChangedEvent": {
-        "type": "object",
-        "description": "Модуль timer: таймер целиком, в том числе пауза и продолжение",
-        "properties": {
-          "data": {
-            "$ref": "#/components/schemas/SessionTimerChangedFrame"
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "timer-changed"
-            ]
-          }
-        },
-        "required": [
-          "data",
-          "type"
-        ]
-      },
-      "SessionTimerChangedFrame": {
-        "type": "object",
-        "properties": {
-          "at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "data": {
-            "$ref": "#/components/schemas/SessionTimerDto"
-          },
-          "seq": {
-            "type": "integer",
-            "format": "int64"
-          }
-        },
-        "required": [
-          "at",
-          "data",
-          "seq"
         ]
       },
       "SessionTimerDto": {
@@ -3052,46 +3037,6 @@
         },
         "required": [
           "status"
-        ]
-      },
-      "SessionTurnsChangedEvent": {
-        "type": "object",
-        "description": "Модуль turns: блок очерёдности целиком (чей ход, раунд)",
-        "properties": {
-          "data": {
-            "$ref": "#/components/schemas/SessionTurnsChangedFrame"
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "turns-changed"
-            ]
-          }
-        },
-        "required": [
-          "data",
-          "type"
-        ]
-      },
-      "SessionTurnsChangedFrame": {
-        "type": "object",
-        "properties": {
-          "at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "data": {
-            "$ref": "#/components/schemas/SessionTurnsDto"
-          },
-          "seq": {
-            "type": "integer",
-            "format": "int64"
-          }
-        },
-        "required": [
-          "at",
-          "data",
-          "seq"
         ]
       },
       "SessionTurnsDto": {

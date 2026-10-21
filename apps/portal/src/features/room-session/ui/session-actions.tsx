@@ -40,7 +40,7 @@ export function SessionActions({room, membership}: SessionActionsProps) {
   });
   const sessionId = room.session?.id ?? null;
   const session = useSession(sessionId);
-  // Пауза и продолжение отвечают 204: ждём timer-changed (рост seq).
+  // Пауза и продолжение отвечают 204: ждём game-paused или game-resumed (рост seq).
   const advance = useSessionAdvance(sessionId);
   const onTimerAction = {
     mutation: {

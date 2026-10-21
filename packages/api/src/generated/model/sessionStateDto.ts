@@ -7,6 +7,6 @@
 import type {NothingSessionStateDto} from './nothingSessionStateDto';
 
 /**
- * Состояние партии конкретной игры: блоки модулей (players, timer, turns) и поля игры. Игра — meta.game.code снапшота или started
+ * Состояние партии конкретной игры: блоки модулей (players, timer, turns) и поля игры. Игра — meta.game.code снапшота; этой схемой клиент проверяет состояние после каждого события
  */
 export type SessionStateDto = NothingSessionStateDto;

@@ -1,4 +1,4 @@
-import type {GameReducer, SessionData} from '@qgames/game-core';
+import type {GameStateRules, SessionData} from '@qgames/game-core';
 import type {ComponentType} from 'react';
 
 // Форма модуля игры, которую ожидает портал. Общий API игр ещё не выбран
@@ -31,8 +31,13 @@ export interface GameBoardProps {
   moveError: string | null;
 }
 
-export interface GameModule {
+/**
+ * Модуль игры: доска и то, что игра объявляет о своём состоянии (как
+ * `GameRules` на бэкенде) — модули-механики (`modules`: core, turns, timer) и
+ * guard своих игровых полей (`isGameState`). События журнала применяет общий
+ * `applySessionEvent`, своего редьюсера у игры нет; по `modules` и
+ * `isGameState` поток партии проверяет состояние после каждого события.
+ */
+export interface GameModule extends GameStateRules {
   Board: ComponentType<GameBoardProps>;
-  /** Применяет события модулей и игры к состоянию партии (поток партии). */
-  reduce: GameReducer;
 }

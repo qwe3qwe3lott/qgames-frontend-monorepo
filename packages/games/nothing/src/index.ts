@@ -1,7 +1,12 @@
-import {reduceNothing} from './reducer';
+import {nothingRules} from './state';
 import {Board} from './ui/board';
 
 export type {BoardMove, BoardPlayer, BoardProps} from './types';
 
-/** Модуль игры; портал загружает его отдельным чанком через import(). */
-export const nothingGame = {Board, reduce: reduceNothing};
+/**
+ * Модуль игры; портал загружает его отдельным чанком через import(). Своего
+ * редьюсера нет: события журнала применяет общий `applySessionEvent`, а
+ * состояние после каждого события портал проверяет по `modules` и
+ * `isGameState`.
+ */
+export const nothingGame = {Board, ...nothingRules};

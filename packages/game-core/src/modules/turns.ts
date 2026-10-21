@@ -1,6 +1,10 @@
-import type {SessionTurnsDtoOutput} from '@qgames/api/gateway/zod';
+import {
+  SessionTurnsDto,
+  type SessionTurnsDtoOutput,
+} from '@qgames/api/gateway/zod';
 
-import type {SessionLogEvent} from '../session';
+import type {SessionState} from '../session';
+import type {SessionModule} from './module';
 
 /** Очерёдность (модуль turns): чей ход, раунд, число раундов. */
 export type SessionTurns = SessionTurnsDtoOutput;
@@ -10,16 +14,18 @@ export interface TurnsBlock {
   turns: SessionTurns;
 }
 
-/** Модуль turns: `turns-changed` заменяет блок целиком (PUT). */
-export function reduceTurns<S extends TurnsBlock>(
-  state: S,
-  event: SessionLogEvent,
-): S {
-  if (event.type !== 'turns-changed') {
-    return state;
-  }
-  return {...state, turns: event.data.data};
+/** Блок turns по схеме контракта. */
+export function isTurnsBlock(
+  state: SessionState,
+): state is SessionState & TurnsBlock {
+  return SessionTurnsDto.safeParse(state['turns']).success;
 }
+
+/** Модуль turns: очерёдность ходов и раунды. */
+export const turnsModule: SessionModule = {
+  name: 'turns',
+  isBlock: isTurnsBlock,
+};
 
 /** Чей сейчас ход; null — ход ничей или партия закончилась. */
 export function currentPlayerId(turns: SessionTurns): string | null {

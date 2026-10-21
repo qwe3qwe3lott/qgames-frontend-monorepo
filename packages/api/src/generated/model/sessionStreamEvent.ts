@@ -4,24 +4,10 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
-import type {SessionCancelledEvent} from './sessionCancelledEvent';
-import type {SessionFinishedEvent} from './sessionFinishedEvent';
-import type {SessionMovedEvent} from './sessionMovedEvent';
-import type {SessionPlayerChangedEvent} from './sessionPlayerChangedEvent';
+import type {SessionPatchStreamEvent} from './sessionPatchStreamEvent';
 import type {SessionSnapshotEvent} from './sessionSnapshotEvent';
-import type {SessionStartedEvent} from './sessionStartedEvent';
-import type {SessionTimerChangedEvent} from './sessionTimerChangedEvent';
-import type {SessionTurnsChangedEvent} from './sessionTurnsChangedEvent';
 
 /**
- * Событие потока партии: тип — поле event: в SSE, data — JSON в поле data:
+ * Сообщение потока партии: тип — поле event: в SSE, data — JSON в поле data:. snapshot — документ партии, put/patch/delete/info — событие журнала (патч документа)
  */
-export type SessionStreamEvent =
-  | SessionSnapshotEvent
-  | SessionStartedEvent
-  | SessionFinishedEvent
-  | SessionCancelledEvent
-  | SessionPlayerChangedEvent
-  | SessionTurnsChangedEvent
-  | SessionTimerChangedEvent
-  | SessionMovedEvent;
+export type SessionStreamEvent = SessionSnapshotEvent | SessionPatchStreamEvent;

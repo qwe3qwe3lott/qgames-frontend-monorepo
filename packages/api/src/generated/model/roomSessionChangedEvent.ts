@@ -8,7 +8,7 @@ import type {EmptyEventDataDto} from './emptyEventDataDto';
 import type {RoomSessionChangedEventType} from './roomSessionChangedEventType';
 
 /**
- * Партия началась, отменена или закончилась: клиент перечитывает комнату (GET) и подписывается на поток партии. Пауза и продолжение — timer-changed потока партии
+ * Партия началась, отменена или закончилась: клиент перечитывает комнату (GET) и подписывается на поток партии. Пауза и продолжение — game-paused и game-resumed потока партии
  */
 export interface RoomSessionChangedEvent {
   data: EmptyEventDataDto;

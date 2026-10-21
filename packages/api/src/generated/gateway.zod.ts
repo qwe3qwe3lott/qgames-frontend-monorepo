@@ -67,6 +67,35 @@ export const CreateRoomRequest = zod.object({
 export type CreateRoomRequest = zod.input<typeof CreateRoomRequest>;
 export type CreateRoomRequestOutput = zod.output<typeof CreateRoomRequest>;
 
+export const PathSegmentId = zod.object({
+  id: zod.string(),
+});
+
+export type PathSegmentId = zod.input<typeof PathSegmentId>;
+export type PathSegmentIdOutput = zod.output<typeof PathSegmentId>;
+
+export const PathSegment = zod
+  .union([zod.string(), PathSegmentId])
+  .describe(
+    'Сегмент пути: строка — ключ объекта, {id} — элемент массива с этим id (адрес не зависит от индекса)',
+  );
+
+export type PathSegment = zod.input<typeof PathSegment>;
+export type PathSegmentOutput = zod.output<typeof PathSegment>;
+
+export const DeleteData = zod
+  .object({
+    path: zod
+      .array(PathSegment)
+      .describe(
+        'Путь от корня документа {status, meta, state}: [] — весь документ, ["state", "timer"], ["state", "players", {"id": "…"}, "moveOptions"]',
+      ),
+  })
+  .describe('Данные DELETE: путь к полю объекта или элементу массива');
+
+export type DeleteData = zod.input<typeof DeleteData>;
+export type DeleteDataOutput = zod.output<typeof DeleteData>;
+
 export const EmptyEventDataDto = zod
   .looseObject({})
   .describe('Событие без данных: {}');
@@ -161,6 +190,15 @@ export type GoogleIdTokenRequestOutput = zod.output<
   typeof GoogleIdTokenRequest
 >;
 
+export const InfoData = zod
+  .record(zod.string(), zod.unknown())
+  .describe(
+    'Данные INFO: произвольный объект для журнала и логов, состояние не меняет',
+  );
+
+export type InfoData = zod.input<typeof InfoData>;
+export type InfoDataOutput = zod.output<typeof InfoData>;
+
 export const LoginRequest = zod.object({
   email: zod.email().min(1),
   password: zod.string().min(1),
@@ -184,15 +222,6 @@ export const MoveRequest = zod.object({
 
 export type MoveRequest = zod.input<typeof MoveRequest>;
 export type MoveRequestOutput = zod.output<typeof MoveRequest>;
-
-export const NothingMovedDto = zod.object({
-  playerId: zod.uuid(),
-  timeout: zod.boolean(),
-  type: zod.string(),
-});
-
-export type NothingMovedDto = zod.input<typeof NothingMovedDto>;
-export type NothingMovedDtoOutput = zod.output<typeof NothingMovedDto>;
 
 export const SessionPlayerDto = zod.object({
   id: zod.uuid(),
@@ -232,6 +261,24 @@ export type NothingSessionStateDtoOutput = zod.output<
   typeof NothingSessionStateDto
 >;
 
+export const PatchData = zod
+  .object({
+    path: zod
+      .array(PathSegment)
+      .describe(
+        'Путь от корня документа {status, meta, state}: [] — весь документ, ["state", "timer"], ["state", "players", {"id": "…"}, "moveOptions"]',
+      ),
+    value: zod
+      .record(zod.string(), zod.unknown())
+      .describe(
+        'Поля, которые заменяют поля объекта по пути (вложенные значения — целиком, null — как значение)',
+      ),
+  })
+  .describe('Данные PATCH: путь к объекту и поля для неглубокого слияния');
+
+export type PatchData = zod.input<typeof PatchData>;
+export type PatchDataOutput = zod.output<typeof PatchData>;
+
 export const ProblemDetail = zod.object({
   code: zod.string().optional().describe('Машиночитаемый код ошибки'),
   detail: zod.string().optional(),
@@ -256,6 +303,25 @@ export const ProblemDetail = zod.object({
 
 export type ProblemDetail = zod.input<typeof ProblemDetail>;
 export type ProblemDetailOutput = zod.output<typeof ProblemDetail>;
+
+export const PutData = zod
+  .object({
+    path: zod
+      .array(PathSegment)
+      .describe(
+        'Путь от корня документа {status, meta, state}: [] — весь документ, ["state", "timer"], ["state", "players", {"id": "…"}, "moveOptions"]',
+      ),
+    value: zod
+      .unknown()
+      .optional()
+      .describe(
+        'Новое значение: любой JSON, в том числе null. Схема — схема состояния игры по пути',
+      ),
+  })
+  .describe('Данные PUT: путь и новое значение (любой JSON, в том числе null)');
+
+export type PutData = zod.input<typeof PutData>;
+export type PutDataOutput = zod.output<typeof PutData>;
 
 export const registerRequestEmailMax = 320;
 
@@ -359,7 +425,7 @@ export const RoomSessionChangedEvent = zod
     type: zod.enum(['session-changed']),
   })
   .describe(
-    'Партия началась, отменена или закончилась: клиент перечитывает комнату (GET) и подписывается на поток партии. Пауза и продолжение — timer-changed потока партии',
+    'Партия началась, отменена или закончилась: клиент перечитывает комнату (GET) и подписывается на поток партии. Пауза и продолжение — game-paused и game-resumed потока партии',
   );
 
 export type RoomSessionChangedEvent = zod.input<typeof RoomSessionChangedEvent>;
@@ -439,40 +505,81 @@ export const RoomStreamEvent = zod
 export type RoomStreamEvent = zod.input<typeof RoomStreamEvent>;
 export type RoomStreamEventOutput = zod.output<typeof RoomStreamEvent>;
 
-export const SessionEndedFrame = zod.object({
-  at: zod.iso.datetime({offset: true}),
-  data: EmptyEventDataDto,
-  seq: zod.int(),
-});
-
-export type SessionEndedFrame = zod.input<typeof SessionEndedFrame>;
-export type SessionEndedFrameOutput = zod.output<typeof SessionEndedFrame>;
-
-export const SessionCancelledEvent = zod
+export const SessionEventDelete = zod
   .object({
-    data: SessionEndedFrame,
-    type: zod.enum(['session-cancelled']),
-  })
-  .describe('Партию отменил владелец; после события сервер закрывает поток');
-
-export type SessionCancelledEvent = zod.input<typeof SessionCancelledEvent>;
-export type SessionCancelledEventOutput = zod.output<
-  typeof SessionCancelledEvent
->;
-
-export const SessionFinishedEvent = zod
-  .object({
-    data: SessionEndedFrame,
-    type: zod.enum(['session-finished']),
+    at: zod.iso.datetime({offset: true}),
+    code: zod
+      .string()
+      .describe(
+        'Что произошло (см. описание SessionPatchEvent); набор кодов зависит от игры и её версии, состояние по коду не меняется',
+      ),
+    data: DeleteData,
+    method: zod.enum(['DELETE']),
+    seq: zod.int(),
   })
   .describe(
-    'Партия закончилась по правилам; после события сервер закрывает поток',
+    'DELETE: удалить поле объекта или элемент массива по id (путь должен существовать)',
   );
 
-export type SessionFinishedEvent = zod.input<typeof SessionFinishedEvent>;
-export type SessionFinishedEventOutput = zod.output<
-  typeof SessionFinishedEvent
->;
+export type SessionEventDelete = zod.input<typeof SessionEventDelete>;
+export type SessionEventDeleteOutput = zod.output<typeof SessionEventDelete>;
+
+export const SessionEventInfo = zod
+  .object({
+    at: zod.iso.datetime({offset: true}),
+    code: zod
+      .string()
+      .describe(
+        'Что произошло (см. описание SessionPatchEvent); набор кодов зависит от игры и её версии, состояние по коду не меняется',
+      ),
+    data: InfoData,
+    method: zod.enum(['INFO']),
+    seq: zod.int(),
+  })
+  .describe(
+    'INFO: документ не меняется, data — данные для журнала и логов (seq всё равно сдвигается)',
+  );
+
+export type SessionEventInfo = zod.input<typeof SessionEventInfo>;
+export type SessionEventInfoOutput = zod.output<typeof SessionEventInfo>;
+
+export const SessionEventPatch = zod
+  .object({
+    at: zod.iso.datetime({offset: true}),
+    code: zod
+      .string()
+      .describe(
+        'Что произошло (см. описание SessionPatchEvent); набор кодов зависит от игры и её версии, состояние по коду не меняется',
+      ),
+    data: PatchData,
+    method: zod.enum(['PATCH']),
+    seq: zod.int(),
+  })
+  .describe(
+    'PATCH: неглубокое слияние объекта по пути с value (путь должен существовать)',
+  );
+
+export type SessionEventPatch = zod.input<typeof SessionEventPatch>;
+export type SessionEventPatchOutput = zod.output<typeof SessionEventPatch>;
+
+export const SessionEventPut = zod
+  .object({
+    at: zod.iso.datetime({offset: true}),
+    code: zod
+      .string()
+      .describe(
+        'Что произошло (см. описание SessionPatchEvent); набор кодов зависит от игры и её версии, состояние по коду не меняется',
+      ),
+    data: PutData,
+    method: zod.enum(['PUT']),
+    seq: zod.int(),
+  })
+  .describe(
+    'PUT: заменить или создать значение по пути целиком; {id} в конце пути, которого нет, — добавить элемент в конец массива',
+  );
+
+export type SessionEventPut = zod.input<typeof SessionEventPut>;
+export type SessionEventPutOutput = zod.output<typeof SessionEventPut>;
 
 export const SessionGameDto = zod.object({
   code: zod.enum(['nothing', 'carcassonne']),
@@ -489,63 +596,36 @@ export const SessionMetaDto = zod.object({
 export type SessionMetaDto = zod.input<typeof SessionMetaDto>;
 export type SessionMetaDtoOutput = zod.output<typeof SessionMetaDto>;
 
-export const SessionMovedDto = NothingMovedDto.describe(
-  'Данные события moved конкретной игры (игра — meta.game.code)',
-);
-
-export type SessionMovedDto = zod.input<typeof SessionMovedDto>;
-export type SessionMovedDtoOutput = zod.output<typeof SessionMovedDto>;
-
-export const SessionMovedFrame = zod.object({
-  at: zod.iso.datetime({offset: true}),
-  data: SessionMovedDto,
-  seq: zod.int(),
-});
-
-export type SessionMovedFrame = zod.input<typeof SessionMovedFrame>;
-export type SessionMovedFrameOutput = zod.output<typeof SessionMovedFrame>;
-
-export const SessionMovedEvent = zod
-  .object({
-    data: SessionMovedFrame,
-    type: zod.enum(['moved']),
-  })
-  .describe('Игра: игрок сделал ход; данные задаёт игра (meta.game.code)');
-
-export type SessionMovedEvent = zod.input<typeof SessionMovedEvent>;
-export type SessionMovedEventOutput = zod.output<typeof SessionMovedEvent>;
-
-export const SessionPlayerChangedFrame = zod.object({
-  at: zod.iso.datetime({offset: true}),
-  data: SessionPlayerDto,
-  seq: zod.int(),
-});
-
-export type SessionPlayerChangedFrame = zod.input<
-  typeof SessionPlayerChangedFrame
->;
-export type SessionPlayerChangedFrameOutput = zod.output<
-  typeof SessionPlayerChangedFrame
->;
-
-export const SessionPlayerChangedEvent = zod
-  .object({
-    data: SessionPlayerChangedFrame,
-    type: zod.enum(['player-changed']),
-  })
+export const SessionPatchEvent = zod
+  .discriminatedUnion('method', [
+    SessionEventPut,
+    SessionEventPatch,
+    SessionEventDelete,
+    SessionEventInfo,
+  ])
   .describe(
-    'Модуль core: игрок целиком (замена по id); чужим зрителям moveOptions — пустой список',
+    'Событие журнала партии {seq, at, method, code, data}: одна операция над документом партии {status, meta, state}. Состояние меняется только по method (PUT, PATCH, DELETE; INFO не меняет), code — что произошло, для журнала и логов. Несуществующий путь у PATCH/DELETE или неподходящий тип — рассинхронизация, клиент переподключается за свежим снапшотом.\n\nИзвестные коды (code):\n- session-started — PUT [] {status, meta, state}: первое событие журнала (обычно уже в снапшоте);\n- session-finished — PATCH [] {status: FINISHED}: партия закончилась, последнее событие, поток закрывается;\n- session-cancelled — PATCH [] {status: CANCELLED}: партию отменил владелец, последнее событие, поток закрывается;\n- move-options-changed — PUT ["state", "players", {id}, "moveOptions"]: варианты ходов игрока (чужим зрителям — пустой список);\n- turn-changed — PUT ["state", "turns"]: сменился текущий игрок или раунд;\n- timer-started — PUT ["state", "timer"]: таймер следующего хода;\n- game-paused — PATCH ["state", "timer"] {status: PAUSED, pausedAt}: пауза;\n- game-resumed — PATCH ["state", "timer"] {status: RUNNING, deadline, pausedAt: null}: продолжение;\n- timer-stopped — PUT ["state", "timer"]: таймер остановлен перед концом или отменой партии;\n- player-passed («игра в ничто») — PATCH ["state"] {moves}: игрок пропустил ход; по истечении времени — INFO {playerId, timeout: true}.',
   );
 
-export type SessionPlayerChangedEvent = zod.input<
-  typeof SessionPlayerChangedEvent
->;
-export type SessionPlayerChangedEventOutput = zod.output<
-  typeof SessionPlayerChangedEvent
+export type SessionPatchEvent = zod.input<typeof SessionPatchEvent>;
+export type SessionPatchEventOutput = zod.output<typeof SessionPatchEvent>;
+
+export const SessionPatchStreamEvent = zod
+  .object({
+    data: SessionPatchEvent,
+    type: zod.enum(['delete', 'info', 'patch', 'put']),
+  })
+  .describe(
+    'Событие журнала партии; тип сообщения — метод события в нижнем регистре',
+  );
+
+export type SessionPatchStreamEvent = zod.input<typeof SessionPatchStreamEvent>;
+export type SessionPatchStreamEventOutput = zod.output<
+  typeof SessionPatchStreamEvent
 >;
 
 export const SessionStateDto = NothingSessionStateDto.describe(
-  'Состояние партии конкретной игры: блоки модулей (players, timer, turns) и поля игры. Игра — meta.game.code снапшота или started',
+  'Состояние партии конкретной игры: блоки модулей (players, timer, turns) и поля игры. Игра — meta.game.code снапшота; этой схемой клиент проверяет состояние после каждого события',
 );
 
 export type SessionStateDto = zod.input<typeof SessionStateDto>;
@@ -568,7 +648,7 @@ export const SessionSnapshotEvent = zod
     type: zod.enum(['snapshot']),
   })
   .describe(
-    'Состояние партии для этого зрителя на seq; всегда первое сообщение потока',
+    'Документ партии для этого зрителя на seq; всегда первое сообщение потока',
   );
 
 export type SessionSnapshotEvent = zod.input<typeof SessionSnapshotEvent>;
@@ -576,102 +656,10 @@ export type SessionSnapshotEventOutput = zod.output<
   typeof SessionSnapshotEvent
 >;
 
-export const SessionStartedDto = zod.object({
-  meta: SessionMetaDto,
-  state: SessionStateDto,
-});
-
-export type SessionStartedDto = zod.input<typeof SessionStartedDto>;
-export type SessionStartedDtoOutput = zod.output<typeof SessionStartedDto>;
-
-export const SessionStartedFrame = zod.object({
-  at: zod.iso.datetime({offset: true}),
-  data: SessionStartedDto,
-  seq: zod.int(),
-});
-
-export type SessionStartedFrame = zod.input<typeof SessionStartedFrame>;
-export type SessionStartedFrameOutput = zod.output<typeof SessionStartedFrame>;
-
-export const SessionStartedEvent = zod
-  .object({
-    data: SessionStartedFrame,
-    type: zod.enum(['started']),
-  })
-  .describe(
-    'Первое событие журнала: описание партии и начальное состояние. Обычно уже входит в снапшот',
-  );
-
-export type SessionStartedEvent = zod.input<typeof SessionStartedEvent>;
-export type SessionStartedEventOutput = zod.output<typeof SessionStartedEvent>;
-
-export const SessionTurnsChangedFrame = zod.object({
-  at: zod.iso.datetime({offset: true}),
-  data: SessionTurnsDto,
-  seq: zod.int(),
-});
-
-export type SessionTurnsChangedFrame = zod.input<
-  typeof SessionTurnsChangedFrame
->;
-export type SessionTurnsChangedFrameOutput = zod.output<
-  typeof SessionTurnsChangedFrame
->;
-
-export const SessionTurnsChangedEvent = zod
-  .object({
-    data: SessionTurnsChangedFrame,
-    type: zod.enum(['turns-changed']),
-  })
-  .describe('Модуль turns: блок очерёдности целиком (чей ход, раунд)');
-
-export type SessionTurnsChangedEvent = zod.input<
-  typeof SessionTurnsChangedEvent
->;
-export type SessionTurnsChangedEventOutput = zod.output<
-  typeof SessionTurnsChangedEvent
->;
-
-export const SessionTimerChangedFrame = zod.object({
-  at: zod.iso.datetime({offset: true}),
-  data: SessionTimerDto,
-  seq: zod.int(),
-});
-
-export type SessionTimerChangedFrame = zod.input<
-  typeof SessionTimerChangedFrame
->;
-export type SessionTimerChangedFrameOutput = zod.output<
-  typeof SessionTimerChangedFrame
->;
-
-export const SessionTimerChangedEvent = zod
-  .object({
-    data: SessionTimerChangedFrame,
-    type: zod.enum(['timer-changed']),
-  })
-  .describe('Модуль timer: таймер целиком, в том числе пауза и продолжение');
-
-export type SessionTimerChangedEvent = zod.input<
-  typeof SessionTimerChangedEvent
->;
-export type SessionTimerChangedEventOutput = zod.output<
-  typeof SessionTimerChangedEvent
->;
-
 export const SessionStreamEvent = zod
-  .discriminatedUnion('type', [
-    SessionSnapshotEvent,
-    SessionStartedEvent,
-    SessionFinishedEvent,
-    SessionCancelledEvent,
-    SessionPlayerChangedEvent,
-    SessionTurnsChangedEvent,
-    SessionTimerChangedEvent,
-    SessionMovedEvent,
-  ])
+  .discriminatedUnion('type', [SessionSnapshotEvent, SessionPatchStreamEvent])
   .describe(
-    'Событие потока партии: тип — поле event: в SSE, data — JSON в поле data:',
+    'Сообщение потока партии: тип — поле event: в SSE, data — JSON в поле data:. snapshot — документ партии, put/patch/delete/info — событие журнала (патч документа)',
   );
 
 export type SessionStreamEvent = zod.input<typeof SessionStreamEvent>;
@@ -832,9 +820,9 @@ export const MakeMoveResponse = zod.void();
 /**
  * Server-Sent Events (EventSource с withCredentials): сообщения `event: <тип>` + `data: <json>`, без `id:`, раз в ~5 с комментарий `: ping`. Схема пары тип + данные — SessionStreamEvent ({type, data}, дискриминатор type).
  *
- * Первое сообщение — snapshot: состояние партии для этого зрителя `{seq, status, serverTime, meta, state}`; так же после каждого переподключения. meta.game — код игры и правила партии, закреплённые при старте; по meta.game.code клиент выбирает схемы состояния и игровых событий (NothingSessionStateDto, NothingMovedDto). state — блоки модулей (players с moveOptions, timer, turns) и поля игры.
+ * Первое сообщение — snapshot: документ партии для этого зрителя `{seq, status, serverTime, meta, state}`; так же после каждого переподключения. meta.game — код игры и правила партии, закреплённые при старте; по meta.game.code клиент выбирает схему состояния (NothingSessionStateDto). state — блоки модулей (players с moveOptions, timer, turns) и поля игры.
  *
- * Дальше — события журнала партии в кадре `{seq, at, data}`, seq непрерывен и продолжает seq снапшота: дыра означает потерю (переподключиться), повтор с уже применённым seq отбрасывается. События модулей заменяют блок целиком: player-changed — игрок (по id), turns-changed — очерёдность, timer-changed — таймер, в том числе пауза и продолжение. moved — ход (данные задаёт игра). started — первое событие журнала (обычно уже в снапшоте). session-finished и session-cancelled — конец партии, после них сервер закрывает поток.
+ * Дальше — события журнала партии `{seq, at, method, code, data}` (SessionPatchEvent), тип сообщения — method в нижнем регистре (put, patch, delete, info). seq непрерывен и продолжает seq снапшота: дыра означает потерю (переподключиться), повтор с уже применённым seq отбрасывается. Каждое событие — одна операция над документом `{status, meta, state}` по пути data.path (строка — ключ объекта, {id} — элемент массива по id): PUT заменяет или создаёт значение, PATCH сливает поля объекта неглубоко, DELETE удаляет, INFO состояние не меняет. Клиент применяет события по method, code — для журнала и логов. Начало и конец партии — тоже патчи: session-started (PUT []), session-finished и session-cancelled (PATCH [] {status}), после конца сервер закрывает поток. Несуществующий путь или состояние не по схеме игры — переподключиться за свежим снапшотом.
  *
  * События маскируются под зрителя: варианты ходов (moveOptions) видит только сам игрок, остальным приходит пустой список, но событие доставляется. После конца партии всё публично: на завершённую или отменённую партию приходит полный снапшот, и поток закрывается. Подписаться может участник комнаты (открытый поток комнаты). Access-токен проверяется только при подключении.
  * @summary Поток событий партии
@@ -871,7 +859,7 @@ export const GetRoomParams = zod.object({
 export const GetRoomResponse = RoomResponse;
 
 /**
- * Server-Sent Events (EventSource с withCredentials): сообщения `event: <тип>` + `data: <json>`, без `id:`, раз в ~5 с комментарий `: ping`. Первое сообщение — snapshot: комната целиком для этого пользователя, как в GET /api/rooms/{roomId}; так же после каждого переподключения. Дальше — users-changed (владелец и полный список участников: вход, выход, уход, смена роли, ника, владельца), settings-changed (настройки комнаты), session-changed (старт, отмена, конец партии — перечитать комнату через GET и подписаться на поток партии session.id; пауза и продолжение — timer-changed потока партии) и room-deleted (комната удалена, после него сервер закрывает поток). События несут полное значение, повтор безопасен. Схема пары тип + данные — RoomStreamEvent ({type, data}, дискриминатор type).
+ * Server-Sent Events (EventSource с withCredentials): сообщения `event: <тип>` + `data: <json>`, без `id:`, раз в ~5 с комментарий `: ping`. Первое сообщение — snapshot: комната целиком для этого пользователя, как в GET /api/rooms/{roomId}; так же после каждого переподключения. Дальше — users-changed (владелец и полный список участников: вход, выход, уход, смена роли, ника, владельца), settings-changed (настройки комнаты), session-changed (старт, отмена, конец партии — перечитать комнату через GET и подписаться на поток партии session.id; пауза и продолжение — game-paused и game-resumed потока партии) и room-deleted (комната удалена, после него сервер закрывает поток). События несут полное значение, повтор безопасен. Схема пары тип + данные — RoomStreamEvent ({type, data}, дискриминатор type).
  *
  * Открытый поток и есть нахождение в комнате: подключение входит в комнату (игрок идущей партии возвращается на своё место; иначе игрок, если партия не идёт и есть место, или наблюдатель; в пустой комнате — владелец; повторное подключение, в том числе в пределах срока выхода, роль и владение не меняет). Подключений у пользователя может быть несколько (вкладки, устройства). Когда закрывается последнее, выход отложенный: участник помечается уходящим (leaving) и до истечения срока сохраняет роль, место и владение. Срок: игроку идущей партии его задаёт игра (в «игре в ничто» 30 с, на паузе отсчёт заморожен), владельцу вне игры — 15 с, остальным — 1 с. По истечении срока участник удаляется: игрок идущей партии сохраняет место, владение переходит к самому раннему из оставшихся (сначала присутствующие, в каждой группе сначала игроки). Создатель комнаты, так и не подключившийся к потоку, удаляется через 15 с. Пустая комната удаляется через 30 минут. Обрыв соединения сервер замечает с задержкой (по неудачной записи ping, обычно 10–30 с). Access-токен проверяется только при подключении: при истечении поток не рвётся.
  * @summary Поток событий комнаты
@@ -915,7 +903,7 @@ export const StartSessionParams = zod.object({
 export const StartSessionResponse = RoomResponse;
 
 /**
- * Пауза — действие таймера партии: ходы запрещены, время хода и сроки возвращения вышедших игроков партии не идут (state.timer: status PAUSED, pausedAt; остаток времени хода — deadline − pausedAt). Вход, выход и отмена партии работают. Только владелец. Ответ без тела: изменение приходит событием timer-changed потока партии. Повторный вызов на паузе ничего не меняет. У партии без таймера паузы нет.
+ * Пауза — действие таймера партии: ходы запрещены, время хода и сроки возвращения вышедших игроков партии не идут (state.timer: status PAUSED, pausedAt; остаток времени хода — deadline − pausedAt). Вход, выход и отмена партии работают. Только владелец. Ответ без тела: изменение приходит событием game-paused потока партии. Повторный вызов на паузе ничего не меняет. У партии без таймера паузы нет.
  * @summary Поставить партию на паузу
  */
 export const PauseSessionParams = zod.object({
@@ -925,7 +913,7 @@ export const PauseSessionParams = zod.object({
 export const PauseSessionResponse = zod.void();
 
 /**
- * Снимает паузу таймера. Время хода и сроки возвращения вышедших игроков партии сдвигаются на длительность паузы: остаётся столько же времени, сколько было в момент паузы. Только владелец. Ответ без тела: изменение приходит событием timer-changed потока партии. Без паузы вызов ничего не меняет.
+ * Снимает паузу таймера. Время хода и сроки возвращения вышедших игроков партии сдвигаются на длительность паузы: остаётся столько же времени, сколько было в момент паузы. Только владелец. Ответ без тела: изменение приходит событием game-resumed потока партии. Без паузы вызов ничего не меняет.
  * @summary Продолжить партию
  */
 export const ResumeSessionParams = zod.object({
