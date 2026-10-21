@@ -9,8 +9,6 @@ import type {MoveRequestData} from './moveRequestData';
 export interface MoveRequest {
   /** @nullable */
   data?: MoveRequestData;
-  /** @nullable */
-  expectedVersion?: number | null;
   /** @minLength 1 */
   type: string;
 }

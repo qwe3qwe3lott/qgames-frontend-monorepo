@@ -8,12 +8,6 @@ import {PageLayout} from '@/shared/ui';
 import {GameBoard} from '@/widgets/game-board';
 import {RoomPanel} from '@/widgets/room-panel';
 
-/**
- * Комнату обновляет поток событий; состояние идущей партии в нём пока не
- * приходит, поэтому во время партии комната перечитывается опросом (CLAUDE.md §4).
- */
-const SESSION_POLL_INTERVAL_MS = 2000;
-
 /** Заголовок, пока название игры не загружено или игра недоступна. */
 const FALLBACK_TITLE = 'Комната';
 
@@ -29,14 +23,8 @@ export interface RoomPageProps {
 }
 
 export function RoomPage({game, roomId, viewerId}: RoomPageProps) {
-  const {data, dataUpdatedAt, error, isPending} = useGetRoom(roomId, {
-    query: {
-      refetchInterval: query =>
-        query.state.data?.status === 'IN_GAME'
-          ? SESSION_POLL_INTERVAL_MS
-          : false,
-    },
-  });
+  // Комнату обновляет её поток событий, партию — поток партии; опроса нет.
+  const {data, error, isPending} = useGetRoom(roomId);
   // Название игры приходит с бэкенда; маршрут комнаты загружает его заранее.
   const title = useGetGame(game.code).data?.title ?? FALLBACK_TITLE;
   // Пока страница открыта и комната доступна, пользователь в ней.
@@ -58,7 +46,7 @@ export function RoomPage({game, roomId, viewerId}: RoomPageProps) {
       </PageLayout>
     );
   }
-  const room = toRoomView(data, dataUpdatedAt);
+  const room = toRoomView(data);
   const viewerMembership = membership(room, viewerId);
 
   return (

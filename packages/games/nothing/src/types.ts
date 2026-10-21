@@ -1,28 +1,12 @@
 // Пропсы доски, которые передаёт портал. Общий API игр ещё не выбран (CLAUDE.md §2),
 // поэтому форма дублирует ожидание портала и сверяется с ним структурной типизацией.
 
+import type {SessionData} from '@qgames/game-core';
+
 export interface BoardPlayer {
   id: string;
   name: string;
   avatar: 'CAT' | 'DOG' | null;
-}
-
-export interface BoardSession {
-  status: 'IN_PROGRESS' | 'FINISHED' | 'CANCELLED';
-  /** Игроки партии в порядке мест. */
-  players: readonly string[];
-  version: number;
-  /** Состояние партии с точки зрения зрителя; формат задаёт игра. */
-  state: unknown;
-  /** Дедлайн текущего хода по часам сервера (ISO 8601); null — без таймера или партия не идёт. */
-  moveDeadline: string | null;
-  /**
-   * Момент постановки на паузу по часам сервера (ISO 8601); null — не на паузе.
-   * На паузе ходить нельзя, остаток времени хода = moveDeadline − pausedAt.
-   */
-  pausedAt: string | null;
-  /** Смещение часов: время сервера минус `Date.now()` клиента, мс. */
-  clockOffsetMs: number;
 }
 
 /** Ход — общий конверт бэкенда: вид действия и его параметры в формате игры. */
@@ -32,7 +16,8 @@ export interface BoardMove {
 }
 
 export interface BoardProps {
-  session: BoardSession;
+  /** Партия из потока: снапшот и применённые события, смещение часов. */
+  session: SessionData;
   /** Участники комнаты (и бывшие игроки партии) для имён и аватаров. */
   players: readonly BoardPlayer[];
   viewerId: string;

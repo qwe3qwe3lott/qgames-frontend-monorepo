@@ -6,8 +6,6 @@ export interface Membership {
   isOwner: boolean;
   isPlayer: boolean;
   inGame: boolean;
-  /** Идущая партия стоит на паузе. */
-  paused: boolean;
   playersCount: number;
   hasFreeSeat: boolean;
   /** Хватает ли игроков, чтобы владелец начал партию. */
@@ -23,10 +21,6 @@ export function membership(room: RoomView, userId: string): Membership {
     isOwner: member?.owner ?? false,
     isPlayer: member?.role === 'PLAYER',
     inGame: room.status === 'IN_GAME',
-    paused:
-      room.status === 'IN_GAME' &&
-      room.session !== null &&
-      room.session.pausedAt !== null,
     playersCount,
     hasFreeSeat: playersCount < room.maxPlayers,
     enoughPlayers:

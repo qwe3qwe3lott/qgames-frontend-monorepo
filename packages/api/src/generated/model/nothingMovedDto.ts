@@ -5,4 +5,8 @@
  * OpenAPI spec version: v0
  */
 
-export type SessionResponseState = {[key: string]: unknown};
+export interface NothingMovedDto {
+  playerId: string;
+  timeout: boolean;
+  type: string;
+}

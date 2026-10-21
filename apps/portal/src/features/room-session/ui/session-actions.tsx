@@ -5,6 +5,7 @@ import {
   useStartSession,
 } from '@qgames/api/gateway';
 import type {RoomResponse} from '@qgames/api/gateway/model';
+import {activeTimer} from '@qgames/game-core';
 import {Button} from '@qgames/ui/components/button';
 import {useQueryClient} from '@tanstack/react-query';
 
@@ -14,6 +15,7 @@ import {
   type Membership,
   type RoomView,
 } from '@/entities/room';
+import {useSession, useSessionAdvance} from '@/entities/session';
 import {WithHint} from '@/shared/ui';
 
 export interface SessionActionsProps {
@@ -21,35 +23,59 @@ export interface SessionActionsProps {
   membership: Membership;
 }
 
-/** Старт, пауза и отмена партии; доступны только владельцу. */
+/**
+ * Старт, пауза и отмена партии; доступны только владельцу. Старт возвращает
+ * комнату (кладём в кеш); пауза, продолжение и отмена отвечают без тела —
+ * изменения приходят потоками партии и комнаты. Пауза — действие таймера:
+ * у партии без таймера её нет.
+ */
 export function SessionActions({room, membership}: SessionActionsProps) {
   const queryClient = useQueryClient();
-  const onRoom = {
+  const start = useStartSession({
     mutation: {
       onSuccess: (data: RoomResponse) => {
         setRoomCache(queryClient, room.id, data);
       },
     },
+  });
+  const sessionId = room.session?.id ?? null;
+  const session = useSession(sessionId);
+  // Пауза и продолжение отвечают 204: ждём timer-changed (рост seq).
+  const advance = useSessionAdvance(sessionId);
+  const onTimerAction = {
+    mutation: {
+      onSuccess: () => {
+        advance.arm();
+      },
+      onError: () => {
+        advance.clear();
+      },
+    },
   };
-  const start = useStartSession(onRoom);
-  const cancel = useCancelSession(onRoom);
-  const pause = usePauseSession(onRoom);
-  const resume = useResumeSession(onRoom);
+  const cancel = useCancelSession();
+  const pause = usePauseSession(onTimerAction);
+  const resume = useResumeSession(onTimerAction);
   if (!membership.isOwner) {
     return null;
   }
+  const timer = session === undefined ? null : activeTimer(session);
   const error = start.error ?? cancel.error ?? pause.error ?? resume.error;
   const pending =
-    start.isPending || cancel.isPending || pause.isPending || resume.isPending;
+    start.isPending ||
+    cancel.isPending ||
+    pause.isPending ||
+    resume.isPending ||
+    advance.waiting;
 
   return (
     <>
       {membership.inGame ? (
         <>
-          {membership.paused ? (
+          {timer === null ? null : timer.paused ? (
             <Button
               disabled={pending}
               onClick={() => {
+                advance.mark();
                 resume.mutate({roomId: room.id});
               }}
             >
@@ -60,6 +86,7 @@ export function SessionActions({room, membership}: SessionActionsProps) {
               variant="outline"
               disabled={pending}
               onClick={() => {
+                advance.mark();
                 pause.mutate({roomId: room.id});
               }}
             >

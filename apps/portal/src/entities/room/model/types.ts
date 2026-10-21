@@ -21,16 +21,10 @@ export interface RoomMemberView {
   leaving: boolean;
 }
 
+/** Партия в ответе комнаты: только id и статус, состояние — в потоке партии. */
 export interface SessionView {
   id: string;
   status: SessionStatus;
-  players: readonly string[];
-  version: number;
-  state: unknown;
-  /** Дедлайн текущего хода (ISO 8601); null — без таймера или партия не идёт. */
-  moveDeadline: string | null;
-  /** Момент постановки на паузу (ISO 8601); null — партия не на паузе. */
-  pausedAt: string | null;
 }
 
 export interface RoomView {
@@ -45,8 +39,6 @@ export interface RoomView {
   session: SessionView | null;
   /** Текущие настройки комнаты; следующая партия стартует с ними. */
   settings: RoomSettingsDto;
-  /** Смещение часов: время сервера минус `Date.now()` клиента, мс. */
-  clockOffsetMs: number;
 }
 
 function toMemberView(member: RoomMemberResponse): RoomMemberView {
@@ -60,26 +52,12 @@ function toMemberView(member: RoomMemberResponse): RoomMemberView {
   };
 }
 
-function toSessionView(session: SessionResponse): SessionView {
-  const {id, status, players, version, state} = session;
-  return {
-    id,
-    status,
-    players,
-    version,
-    state,
-    moveDeadline: session.moveDeadline ?? null,
-    pausedAt: session.pausedAt ?? null,
-  };
+function toSessionView({id, status}: SessionResponse): SessionView {
+  return {id, status};
 }
 
-/**
- * Ответ комнаты в виде для UI: необязательные nullable-поля приведены к `null`.
- * `receivedAt` — момент получения ответа (`dataUpdatedAt` запроса): по нему и
- * `serverTime` считается смещение часов для обратного отсчёта.
- */
-export function toRoomView(room: RoomResponse, receivedAt: number): RoomView {
-  const serverTime = Date.parse(room.serverTime);
+/** Ответ комнаты в виде для UI: необязательные nullable-поля приведены к `null`. */
+export function toRoomView(room: RoomResponse): RoomView {
   return {
     id: room.id,
     gameCode: room.gameCode,
@@ -93,6 +71,5 @@ export function toRoomView(room: RoomResponse, receivedAt: number): RoomView {
         ? null
         : toSessionView(room.session),
     settings: room.settings,
-    clockOffsetMs: Number.isNaN(serverTime) ? 0 : serverTime - receivedAt,
   };
 }

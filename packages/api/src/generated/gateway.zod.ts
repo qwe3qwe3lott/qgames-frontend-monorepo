@@ -169,14 +169,68 @@ export const LoginRequest = zod.object({
 export type LoginRequest = zod.input<typeof LoginRequest>;
 export type LoginRequestOutput = zod.output<typeof LoginRequest>;
 
+export const MoveOptionDto = zod.object({
+  data: zod.record(zod.string(), zod.unknown()).nullish(),
+  type: zod.string(),
+});
+
+export type MoveOptionDto = zod.input<typeof MoveOptionDto>;
+export type MoveOptionDtoOutput = zod.output<typeof MoveOptionDto>;
+
 export const MoveRequest = zod.object({
   data: zod.record(zod.string(), zod.unknown()).nullish(),
-  expectedVersion: zod.int().nullish(),
   type: zod.string().min(1),
 });
 
 export type MoveRequest = zod.input<typeof MoveRequest>;
 export type MoveRequestOutput = zod.output<typeof MoveRequest>;
+
+export const NothingMovedDto = zod.object({
+  playerId: zod.uuid(),
+  timeout: zod.boolean(),
+  type: zod.string(),
+});
+
+export type NothingMovedDto = zod.input<typeof NothingMovedDto>;
+export type NothingMovedDtoOutput = zod.output<typeof NothingMovedDto>;
+
+export const SessionPlayerDto = zod.object({
+  id: zod.uuid(),
+  moveOptions: zod.array(MoveOptionDto),
+});
+
+export type SessionPlayerDto = zod.input<typeof SessionPlayerDto>;
+export type SessionPlayerDtoOutput = zod.output<typeof SessionPlayerDto>;
+
+export const SessionTimerDto = zod.object({
+  deadline: zod.iso.datetime({offset: true}).nullish(),
+  pausedAt: zod.iso.datetime({offset: true}).nullish(),
+  status: zod.enum(['RUNNING', 'PAUSED', 'STOPPED']),
+});
+
+export type SessionTimerDto = zod.input<typeof SessionTimerDto>;
+export type SessionTimerDtoOutput = zod.output<typeof SessionTimerDto>;
+
+export const SessionTurnsDto = zod.object({
+  currentPlayerId: zod.uuid().nullish(),
+  round: zod.int(),
+  rounds: zod.int().nullish(),
+});
+
+export type SessionTurnsDto = zod.input<typeof SessionTurnsDto>;
+export type SessionTurnsDtoOutput = zod.output<typeof SessionTurnsDto>;
+
+export const NothingSessionStateDto = zod.object({
+  moves: zod.int(),
+  players: zod.array(SessionPlayerDto),
+  timer: zod.union([SessionTimerDto, zod.null()]).optional(),
+  turns: SessionTurnsDto,
+});
+
+export type NothingSessionStateDto = zod.input<typeof NothingSessionStateDto>;
+export type NothingSessionStateDtoOutput = zod.output<
+  typeof NothingSessionStateDto
+>;
 
 export const ProblemDetail = zod.object({
   code: zod.string().optional().describe('Машиночитаемый код ошибки'),
@@ -276,12 +330,7 @@ export type RoomMemberResponseOutput = zod.output<typeof RoomMemberResponse>;
 
 export const SessionResponse = zod.object({
   id: zod.uuid(),
-  moveDeadline: zod.iso.datetime({offset: true}).nullish(),
-  pausedAt: zod.iso.datetime({offset: true}).nullish(),
-  players: zod.array(zod.uuid()),
-  state: zod.record(zod.string(), zod.unknown()),
   status: zod.enum(['IN_PROGRESS', 'FINISHED', 'CANCELLED']),
-  version: zod.int(),
 });
 
 export type SessionResponse = zod.input<typeof SessionResponse>;
@@ -310,7 +359,7 @@ export const RoomSessionChangedEvent = zod
     type: zod.enum(['session-changed']),
   })
   .describe(
-    'Партия началась, отменена, поставлена на паузу, продолжена или закончилась: клиент перечитывает комнату (GET)',
+    'Партия началась, отменена или закончилась: клиент перечитывает комнату (GET) и подписывается на поток партии. Пауза и продолжение — timer-changed потока партии',
   );
 
 export type RoomSessionChangedEvent = zod.input<typeof RoomSessionChangedEvent>;
@@ -389,6 +438,244 @@ export const RoomStreamEvent = zod
 
 export type RoomStreamEvent = zod.input<typeof RoomStreamEvent>;
 export type RoomStreamEventOutput = zod.output<typeof RoomStreamEvent>;
+
+export const SessionEndedFrame = zod.object({
+  at: zod.iso.datetime({offset: true}),
+  data: EmptyEventDataDto,
+  seq: zod.int(),
+});
+
+export type SessionEndedFrame = zod.input<typeof SessionEndedFrame>;
+export type SessionEndedFrameOutput = zod.output<typeof SessionEndedFrame>;
+
+export const SessionCancelledEvent = zod
+  .object({
+    data: SessionEndedFrame,
+    type: zod.enum(['session-cancelled']),
+  })
+  .describe('Партию отменил владелец; после события сервер закрывает поток');
+
+export type SessionCancelledEvent = zod.input<typeof SessionCancelledEvent>;
+export type SessionCancelledEventOutput = zod.output<
+  typeof SessionCancelledEvent
+>;
+
+export const SessionFinishedEvent = zod
+  .object({
+    data: SessionEndedFrame,
+    type: zod.enum(['session-finished']),
+  })
+  .describe(
+    'Партия закончилась по правилам; после события сервер закрывает поток',
+  );
+
+export type SessionFinishedEvent = zod.input<typeof SessionFinishedEvent>;
+export type SessionFinishedEventOutput = zod.output<
+  typeof SessionFinishedEvent
+>;
+
+export const SessionGameDto = zod.object({
+  code: zod.enum(['nothing', 'carcassonne']),
+  rules: RoomSettingsDto,
+});
+
+export type SessionGameDto = zod.input<typeof SessionGameDto>;
+export type SessionGameDtoOutput = zod.output<typeof SessionGameDto>;
+
+export const SessionMetaDto = zod.object({
+  game: SessionGameDto,
+});
+
+export type SessionMetaDto = zod.input<typeof SessionMetaDto>;
+export type SessionMetaDtoOutput = zod.output<typeof SessionMetaDto>;
+
+export const SessionMovedDto = NothingMovedDto.describe(
+  'Данные события moved конкретной игры (игра — meta.game.code)',
+);
+
+export type SessionMovedDto = zod.input<typeof SessionMovedDto>;
+export type SessionMovedDtoOutput = zod.output<typeof SessionMovedDto>;
+
+export const SessionMovedFrame = zod.object({
+  at: zod.iso.datetime({offset: true}),
+  data: SessionMovedDto,
+  seq: zod.int(),
+});
+
+export type SessionMovedFrame = zod.input<typeof SessionMovedFrame>;
+export type SessionMovedFrameOutput = zod.output<typeof SessionMovedFrame>;
+
+export const SessionMovedEvent = zod
+  .object({
+    data: SessionMovedFrame,
+    type: zod.enum(['moved']),
+  })
+  .describe('Игра: игрок сделал ход; данные задаёт игра (meta.game.code)');
+
+export type SessionMovedEvent = zod.input<typeof SessionMovedEvent>;
+export type SessionMovedEventOutput = zod.output<typeof SessionMovedEvent>;
+
+export const SessionPlayerChangedFrame = zod.object({
+  at: zod.iso.datetime({offset: true}),
+  data: SessionPlayerDto,
+  seq: zod.int(),
+});
+
+export type SessionPlayerChangedFrame = zod.input<
+  typeof SessionPlayerChangedFrame
+>;
+export type SessionPlayerChangedFrameOutput = zod.output<
+  typeof SessionPlayerChangedFrame
+>;
+
+export const SessionPlayerChangedEvent = zod
+  .object({
+    data: SessionPlayerChangedFrame,
+    type: zod.enum(['player-changed']),
+  })
+  .describe(
+    'Модуль core: игрок целиком (замена по id); чужим зрителям moveOptions — пустой список',
+  );
+
+export type SessionPlayerChangedEvent = zod.input<
+  typeof SessionPlayerChangedEvent
+>;
+export type SessionPlayerChangedEventOutput = zod.output<
+  typeof SessionPlayerChangedEvent
+>;
+
+export const SessionStateDto = NothingSessionStateDto.describe(
+  'Состояние партии конкретной игры: блоки модулей (players, timer, turns) и поля игры. Игра — meta.game.code снапшота или started',
+);
+
+export type SessionStateDto = zod.input<typeof SessionStateDto>;
+export type SessionStateDtoOutput = zod.output<typeof SessionStateDto>;
+
+export const SessionSnapshotDto = zod.object({
+  meta: SessionMetaDto,
+  seq: zod.int(),
+  serverTime: zod.iso.datetime({offset: true}),
+  state: SessionStateDto,
+  status: zod.enum(['IN_PROGRESS', 'FINISHED', 'CANCELLED']),
+});
+
+export type SessionSnapshotDto = zod.input<typeof SessionSnapshotDto>;
+export type SessionSnapshotDtoOutput = zod.output<typeof SessionSnapshotDto>;
+
+export const SessionSnapshotEvent = zod
+  .object({
+    data: SessionSnapshotDto,
+    type: zod.enum(['snapshot']),
+  })
+  .describe(
+    'Состояние партии для этого зрителя на seq; всегда первое сообщение потока',
+  );
+
+export type SessionSnapshotEvent = zod.input<typeof SessionSnapshotEvent>;
+export type SessionSnapshotEventOutput = zod.output<
+  typeof SessionSnapshotEvent
+>;
+
+export const SessionStartedDto = zod.object({
+  meta: SessionMetaDto,
+  state: SessionStateDto,
+});
+
+export type SessionStartedDto = zod.input<typeof SessionStartedDto>;
+export type SessionStartedDtoOutput = zod.output<typeof SessionStartedDto>;
+
+export const SessionStartedFrame = zod.object({
+  at: zod.iso.datetime({offset: true}),
+  data: SessionStartedDto,
+  seq: zod.int(),
+});
+
+export type SessionStartedFrame = zod.input<typeof SessionStartedFrame>;
+export type SessionStartedFrameOutput = zod.output<typeof SessionStartedFrame>;
+
+export const SessionStartedEvent = zod
+  .object({
+    data: SessionStartedFrame,
+    type: zod.enum(['started']),
+  })
+  .describe(
+    'Первое событие журнала: описание партии и начальное состояние. Обычно уже входит в снапшот',
+  );
+
+export type SessionStartedEvent = zod.input<typeof SessionStartedEvent>;
+export type SessionStartedEventOutput = zod.output<typeof SessionStartedEvent>;
+
+export const SessionTurnsChangedFrame = zod.object({
+  at: zod.iso.datetime({offset: true}),
+  data: SessionTurnsDto,
+  seq: zod.int(),
+});
+
+export type SessionTurnsChangedFrame = zod.input<
+  typeof SessionTurnsChangedFrame
+>;
+export type SessionTurnsChangedFrameOutput = zod.output<
+  typeof SessionTurnsChangedFrame
+>;
+
+export const SessionTurnsChangedEvent = zod
+  .object({
+    data: SessionTurnsChangedFrame,
+    type: zod.enum(['turns-changed']),
+  })
+  .describe('Модуль turns: блок очерёдности целиком (чей ход, раунд)');
+
+export type SessionTurnsChangedEvent = zod.input<
+  typeof SessionTurnsChangedEvent
+>;
+export type SessionTurnsChangedEventOutput = zod.output<
+  typeof SessionTurnsChangedEvent
+>;
+
+export const SessionTimerChangedFrame = zod.object({
+  at: zod.iso.datetime({offset: true}),
+  data: SessionTimerDto,
+  seq: zod.int(),
+});
+
+export type SessionTimerChangedFrame = zod.input<
+  typeof SessionTimerChangedFrame
+>;
+export type SessionTimerChangedFrameOutput = zod.output<
+  typeof SessionTimerChangedFrame
+>;
+
+export const SessionTimerChangedEvent = zod
+  .object({
+    data: SessionTimerChangedFrame,
+    type: zod.enum(['timer-changed']),
+  })
+  .describe('Модуль timer: таймер целиком, в том числе пауза и продолжение');
+
+export type SessionTimerChangedEvent = zod.input<
+  typeof SessionTimerChangedEvent
+>;
+export type SessionTimerChangedEventOutput = zod.output<
+  typeof SessionTimerChangedEvent
+>;
+
+export const SessionStreamEvent = zod
+  .discriminatedUnion('type', [
+    SessionSnapshotEvent,
+    SessionStartedEvent,
+    SessionFinishedEvent,
+    SessionCancelledEvent,
+    SessionPlayerChangedEvent,
+    SessionTurnsChangedEvent,
+    SessionTimerChangedEvent,
+    SessionMovedEvent,
+  ])
+  .describe(
+    'Событие потока партии: тип — поле event: в SSE, data — JSON в поле data:',
+  );
+
+export type SessionStreamEvent = zod.input<typeof SessionStreamEvent>;
+export type SessionStreamEventOutput = zod.output<typeof SessionStreamEvent>;
 
 export const setPasswordRequestPasswordMin = 8;
 export const setPasswordRequestPasswordMax = 128;
@@ -530,7 +817,7 @@ export const CreateRoomBody = CreateRoomRequest;
 export const CreateRoomResponse = RoomResponse;
 
 /**
- * Ручка одна на все игры: код игры — в пути, ход — общий конверт `{type, data}`. `type` — вид действия (`PASS` в «игре в ничто»), `data` — его параметры в формате игры. Код игры должен совпадать с игрой комнаты. Ходить может только игрок партии, находящийся в комнате. Если у партии есть таймер, ход переставляет дедлайн (session.moveDeadline). Когда партия заканчивается, комната возвращается в ожидание, а законченная партия остаётся в ответе. Идущая партия продолжается, даже если игра стала временно недоступной.
+ * Ручка одна на все игры: код игры — в пути, ход — общий конверт `{type, data}`. `type` — вид действия (`PASS` в «игре в ничто»), `data` — его параметры в формате игры; допустимые сейчас ходы игрока — moveOptions его игрока в состоянии партии. Код игры должен совпадать с игрой комнаты. Ходить может только игрок партии, находящийся в комнате. Ход проверяется по текущему состоянию партии. Ответ без тела: изменения (ход, очерёдность, варианты ходов, таймер, конец партии) приходят событиями потока партии. Когда партия заканчивается, комната возвращается в ожидание. Идущая партия продолжается, даже если игра стала временно недоступной.
  * @summary Сделать ход
  */
 export const MakeMoveParams = zod.object({
@@ -540,7 +827,25 @@ export const MakeMoveParams = zod.object({
 
 export const MakeMoveBody = MoveRequest;
 
-export const MakeMoveResponse = RoomResponse;
+export const MakeMoveResponse = zod.void();
+
+/**
+ * Server-Sent Events (EventSource с withCredentials): сообщения `event: <тип>` + `data: <json>`, без `id:`, раз в ~5 с комментарий `: ping`. Схема пары тип + данные — SessionStreamEvent ({type, data}, дискриминатор type).
+ *
+ * Первое сообщение — snapshot: состояние партии для этого зрителя `{seq, status, serverTime, meta, state}`; так же после каждого переподключения. meta.game — код игры и правила партии, закреплённые при старте; по meta.game.code клиент выбирает схемы состояния и игровых событий (NothingSessionStateDto, NothingMovedDto). state — блоки модулей (players с moveOptions, timer, turns) и поля игры.
+ *
+ * Дальше — события журнала партии в кадре `{seq, at, data}`, seq непрерывен и продолжает seq снапшота: дыра означает потерю (переподключиться), повтор с уже применённым seq отбрасывается. События модулей заменяют блок целиком: player-changed — игрок (по id), turns-changed — очерёдность, timer-changed — таймер, в том числе пауза и продолжение. moved — ход (данные задаёт игра). started — первое событие журнала (обычно уже в снапшоте). session-finished и session-cancelled — конец партии, после них сервер закрывает поток.
+ *
+ * События маскируются под зрителя: варианты ходов (moveOptions) видит только сам игрок, остальным приходит пустой список, но событие доставляется. После конца партии всё публично: на завершённую или отменённую партию приходит полный снапшот, и поток закрывается. Подписаться может участник комнаты (открытый поток комнаты). Access-токен проверяется только при подключении.
+ * @summary Поток событий партии
+ */
+export const SessionEventsParams = zod.object({
+  gameCode: zod.enum(['nothing', 'carcassonne']).describe('Код игры'),
+  roomId: zod.uuid(),
+  sessionId: zod.uuid(),
+});
+
+export const SessionEventsResponse = zod.unknown();
 
 /**
  * Заменяет настройки комнаты целиком. Только владелец и только между партиями; следующая партия стартует с новыми настройками. Код игры в пути должен совпадать с игрой комнаты. Ошибки настроек отдаются по полям тела (например, gameSettings.rounds).
@@ -566,7 +871,7 @@ export const GetRoomParams = zod.object({
 export const GetRoomResponse = RoomResponse;
 
 /**
- * Server-Sent Events (EventSource с withCredentials): сообщения `event: <тип>` + `data: <json>`, без `id:`, раз в ~5 с комментарий `: ping`. Первое сообщение — snapshot: комната целиком для этого пользователя, как в GET /api/rooms/{roomId}; так же после каждого переподключения. Дальше — users-changed (владелец и полный список участников: вход, выход, уход, смена роли, ника, владельца), settings-changed (настройки комнаты), session-changed (старт, отмена, пауза, продолжение, конец партии — перечитать комнату через GET) и room-deleted (комната удалена, после него сервер закрывает поток). События несут полное значение, повтор безопасен. Схема пары тип + данные — RoomStreamEvent ({type, data}, дискриминатор type).
+ * Server-Sent Events (EventSource с withCredentials): сообщения `event: <тип>` + `data: <json>`, без `id:`, раз в ~5 с комментарий `: ping`. Первое сообщение — snapshot: комната целиком для этого пользователя, как в GET /api/rooms/{roomId}; так же после каждого переподключения. Дальше — users-changed (владелец и полный список участников: вход, выход, уход, смена роли, ника, владельца), settings-changed (настройки комнаты), session-changed (старт, отмена, конец партии — перечитать комнату через GET и подписаться на поток партии session.id; пауза и продолжение — timer-changed потока партии) и room-deleted (комната удалена, после него сервер закрывает поток). События несут полное значение, повтор безопасен. Схема пары тип + данные — RoomStreamEvent ({type, data}, дискриминатор type).
  *
  * Открытый поток и есть нахождение в комнате: подключение входит в комнату (игрок идущей партии возвращается на своё место; иначе игрок, если партия не идёт и есть место, или наблюдатель; в пустой комнате — владелец; повторное подключение, в том числе в пределах срока выхода, роль и владение не меняет). Подключений у пользователя может быть несколько (вкладки, устройства). Когда закрывается последнее, выход отложенный: участник помечается уходящим (leaving) и до истечения срока сохраняет роль, место и владение. Срок: игроку идущей партии его задаёт игра (в «игре в ничто» 30 с, на паузе отсчёт заморожен), владельцу вне игры — 15 с, остальным — 1 с. По истечении срока участник удаляется: игрок идущей партии сохраняет место, владение переходит к самому раннему из оставшихся (сначала присутствующие, в каждой группе сначала игроки). Создатель комнаты, так и не подключившийся к потоку, удаляется через 15 с. Пустая комната удаляется через 30 минут. Обрыв соединения сервер замечает с задержкой (по неудачной записи ping, обычно 10–30 с). Access-токен проверяется только при подключении: при истечении поток не рвётся.
  * @summary Поток событий комнаты
@@ -590,17 +895,17 @@ export const ChangeRoleBody = ChangeRoleRequest;
 export const ChangeRoleResponse = RoomResponse;
 
 /**
- * Завершает идущую партию без результата и возвращает комнату в ожидание. Работает и на паузе. Только владелец.
+ * Завершает идущую партию без результата и возвращает комнату в ожидание. Работает и на паузе. Только владелец. Ответ без тела: поток партии получает session-cancelled и закрывается, поток комнаты — session-changed.
  * @summary Отменить партию
  */
 export const CancelSessionParams = zod.object({
   roomId: zod.uuid(),
 });
 
-export const CancelSessionResponse = RoomResponse;
+export const CancelSessionResponse = zod.void();
 
 /**
- * Стартует партию с текущими игроками комнаты (места — по порядку входа). Только владелец, число игроков должно укладываться в ограничения игры (minPlayers–maxPlayers). Игра должна быть доступна (PUBLISHED или HIDDEN).
+ * Стартует партию с текущими игроками комнаты (места — по порядку входа). Только владелец, число игроков должно укладываться в ограничения игры (minPlayers–maxPlayers). Игра должна быть доступна (PUBLISHED или HIDDEN). В ответе комната; по session.id клиент подписывается на поток партии.
  * @summary Начать партию
  */
 export const StartSessionParams = zod.object({
@@ -610,24 +915,24 @@ export const StartSessionParams = zod.object({
 export const StartSessionResponse = RoomResponse;
 
 /**
- * Замораживает идущую партию: ходы запрещены, время хода и сроки возвращения вышедших игроков партии не идут (session.pausedAt; остаток времени хода — moveDeadline − pausedAt). Вход, выход и отмена партии работают. Только владелец. Повторный вызов на паузе ничего не меняет.
+ * Пауза — действие таймера партии: ходы запрещены, время хода и сроки возвращения вышедших игроков партии не идут (state.timer: status PAUSED, pausedAt; остаток времени хода — deadline − pausedAt). Вход, выход и отмена партии работают. Только владелец. Ответ без тела: изменение приходит событием timer-changed потока партии. Повторный вызов на паузе ничего не меняет. У партии без таймера паузы нет.
  * @summary Поставить партию на паузу
  */
 export const PauseSessionParams = zod.object({
   roomId: zod.uuid(),
 });
 
-export const PauseSessionResponse = RoomResponse;
+export const PauseSessionResponse = zod.void();
 
 /**
- * Снимает паузу. Время хода и сроки возвращения вышедших игроков партии сдвигаются на длительность паузы: остаётся столько же времени, сколько было в момент паузы. Только владелец. Без паузы вызов ничего не меняет.
+ * Снимает паузу таймера. Время хода и сроки возвращения вышедших игроков партии сдвигаются на длительность паузы: остаётся столько же времени, сколько было в момент паузы. Только владелец. Ответ без тела: изменение приходит событием timer-changed потока партии. Без паузы вызов ничего не меняет.
  * @summary Продолжить партию
  */
 export const ResumeSessionParams = zod.object({
   roomId: zod.uuid(),
 });
 
-export const ResumeSessionResponse = RoomResponse;
+export const ResumeSessionResponse = zod.void();
 
 /**
  * Email, статус его подтверждения и привязанные способы входа. Подходит, чтобы проверить, залогинен ли пользователь.

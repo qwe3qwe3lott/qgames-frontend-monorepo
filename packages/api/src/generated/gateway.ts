@@ -1224,7 +1224,7 @@ export const getMakeMoveUrl = (
 };
 
 /**
- * Ручка одна на все игры: код игры — в пути, ход — общий конверт `{type, data}`. `type` — вид действия (`PASS` в «игре в ничто»), `data` — его параметры в формате игры. Код игры должен совпадать с игрой комнаты. Ходить может только игрок партии, находящийся в комнате. Если у партии есть таймер, ход переставляет дедлайн (session.moveDeadline). Когда партия заканчивается, комната возвращается в ожидание, а законченная партия остаётся в ответе. Идущая партия продолжается, даже если игра стала временно недоступной.
+ * Ручка одна на все игры: код игры — в пути, ход — общий конверт `{type, data}`. `type` — вид действия (`PASS` в «игре в ничто»), `data` — его параметры в формате игры; допустимые сейчас ходы игрока — moveOptions его игрока в состоянии партии. Код игры должен совпадать с игрой комнаты. Ходить может только игрок партии, находящийся в комнате. Ход проверяется по текущему состоянию партии. Ответ без тела: изменения (ход, очерёдность, варианты ходов, таймер, конец партии) приходят событиями потока партии. Когда партия заканчивается, комната возвращается в ожидание. Идущая партия продолжается, даже если игра стала временно недоступной.
  * @summary Сделать ход
  */
 export const makeMove = async (
@@ -1232,7 +1232,7 @@ export const makeMove = async (
   roomId: string,
   moveRequest: MoveRequest,
   options?: Parameters<typeof apiFetch>[1],
-): Promise<RoomResponse> => {
+): Promise<void> => {
   const getHeaders = (
     h?: NonNullable<RequestInit['headers']>,
   ): Record<string, string | readonly string[]> => {
@@ -1254,7 +1254,7 @@ export const makeMove = async (
     }
     return headers;
   };
-  return apiFetch<RoomResponse>(getMakeMoveUrl(gameCode, roomId), {
+  return apiFetch<void>(getMakeMoveUrl(gameCode, roomId), {
     ...options,
     method: 'POST',
     headers: {
@@ -1741,14 +1741,14 @@ export const getCancelSessionUrl = (roomId: string) => {
 };
 
 /**
- * Завершает идущую партию без результата и возвращает комнату в ожидание. Работает и на паузе. Только владелец.
+ * Завершает идущую партию без результата и возвращает комнату в ожидание. Работает и на паузе. Только владелец. Ответ без тела: поток партии получает session-cancelled и закрывается, поток комнаты — session-changed.
  * @summary Отменить партию
  */
 export const cancelSession = async (
   roomId: string,
   options?: Parameters<typeof apiFetch>[1],
-): Promise<RoomResponse> => {
-  return apiFetch<RoomResponse>(getCancelSessionUrl(roomId), {
+): Promise<void> => {
+  return apiFetch<void>(getCancelSessionUrl(roomId), {
     ...options,
     method: 'DELETE',
   });
@@ -1832,7 +1832,7 @@ export const getStartSessionUrl = (roomId: string) => {
 };
 
 /**
- * Стартует партию с текущими игроками комнаты (места — по порядку входа). Только владелец, число игроков должно укладываться в ограничения игры (minPlayers–maxPlayers). Игра должна быть доступна (PUBLISHED или HIDDEN).
+ * Стартует партию с текущими игроками комнаты (места — по порядку входа). Только владелец, число игроков должно укладываться в ограничения игры (minPlayers–maxPlayers). Игра должна быть доступна (PUBLISHED или HIDDEN). В ответе комната; по session.id клиент подписывается на поток партии.
  * @summary Начать партию
  */
 export const startSession = async (
@@ -1923,14 +1923,14 @@ export const getPauseSessionUrl = (roomId: string) => {
 };
 
 /**
- * Замораживает идущую партию: ходы запрещены, время хода и сроки возвращения вышедших игроков партии не идут (session.pausedAt; остаток времени хода — moveDeadline − pausedAt). Вход, выход и отмена партии работают. Только владелец. Повторный вызов на паузе ничего не меняет.
+ * Пауза — действие таймера партии: ходы запрещены, время хода и сроки возвращения вышедших игроков партии не идут (state.timer: status PAUSED, pausedAt; остаток времени хода — deadline − pausedAt). Вход, выход и отмена партии работают. Только владелец. Ответ без тела: изменение приходит событием timer-changed потока партии. Повторный вызов на паузе ничего не меняет. У партии без таймера паузы нет.
  * @summary Поставить партию на паузу
  */
 export const pauseSession = async (
   roomId: string,
   options?: Parameters<typeof apiFetch>[1],
-): Promise<RoomResponse> => {
-  return apiFetch<RoomResponse>(getPauseSessionUrl(roomId), {
+): Promise<void> => {
+  return apiFetch<void>(getPauseSessionUrl(roomId), {
     ...options,
     method: 'POST',
   });
@@ -2014,14 +2014,14 @@ export const getResumeSessionUrl = (roomId: string) => {
 };
 
 /**
- * Снимает паузу. Время хода и сроки возвращения вышедших игроков партии сдвигаются на длительность паузы: остаётся столько же времени, сколько было в момент паузы. Только владелец. Без паузы вызов ничего не меняет.
+ * Снимает паузу таймера. Время хода и сроки возвращения вышедших игроков партии сдвигаются на длительность паузы: остаётся столько же времени, сколько было в момент паузы. Только владелец. Ответ без тела: изменение приходит событием timer-changed потока партии. Без паузы вызов ничего не меняет.
  * @summary Продолжить партию
  */
 export const resumeSession = async (
   roomId: string,
   options?: Parameters<typeof apiFetch>[1],
-): Promise<RoomResponse> => {
-  return apiFetch<RoomResponse>(getResumeSessionUrl(roomId), {
+): Promise<void> => {
+  return apiFetch<void>(getResumeSessionUrl(roomId), {
     ...options,
     method: 'POST',
   });

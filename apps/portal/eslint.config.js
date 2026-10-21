@@ -21,6 +21,8 @@ export default [
                 '@qgames/game-*',
                 '!@qgames/game-ui',
                 '!@qgames/game-ui/**',
+                // Ядро партии (редьюсеры сессии и модулей) — не пакет игры.
+                '!@qgames/game-core',
               ],
               allowTypeImports: true,
               message:

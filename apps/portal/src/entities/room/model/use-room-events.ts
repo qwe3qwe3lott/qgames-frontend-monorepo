@@ -45,21 +45,14 @@ export interface RoomEvents {
   reconnect: () => void;
 }
 
-/**
- * Частичное событие (участники, настройки) меняет кеш, не сдвигая момент
- * получения данных: по нему и `serverTime` считается смещение часов.
- */
+/** Частичное событие (участники, настройки) меняет поле закешированной комнаты. */
 function patchRoom(
   queryClient: QueryClient,
   roomId: string,
   patch: (room: RoomResponse) => RoomResponse,
 ): void {
-  const queryKey = getGetRoomQueryKey(roomId);
-  const updatedAt = queryClient.getQueryState(queryKey)?.dataUpdatedAt;
-  queryClient.setQueryData<RoomResponse>(
-    queryKey,
-    room => (room === undefined ? undefined : patch(room)),
-    updatedAt === undefined ? undefined : {updatedAt},
+  queryClient.setQueryData<RoomResponse>(getGetRoomQueryKey(roomId), room =>
+    room === undefined ? undefined : patch(room),
   );
 }
 

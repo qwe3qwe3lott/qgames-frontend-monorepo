@@ -8,6 +8,7 @@ import {
   type GameLoader,
 } from '@/entities/game';
 import {memberName, type RoomView, type SessionView} from '@/entities/room';
+import {useSession, useSessionEvents} from '@/entities/session';
 import {useMoveControls} from '@/features/make-move';
 
 export interface GameBoardProps {
@@ -51,6 +52,14 @@ function Board({
   viewerId: string;
 }) {
   const module = use(loadGameModule(room.gameCode, load));
+  // Партия — только из потока: снапшот, затем события журнала (CLAUDE.md §4).
+  const status = useSessionEvents({
+    gameCode: room.gameCode,
+    roomId: room.id,
+    sessionId: session.id,
+    reduce: module.reduce,
+  });
+  const data = useSession(session.id);
   const controls = useMoveControls(room);
   const players: GameBoardPlayer[] = room.members.map(member => ({
     id: member.userId,
@@ -58,12 +67,23 @@ function Board({
     avatar: member.avatar,
   }));
   return (
-    <module.Board
-      session={{...session, clockOffsetMs: room.clockOffsetMs}}
-      players={players}
-      viewerId={viewerId}
-      {...controls}
-    />
+    <>
+      {status === 'reconnecting' ? (
+        <p className="text-sm text-destructive" role="alert">
+          Нет связи с партией — переподключаемся…
+        </p>
+      ) : null}
+      {data === undefined ? (
+        <p className="text-muted-foreground">Загружаем партию…</p>
+      ) : (
+        <module.Board
+          session={data}
+          players={players}
+          viewerId={viewerId}
+          {...controls}
+        />
+      )}
+    </>
   );
 }
 

@@ -39,12 +39,11 @@ export function settingsFromStream(
   };
 }
 
-function sessionFromStream(session: SessionResponseOutput): SessionResponse {
-  return {
-    ...session,
-    moveDeadline: session.moveDeadline ?? null,
-    pausedAt: session.pausedAt ?? null,
-  };
+function sessionFromStream({
+  id,
+  status,
+}: SessionResponseOutput): SessionResponse {
+  return {id, status};
 }
 
 export function roomFromStream(room: RoomResponseOutput): RoomResponse {

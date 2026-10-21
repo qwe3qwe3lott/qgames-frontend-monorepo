@@ -405,6 +405,9 @@ importers:
       '@qgames/api':
         specifier: workspace:*
         version: link:../../packages/api
+      '@qgames/game-core':
+        specifier: workspace:*
+        version: link:../../packages/game-core
       '@qgames/game-nothing':
         specifier: workspace:*
         version: link:../../packages/games/nothing
@@ -544,6 +547,22 @@ importers:
         specifier: 'catalog:'
         version: 6.0.3
 
+  packages/game-core:
+    dependencies:
+      '@qgames/api':
+        specifier: workspace:*
+        version: link:../api
+    devDependencies:
+      '@qgames/config':
+        specifier: workspace:*
+        version: link:../config
+      eslint:
+        specifier: 'catalog:'
+        version: 9.39.5(jiti@2.7.0)(supports-color@10.2.2)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+
   packages/game-ui:
     dependencies:
       '@qgames/ui':
@@ -571,15 +590,18 @@ importers:
 
   packages/games/nothing:
     dependencies:
+      '@qgames/api':
+        specifier: workspace:*
+        version: link:../../api
+      '@qgames/game-core':
+        specifier: workspace:*
+        version: link:../../game-core
       '@qgames/game-ui':
         specifier: workspace:*
         version: link:../../game-ui
       '@qgames/ui':
         specifier: workspace:*
         version: link:../../ui
-      zod:
-        specifier: 'catalog:'
-        version: 4.6.7
     devDependencies:
       '@qgames/config':
         specifier: workspace:*
