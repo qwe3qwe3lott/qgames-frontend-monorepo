@@ -5,7 +5,7 @@
  * OpenAPI spec version: v0
  */
 
-export interface AdminLoginRequest {
+export interface LoginRequest {
   /**
    * @minLength 1
    * @maxLength 64

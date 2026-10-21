@@ -123,7 +123,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AdminLoginRequest"
+                "$ref": "#/components/schemas/LoginRequest"
               }
             }
           },
@@ -261,25 +261,6 @@
           "admins"
         ]
       },
-      "AdminLoginRequest": {
-        "type": "object",
-        "properties": {
-          "login": {
-            "type": "string",
-            "maxLength": 64,
-            "minLength": 1
-          },
-          "password": {
-            "type": "string",
-            "maxLength": 128,
-            "minLength": 1
-          }
-        },
-        "required": [
-          "login",
-          "password"
-        ]
-      },
       "AdminResponse": {
         "type": "object",
         "properties": {
@@ -299,6 +280,25 @@
           "createdAt",
           "id",
           "login"
+        ]
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "login": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1
+          }
+        },
+        "required": [
+          "login",
+          "password"
         ]
       },
       "ProblemDetail": {

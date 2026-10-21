@@ -22,8 +22,8 @@ import type {
 
 import type {
   AdminListResponse,
-  AdminLoginRequest,
   AdminResponse,
+  LoginRequest,
   ProblemDetail,
 } from './model';
 
@@ -339,7 +339,7 @@ export const getLoginUrl = () => {
  * @summary Вход по логину и паролю
  */
 export const login = async (
-  adminLoginRequest: AdminLoginRequest,
+  loginRequest: LoginRequest,
   options?: Parameters<typeof apiFetch>[1],
 ): Promise<AdminResponse> => {
   const getHeaders = (
@@ -370,7 +370,7 @@ export const login = async (
       'Content-Type': 'application/json',
       ...getHeaders(options?.headers),
     },
-    body: JSON.stringify(adminLoginRequest),
+    body: JSON.stringify(loginRequest),
   });
 };
 
@@ -417,9 +417,9 @@ export const getLoginMutationOptions = <
 export type LoginMutationResult = NonNullable<
   Awaited<ReturnType<typeof login>>
 >;
-export type LoginMutationBody = AdminLoginRequest;
+export type LoginMutationBody = LoginRequest;
 export type LoginMutationError = ErrorType<ProblemDetail>;
-export type LoginMutationVariables = {data: AdminLoginRequest};
+export type LoginMutationVariables = {data: LoginRequest};
 
 /**
  * @summary Вход по логину и паролю

@@ -6,8 +6,8 @@
  */
 
 export * from './adminListResponse';
-export * from './adminLoginRequest';
 export * from './adminResponse';
+export * from './loginRequest';
 export * from './problemDetail';
 export * from './problemDetailErrors';
 export * from './problemDetailProperties';
