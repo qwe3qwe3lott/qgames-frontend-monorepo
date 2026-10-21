@@ -17,7 +17,7 @@ export interface RoomMemberView {
   avatar: 'CAT' | 'DOG' | null;
   role: RoomRole;
   owner: boolean;
-  /** Вышел, но льготный срок ещё не истёк: остаётся в списках и на месте. */
+  /** Игрок идущей партии не подключён: остаётся на своём месте до конца партии. */
   leaving: boolean;
 }
 

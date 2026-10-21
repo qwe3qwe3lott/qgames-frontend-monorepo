@@ -8,7 +8,7 @@ import type {RoomUsersChangedEventType} from './roomUsersChangedEventType';
 import type {RoomUsersDto} from './roomUsersDto';
 
 /**
- * Изменился состав участников, их роли, ники, уход (leaving) или владелец
+ * Изменился состав участников, их роли, ники, присутствие игроков партии (leaving) или владелец
  */
 export interface RoomUsersChangedEvent {
   data: RoomUsersDto;

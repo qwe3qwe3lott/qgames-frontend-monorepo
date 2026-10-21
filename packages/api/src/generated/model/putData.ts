@@ -13,5 +13,5 @@ export interface PutData {
   /** Путь от корня документа {status, meta, state}: [] — весь документ, ["state", "timer"], ["state", "players", {"id": "…"}, "moveOptions"] */
   path: PathSegment[];
   /** Новое значение: любой JSON, в том числе null. Схема — схема состояния игры по пути */
-  value?: unknown;
+  value: unknown;
 }

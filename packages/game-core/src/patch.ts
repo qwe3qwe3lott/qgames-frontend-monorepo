@@ -105,8 +105,9 @@ function leafOperation(
     case 'PUT': {
       const {value} = event.data;
       return () => {
-        // Сервер всегда присылает value (в том числе null); отсутствие —
-        // сообщение не по контракту.
+        // value обязателен по контракту (может быть null), но Zod `unknown()`
+        // пропускает и отсутствующий ключ: отсутствие — сообщение не по
+        // контракту.
         if (value === undefined) {
           throw new PatchPathError('PUT без value');
         }
