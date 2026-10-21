@@ -1,0 +1,20 @@
+# Контекст сборки — корень репозитория (docker/app.Dockerfile).
+# apps/*/.env НЕ исключаются: из них сборка берёт PUBLIC_* / NEXT_PUBLIC_*.
+
+**/node_modules
+**/.turbo
+**/dist
+**/out
+**/.next
+**/.tanstack
+**/*.tsbuildinfo
+**/next-env.d.ts
+**/npm-debug.log*
+**/pnpm-debug.log*
+
+.git
+.idea
+.vscode
+docker-compose.yml
+docker/app.Dockerfile
+.dockerignore

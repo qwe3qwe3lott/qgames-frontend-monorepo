@@ -230,6 +230,7 @@ pnpm api:generate            # сгенерировать клиент API (Orva
 
 - Порты: portal — http://localhost:3000, admin — http://localhost:3001, landing — http://localhost:3002.
 - Вход через Google локально: в Google Cloud Console настроить OAuth consent screen (External, Testing, себя — в Test users), создать OAuth client ID типа Web application с Authorized JavaScript origins `http://localhost:3000` и `http://localhost` (redirect URI не нужны). Client ID прописать в `GOOGLE_CLIENT_IDS` (`.env` бэкенда, затем `docker compose up -d`) и в `PUBLIC_GOOGLE_CLIENT_ID` (`apps/portal/.env`).
+- Прод-сборка в Docker: `docker compose up --build -d --wait` (portal :3000, admin :3001, landing :3002; статику раздаёт nginx не от root — `nginxinc/nginx-unprivileged`, внутри контейнера порт 8080; hot reload нет — для разработки `pnpm dev`). Общий образ — `docker/app.Dockerfile` (аргументы `APP`, `OUT`, `NGINX_CONF`), конфиги nginx — `docker/nginx/` (`spa.conf` — fallback на `index.html`, `landing.conf` — `404.html`); заголовки безопасности (`X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`) задаются на уровне server и через `add_header_inherit merge` приходят на всех ответах. CSP — решить при настройке прод-деплоя. Переменные `PUBLIC_*`/`NEXT_PUBLIC_*` вшиваются при сборке из `apps/<app>/.env` (нет файла — сборка падает): после правки `.env` — `--build`. Бэкенд в этот compose не входит.
 - Бэкенд поднимается в его репозитории: `docker compose up --build -d --wait`. Gateway и Swagger: http://localhost:8080/swagger-ui.html, письма с кодами — Mailpit http://localhost:8025.
 - Переменные окружения приложений — в `.env` приложения (шаблон — `.env.example`).
 - Статический результат `landing` — `apps/landing/out/`, Rsbuild-приложений — `apps/<app>/dist/`.
@@ -247,13 +248,15 @@ pnpm api:generate            # сгенерировать клиент API (Orva
 
 ### Приложения и сборка
 
-| Вариант                                     | Почему отклонён                                                                                                                             | Что вместо                         |
-| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
-| Весь портал на Next.js (SSR/RSC)            | SEO нужен только публичным страницам; SSR добавляет границы server/client, проброс кук, Node-сервер в проде и другой роутинг, чем в админке | CSR-портал + статический `landing` |
-| Лендинг на Rsbuild с самописным пререндером | Пререндер пришлось бы писать и поддерживать самим                                                                                           | Next.js со статическим экспортом   |
-| `next-rspack` в landing                     | Экспериментальный плагин; пользователь видел проблемы с остановкой dev-сервера                                                              | Turbopack (по умолчанию в Next)    |
-| Чистый Rspack (`@rspack/cli`) для SPA       | Большой ручной конфиг (loaders, HMR, PostCSS, HTML)                                                                                         | Rsbuild                            |
-| Node.js 22                                  | Maintenance LTS, поддержка заканчивается в апреле 2027                                                                                      | Node.js 24 LTS                     |
+| Вариант                                     | Почему отклонён                                                                                                                             | Что вместо                                              |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Весь портал на Next.js (SSR/RSC)            | SEO нужен только публичным страницам; SSR добавляет границы server/client, проброс кук, Node-сервер в проде и другой роутинг, чем в админке | CSR-портал + статический `landing`                      |
+| Лендинг на Rsbuild с самописным пререндером | Пререндер пришлось бы писать и поддерживать самим                                                                                           | Next.js со статическим экспортом                        |
+| `next-rspack` в landing                     | Экспериментальный плагин; пользователь видел проблемы с остановкой dev-сервера                                                              | Turbopack (по умолчанию в Next)                         |
+| Чистый Rspack (`@rspack/cli`) для SPA       | Большой ручной конфиг (loaders, HMR, PostCSS, HTML)                                                                                         | Rsbuild                                                 |
+| Node.js 22                                  | Maintenance LTS, поддержка заканчивается в апреле 2027                                                                                      | Node.js 24 LTS                                          |
+| Dev-режим (`pnpm dev`) в контейнере         | bind-mount на Windows медленный, вотчеры капризны                                                                                           | Прод-сборка + nginx; для разработки `pnpm dev` локально |
+| Build args для `PUBLIC_*` в compose         | Решение пользователя                                                                                                                        | `apps/<app>/.env` в контексте сборки                    |
 
 ### Код и библиотеки
 
