@@ -21,6 +21,11 @@ export {
   type RoomSettingsValues,
 } from './model/settings';
 export {
+  useRoomEvents,
+  type RoomEvents,
+  type RoomEventsStatus,
+} from './model/use-room-events';
+export {
   toRoomView,
   type RoomMemberView,
   type RoomRole,

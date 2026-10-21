@@ -5,4 +5,7 @@
  * OpenAPI spec version: v0
  */
 
-export type SessionResponseState = {[key: string]: unknown};
+/**
+ * @nullable
+ */
+export type MoveOptionDtoData = {[key: string]: unknown} | null;

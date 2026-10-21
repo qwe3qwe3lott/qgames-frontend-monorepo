@@ -1,3 +1,4 @@
+import type {GameStateRules, SessionData} from '@qgames/game-core';
 import type {ComponentType} from 'react';
 
 // Форма модуля игры, которую ожидает портал. Общий API игр ещё не выбран
@@ -12,21 +13,8 @@ export interface GameBoardPlayer {
   avatar: GameAvatar;
 }
 
-export interface GameBoardSession {
-  status: 'IN_PROGRESS' | 'FINISHED' | 'CANCELLED';
-  players: readonly string[];
-  version: number;
-  state: unknown;
-  /** Дедлайн текущего хода по часам сервера (ISO 8601); null — без таймера или партия не идёт. */
-  moveDeadline: string | null;
-  /**
-   * Момент постановки на паузу по часам сервера (ISO 8601); null — не на паузе.
-   * На паузе ходить нельзя, остаток времени хода = moveDeadline − pausedAt.
-   */
-  pausedAt: string | null;
-  /** Смещение часов: время сервера минус `Date.now()` клиента, мс. */
-  clockOffsetMs: number;
-}
+/** Партия из потока: снапшот с применёнными событиями и смещение часов. */
+export type GameBoardSession = SessionData;
 
 /** Ход — общий конверт бэкенда: вид действия и его параметры в формате игры. */
 export interface GameMove {
@@ -43,6 +31,13 @@ export interface GameBoardProps {
   moveError: string | null;
 }
 
-export interface GameModule {
+/**
+ * Модуль игры: доска и то, что игра объявляет о своём состоянии (как
+ * `GameRules` на бэкенде) — модули-механики (`modules`: core, turns, timer) и
+ * guard своих игровых полей (`isGameState`). События журнала применяет общий
+ * `applySessionEvent`, своего редьюсера у игры нет; по `modules` и
+ * `isGameState` поток партии проверяет состояние после каждого события.
+ */
+export interface GameModule extends GameStateRules {
   Board: ComponentType<GameBoardProps>;
 }

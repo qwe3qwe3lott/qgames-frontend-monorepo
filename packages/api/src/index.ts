@@ -10,4 +10,4 @@ export {
   type ApplyFieldErrorsOptions,
   type SetFieldError,
 } from './field-errors';
-export {configureApi} from './mutator';
+export {configureApi, refreshSession, resolveUrl} from './mutator';

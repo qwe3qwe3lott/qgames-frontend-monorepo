@@ -1,15 +1,9 @@
-import {isApiError} from '@qgames/api';
 import {useMakeMove} from '@qgames/api/gateway';
 import type {MoveRequest} from '@qgames/api/gateway/model';
-import {useQueryClient} from '@tanstack/react-query';
 
 import type {GameMove} from '@/entities/game';
-import {
-  invalidateRoom,
-  roomErrorMessage,
-  setRoomCache,
-  type RoomView,
-} from '@/entities/room';
+import {roomErrorMessage, type RoomView} from '@/entities/room';
+import {useSessionAdvance} from '@/entities/session';
 
 export interface MoveControls {
   onMove: (move: GameMove) => void;
@@ -18,24 +12,21 @@ export interface MoveControls {
 }
 
 /**
- * Отправка хода (`{type, data}`) с версией партии, которую видел клиент.
- * Если партия уже изменилась (SESSION_CONFLICT) или стоит на паузе
- * (SESSION_PAUSED), комната перечитывается.
+ * Отправка хода (`{type, data}`). Ответ без тела: ход, очерёдность, варианты
+ * ходов и таймер приходят событиями потока партии. Ошибки — по `code`
+ * (`SESSION_PAUSED`, `MOVE_REJECTED` и др.). После 204 ход считается
+ * отправляемым, пока событие потока не сдвинет seq партии: иначе кнопка
+ * ненадолго оживает и повторный клик получает `NOT_YOUR_TURN`.
  */
 export function useMoveControls(room: RoomView): MoveControls {
-  const queryClient = useQueryClient();
+  const advance = useSessionAdvance(room.session?.id ?? null);
   const makeMove = useMakeMove({
     mutation: {
-      onSuccess: data => {
-        setRoomCache(queryClient, room.id, data);
+      onSuccess: () => {
+        advance.arm();
       },
-      onError: error => {
-        if (
-          isApiError(error) &&
-          (error.code === 'SESSION_CONFLICT' || error.code === 'SESSION_PAUSED')
-        ) {
-          void invalidateRoom(queryClient, room.id);
-        }
+      onError: () => {
+        advance.clear();
       },
     },
   });
@@ -45,16 +36,14 @@ export function useMoveControls(room: RoomView): MoveControls {
       if (move.data !== undefined) {
         request.data = {...move.data};
       }
-      if (room.session !== null) {
-        request.expectedVersion = room.session.version;
-      }
+      advance.mark();
       makeMove.mutate({
         gameCode: room.gameCode,
         roomId: room.id,
         data: request,
       });
     },
-    movePending: makeMove.isPending,
+    movePending: makeMove.isPending || advance.waiting,
     moveError: makeMove.isError ? roomErrorMessage(makeMove.error) : null,
   };
 }

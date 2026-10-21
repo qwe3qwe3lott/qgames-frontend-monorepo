@@ -1,0 +1,51 @@
+# Локальный запуск фронта в прод-сборке: docker compose up --build -d --wait
+# Приложения собираются в статику и раздаются nginx (без hot reload; для разработки — pnpm dev):
+# portal — http://localhost:3000, admin — http://localhost:3001, landing — http://localhost:3002.
+# Переменные окружения вшиваются при сборке из apps/<app>/.env (шаблон — .env.example): после правки — --build.
+# Бэкенд поднимается отдельно в своём репозитории (qgames-backend-monorepo): docker compose up --build -d --wait.
+
+x-app-build: &app-build
+  context: .
+  dockerfile: docker/app.Dockerfile
+
+# 127.0.0.1, а не localhost: nginx слушает только IPv4 (порт 8080 — nginx-unprivileged), а localhost в alpine может разрешиться в ::1.
+x-app-healthcheck: &app-healthcheck
+  test: ['CMD', 'wget', '-q', '--spider', 'http://127.0.0.1:8080/']
+  interval: 10s
+  timeout: 3s
+  retries: 6
+  start_period: 5s
+
+services:
+  portal:
+    build:
+      <<: *app-build
+      args:
+        APP: portal
+        OUT: dist
+        NGINX_CONF: spa.conf
+    ports:
+      - '3000:8080'
+    healthcheck: *app-healthcheck
+
+  admin:
+    build:
+      <<: *app-build
+      args:
+        APP: admin
+        OUT: dist
+        NGINX_CONF: spa.conf
+    ports:
+      - '3001:8080'
+    healthcheck: *app-healthcheck
+
+  landing:
+    build:
+      <<: *app-build
+      args:
+        APP: landing
+        OUT: out
+        NGINX_CONF: landing.conf
+    ports:
+      - '3002:8080'
+    healthcheck: *app-healthcheck

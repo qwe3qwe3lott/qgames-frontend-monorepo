@@ -1,0 +1,4 @@
+{
+  "extends": "@qgames/config/tsconfig/base.json",
+  "include": ["src", "*.config.js"]
+}

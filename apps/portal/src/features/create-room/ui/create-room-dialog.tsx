@@ -17,7 +17,6 @@ import {
   DialogTrigger,
 } from '@qgames/ui/components/dialog';
 import {FieldError, FieldGroup} from '@qgames/ui/components/field';
-import {useQueryClient} from '@tanstack/react-query';
 import {useNavigate} from '@tanstack/react-router';
 import {useMemo} from 'react';
 import {useForm} from 'react-hook-form';
@@ -34,7 +33,6 @@ import {
   roomErrorMessage,
   RoomSettingsFields,
   roomSettingsSchema,
-  setRoomCache,
   toRoomSettings,
   toRoomSettingsValues,
   type RoomSettingsValues,
@@ -56,7 +54,6 @@ interface CreateRoomFormProps {
 }
 
 function CreateRoomForm({gameCode, rules}: CreateRoomFormProps) {
-  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const schema = useMemo(() => roomSettingsSchema(rules), [rules]);
   const form = useForm<RoomSettingsValues>({
@@ -66,7 +63,6 @@ function CreateRoomForm({gameCode, rules}: CreateRoomFormProps) {
   const createRoom = useCreateRoom({
     mutation: {
       onSuccess: room => {
-        setRoomCache(queryClient, room.id, room);
         void navigate({
           to: '/games/$gameCode/rooms/$roomId',
           params: {gameCode, roomId: room.id},

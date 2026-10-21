@@ -11,9 +11,10 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@qgames/api": "workspace:*",
+    "@qgames/game-core": "workspace:*",
     "@qgames/game-ui": "workspace:*",
-    "@qgames/ui": "workspace:*",
-    "zod": "catalog:"
+    "@qgames/ui": "workspace:*"
   },
   "devDependencies": {
     "@qgames/config": "workspace:*",

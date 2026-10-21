@@ -4,17 +4,9 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
-import type {SessionResponseState} from './sessionResponseState';
 import type {SessionResponseStatus} from './sessionResponseStatus';
 
 export interface SessionResponse {
   id: string;
-  /** @nullable */
-  moveDeadline?: string | null;
-  /** @nullable */
-  pausedAt?: string | null;
-  players: string[];
-  state: SessionResponseState;
   status: SessionResponseStatus;
-  version: number;
 }

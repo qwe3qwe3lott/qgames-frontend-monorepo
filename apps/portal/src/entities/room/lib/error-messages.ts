@@ -13,13 +13,15 @@ const ROOM_MESSAGES: Readonly<Record<string, string>> = {
   ROOM_NOT_IN_GAME: 'Партия не идёт.',
   NO_FREE_SEAT: 'Свободных мест игрока нет.',
   NOT_ENOUGH_PLAYERS: 'Число игроков не подходит игре.',
+  SESSION_NOT_FOUND: 'Партия не найдена.',
   SESSION_PAUSED: 'Партия на паузе — ходить нельзя.',
-  SESSION_CONFLICT: 'Партия изменилась — состояние обновлено, повторите ход.',
+  SESSION_NOT_PAUSABLE: 'В партии без таймера паузы нет.',
 };
 
 const MOVE_REASONS: Readonly<Record<string, string>> = {
   NOT_YOUR_TURN: 'Сейчас ход другого игрока.',
   GAME_FINISHED: 'Партия уже закончилась.',
+  UNKNOWN_MOVE: 'Такого хода в игре нет.',
 };
 
 /** Текст ошибки действия с комнатой или партией. */

@@ -1100,7 +1100,7 @@ export const getCreateRoomUrl = (gameCode: 'nothing' | 'carcassonne') => {
 };
 
 /**
- * Создаёт комнату под игру из пути с заданными настройками: правила времени и настройки игры. Создатель становится владельцем и первым игроком, ссылку на комнату (её id) можно отправить другим игрокам. Игра должна быть доступна (PUBLISHED или HIDDEN): это проверяется до настроек. Границы настроек и значения по умолчанию — в параметрах игры (GET /api/games/{gameCode}). Ошибки настроек отдаются по полям тела (например, settings.gameSettings.rounds), как у валидации запроса.
+ * Создаёт комнату под игру из пути с заданными настройками: правила времени и настройки игры. Ссылку на комнату (её id) можно отправить другим игрокам. В ответе комната ещё пустая (members пустой, ownerId = null): создатель входит в неё игроком и становится владельцем, подключившись к потоку событий комнаты в течение 15 с; позже владельцем станет первый вошедший. Игра должна быть доступна (PUBLISHED или HIDDEN): это проверяется до настроек. Границы настроек и значения по умолчанию — в параметрах игры (GET /api/games/{gameCode}). Ошибки настроек отдаются по полям тела (например, settings.gameSettings.rounds), как у валидации запроса.
  * @summary Создать комнату
  */
 export const createRoom = async (
@@ -1224,7 +1224,7 @@ export const getMakeMoveUrl = (
 };
 
 /**
- * Ручка одна на все игры: код игры — в пути, ход — общий конверт `{type, data}`. `type` — вид действия (`PASS` в «игре в ничто»), `data` — его параметры в формате игры. Код игры должен совпадать с игрой комнаты. Ходить может только игрок партии, находящийся в комнате. Если у партии есть таймер, ход переставляет дедлайн (session.moveDeadline). Когда партия заканчивается, комната возвращается в ожидание, а законченная партия остаётся в ответе. Идущая партия продолжается, даже если игра стала временно недоступной.
+ * Ручка одна на все игры: код игры — в пути, ход — общий конверт `{type, data}`. `type` — вид действия (`PASS` в «игре в ничто»), `data` — его параметры в формате игры; допустимые сейчас ходы игрока — moveOptions его игрока в состоянии партии. Код игры должен совпадать с игрой комнаты. Ходить может только игрок партии, находящийся в комнате. Ход проверяется по текущему состоянию партии. Ответ без тела: изменения (ход, очерёдность, варианты ходов, таймер, конец партии) приходят событиями потока партии. Когда партия заканчивается, комната возвращается в ожидание. Идущая партия продолжается, даже если игра стала временно недоступной.
  * @summary Сделать ход
  */
 export const makeMove = async (
@@ -1232,7 +1232,7 @@ export const makeMove = async (
   roomId: string,
   moveRequest: MoveRequest,
   options?: Parameters<typeof apiFetch>[1],
-): Promise<RoomResponse> => {
+): Promise<void> => {
   const getHeaders = (
     h?: NonNullable<RequestInit['headers']>,
   ): Record<string, string | readonly string[]> => {
@@ -1254,7 +1254,7 @@ export const makeMove = async (
     }
     return headers;
   };
-  return apiFetch<RoomResponse>(getMakeMoveUrl(gameCode, roomId), {
+  return apiFetch<void>(getMakeMoveUrl(gameCode, roomId), {
     ...options,
     method: 'POST',
     headers: {
@@ -1477,7 +1477,7 @@ export const getGetRoomUrl = (roomId: string) => {
 };
 
 /**
- * Участники с ролями, владелец, текущая или последняя партия. Доступно и до входа в комнату — так страница по ссылке показывает комнату ещё до входа.
+ * Участники с ролями, владелец, текущая или последняя партия. Доступно и до входа в комнату (подключения к потоку событий) — так страница по ссылке показывает комнату ещё до входа.
  * @summary Получить комнату
  */
 export const getRoom = async (
@@ -1615,188 +1615,6 @@ export function useGetRoom<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-export const getJoinRoomUrl = (roomId: string) => {
-  return `/api/rooms/${roomId}/join`;
-};
-
-/**
- * Игрок идущей партии возвращается на своё место. Иначе, если партия не идёт и есть свободное место, пользователь становится игроком, в остальных случаях — наблюдателем. В пустой комнате вошедший становится владельцем. Вход вышедшего участника, пока не истёк срок выхода, отменяет выход: роль и владение сохраняются. Повторный вход ничего не меняет.
- * @summary Войти в комнату
- */
-export const joinRoom = async (
-  roomId: string,
-  options?: Parameters<typeof apiFetch>[1],
-): Promise<RoomResponse> => {
-  return apiFetch<RoomResponse>(getJoinRoomUrl(roomId), {
-    ...options,
-    method: 'POST',
-  });
-};
-
-export const getJoinRoomMutationKey = () => ['joinRoom'] as const;
-
-export const getJoinRoomMutationOptions = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof joinRoom>>,
-    TError,
-    JoinRoomMutationVariables,
-    TContext
-  >;
-  request?: SecondParameter<typeof apiFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof joinRoom>>,
-  TError,
-  JoinRoomMutationVariables,
-  TContext
-> => {
-  const mutationKey = getJoinRoomMutationKey();
-  const {mutation: mutationOptions, request: requestOptions} = options
-    ? options.mutation &&
-      'mutationKey' in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-    : {mutation: {mutationKey}, request: undefined};
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof joinRoom>>,
-    JoinRoomMutationVariables
-  > = props => {
-    const {roomId} = props ?? {};
-
-    return joinRoom(roomId, requestOptions);
-  };
-
-  return {mutationFn, ...mutationOptions};
-};
-
-export type JoinRoomMutationResult = NonNullable<
-  Awaited<ReturnType<typeof joinRoom>>
->;
-
-export type JoinRoomMutationError = ErrorType<ProblemDetail>;
-export type JoinRoomMutationVariables = {roomId: string};
-
-/**
- * @summary Войти в комнату
- */
-export const useJoinRoom = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof joinRoom>>,
-      TError,
-      JoinRoomMutationVariables,
-      TContext
-    >;
-    request?: SecondParameter<typeof apiFetch>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof joinRoom>>,
-  TError,
-  JoinRoomMutationVariables,
-  TContext
-> => {
-  return useMutation(getJoinRoomMutationOptions(options), queryClient);
-};
-
-export const getLeaveRoomUrl = (roomId: string) => {
-  return `/api/rooms/${roomId}/leave`;
-};
-
-/**
- * Выйти можно всегда, но выход отложенный: участник помечается уходящим (leaving) и до истечения срока сохраняет роль, место и владение, а вход в комнату в пределах срока отменяет выход. Срок: игроку идущей партии его задаёт игра (в «игре в ничто» 30 с, на паузе отсчёт заморожен), владельцу вне игры — 5 с, остальным — 1 с. По истечении срока участник удаляется: игрок идущей партии сохраняет место и может вернуться, владение переходит к самому раннему из оставшихся: сначала к присутствующим, к уходящим — только если присутствующих нет; в каждой группе сначала игроки, затем наблюдатели. Пустая комната удаляется автоматически через 30 минут. Повторный выход срок не продлевает.
- * @summary Выйти из комнаты
- */
-export const leaveRoom = async (
-  roomId: string,
-  options?: Parameters<typeof apiFetch>[1],
-): Promise<void> => {
-  return apiFetch<void>(getLeaveRoomUrl(roomId), {
-    ...options,
-    method: 'POST',
-  });
-};
-
-export const getLeaveRoomMutationKey = () => ['leaveRoom'] as const;
-
-export const getLeaveRoomMutationOptions = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof leaveRoom>>,
-    TError,
-    LeaveRoomMutationVariables,
-    TContext
-  >;
-  request?: SecondParameter<typeof apiFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof leaveRoom>>,
-  TError,
-  LeaveRoomMutationVariables,
-  TContext
-> => {
-  const mutationKey = getLeaveRoomMutationKey();
-  const {mutation: mutationOptions, request: requestOptions} = options
-    ? options.mutation &&
-      'mutationKey' in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-    : {mutation: {mutationKey}, request: undefined};
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof leaveRoom>>,
-    LeaveRoomMutationVariables
-  > = props => {
-    const {roomId} = props ?? {};
-
-    return leaveRoom(roomId, requestOptions);
-  };
-
-  return {mutationFn, ...mutationOptions};
-};
-
-export type LeaveRoomMutationResult = NonNullable<
-  Awaited<ReturnType<typeof leaveRoom>>
->;
-
-export type LeaveRoomMutationError = ErrorType<ProblemDetail>;
-export type LeaveRoomMutationVariables = {roomId: string};
-
-/**
- * @summary Выйти из комнаты
- */
-export const useLeaveRoom = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof leaveRoom>>,
-      TError,
-      LeaveRoomMutationVariables,
-      TContext
-    >;
-    request?: SecondParameter<typeof apiFetch>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof leaveRoom>>,
-  TError,
-  LeaveRoomMutationVariables,
-  TContext
-> => {
-  return useMutation(getLeaveRoomMutationOptions(options), queryClient);
-};
-
 export const getChangeRoleUrl = (roomId: string) => {
   return `/api/rooms/${roomId}/role`;
 };
@@ -1923,14 +1741,14 @@ export const getCancelSessionUrl = (roomId: string) => {
 };
 
 /**
- * Завершает идущую партию без результата и возвращает комнату в ожидание. Работает и на паузе. Только владелец.
+ * Завершает идущую партию без результата и возвращает комнату в ожидание. Работает и на паузе. Только владелец. Ответ без тела: поток партии получает session-cancelled и закрывается, поток комнаты — session-changed.
  * @summary Отменить партию
  */
 export const cancelSession = async (
   roomId: string,
   options?: Parameters<typeof apiFetch>[1],
-): Promise<RoomResponse> => {
-  return apiFetch<RoomResponse>(getCancelSessionUrl(roomId), {
+): Promise<void> => {
+  return apiFetch<void>(getCancelSessionUrl(roomId), {
     ...options,
     method: 'DELETE',
   });
@@ -2014,7 +1832,7 @@ export const getStartSessionUrl = (roomId: string) => {
 };
 
 /**
- * Стартует партию с текущими игроками комнаты (места — по порядку входа). Только владелец, число игроков должно укладываться в ограничения игры (minPlayers–maxPlayers). Игра должна быть доступна (PUBLISHED или HIDDEN).
+ * Стартует партию с текущими игроками комнаты (места — по порядку входа). Только владелец, число игроков должно укладываться в ограничения игры (minPlayers–maxPlayers). Игра должна быть доступна (PUBLISHED или HIDDEN). В ответе комната; по session.id клиент подписывается на поток партии.
  * @summary Начать партию
  */
 export const startSession = async (
@@ -2105,14 +1923,14 @@ export const getPauseSessionUrl = (roomId: string) => {
 };
 
 /**
- * Замораживает идущую партию: ходы запрещены, время хода и сроки возвращения вышедших игроков партии не идут (session.pausedAt; остаток времени хода — moveDeadline − pausedAt). Вход, выход и отмена партии работают. Только владелец. Повторный вызов на паузе ничего не меняет.
+ * Пауза — действие таймера партии: ходы запрещены, время хода не идёт (state.timer: status PAUSED, pausedAt; остаток времени хода — deadline − pausedAt). Окно владения пауза не замораживает. Вход, выход и отмена партии работают. Только владелец. Ответ без тела: изменение приходит событием game-paused потока партии. Повторный вызов на паузе ничего не меняет. У партии без таймера паузы нет.
  * @summary Поставить партию на паузу
  */
 export const pauseSession = async (
   roomId: string,
   options?: Parameters<typeof apiFetch>[1],
-): Promise<RoomResponse> => {
-  return apiFetch<RoomResponse>(getPauseSessionUrl(roomId), {
+): Promise<void> => {
+  return apiFetch<void>(getPauseSessionUrl(roomId), {
     ...options,
     method: 'POST',
   });
@@ -2196,14 +2014,14 @@ export const getResumeSessionUrl = (roomId: string) => {
 };
 
 /**
- * Снимает паузу. Время хода и сроки возвращения вышедших игроков партии сдвигаются на длительность паузы: остаётся столько же времени, сколько было в момент паузы. Только владелец. Без паузы вызов ничего не меняет.
+ * Снимает паузу таймера. Время хода сдвигается на длительность паузы: остаётся столько же времени, сколько было в момент паузы. Только владелец. Ответ без тела: изменение приходит событием game-resumed потока партии. Без паузы вызов ничего не меняет.
  * @summary Продолжить партию
  */
 export const resumeSession = async (
   roomId: string,
   options?: Parameters<typeof apiFetch>[1],
-): Promise<RoomResponse> => {
-  return apiFetch<RoomResponse>(getResumeSessionUrl(roomId), {
+): Promise<void> => {
+  return apiFetch<void>(getResumeSessionUrl(roomId), {
     ...options,
     method: 'POST',
   });
