@@ -1,6 +1,4 @@
-import {isApiError} from '@qgames/api';
-
-import {errorMessage} from '@/shared/lib';
+import {errorMessage, isApiError} from '@qgames/api';
 
 const ROOM_MESSAGES: Readonly<Record<string, string>> = {
   ROOM_NOT_FOUND: 'Комнаты нет или она удалена.',

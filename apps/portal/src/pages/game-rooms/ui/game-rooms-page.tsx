@@ -1,9 +1,9 @@
+import {errorMessage} from '@qgames/api';
 import {useGetGame} from '@qgames/api/gateway';
+import {PageLayout} from '@qgames/ui/components/page-layout';
 
 import {playersLabel, type GameEntry} from '@/entities/game';
 import {CreateRoomDialog} from '@/features/create-room';
-import {errorMessage} from '@/shared/lib';
-import {PageLayout} from '@/shared/ui';
 
 export interface GameRoomsPageProps {
   game: GameEntry;

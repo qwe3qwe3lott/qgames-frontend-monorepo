@@ -1,5 +1,6 @@
+import {PageLayout} from '@qgames/ui/components/page-layout';
+
 import {VerifyEmailForm} from '@/features/verify-email';
-import {PageLayout} from '@/shared/ui';
 
 export interface VerifyEmailPageProps {
   email: string;

@@ -1,3 +1,4 @@
+import {errorMessage} from '@qgames/api';
 import {useListGames} from '@qgames/api/gateway';
 import type {GameSummaryDto} from '@qgames/api/gateway/model';
 import {Button} from '@qgames/ui/components/button';
@@ -7,10 +8,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@qgames/ui/components/card';
+import {PageLayout} from '@qgames/ui/components/page-layout';
 import {Link} from '@tanstack/react-router';
-
-import {errorMessage} from '@/shared/lib';
-import {PageLayout} from '@/shared/ui';
 
 /** Карточка игры каталога со ссылкой на создание комнаты. */
 function GameCard({game}: {game: GameSummaryDto}) {

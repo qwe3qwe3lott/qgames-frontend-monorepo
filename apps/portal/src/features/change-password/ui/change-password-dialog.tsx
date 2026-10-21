@@ -1,5 +1,5 @@
 import {zodResolver} from '@hookform/resolvers/zod';
-import {isApiError} from '@qgames/api';
+import {applyFieldErrors, errorMessage, isApiError} from '@qgames/api';
 import {
   getGetCurrentUserQueryKey,
   useChangePassword,
@@ -26,8 +26,6 @@ import {Input} from '@qgames/ui/components/input';
 import {useQueryClient} from '@tanstack/react-query';
 import {useState} from 'react';
 import {useForm} from 'react-hook-form';
-
-import {applyFieldErrors, errorMessage} from '@/shared/lib';
 
 import {changePasswordSchema, type ChangePasswordValues} from '../model/schema';
 

@@ -1,3 +1,4 @@
+import {errorMessage} from '@qgames/api';
 import {
   getGetCurrentUserQueryKey,
   useLoginWithGoogle,
@@ -6,7 +7,6 @@ import {useQueryClient} from '@tanstack/react-query';
 import {useNavigate} from '@tanstack/react-router';
 
 import {env} from '@/shared/config';
-import {errorMessage} from '@/shared/lib';
 import {GoogleButton} from '@/shared/ui';
 
 const GOOGLE_LOGIN_MESSAGES = {

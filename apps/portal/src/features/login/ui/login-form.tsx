@@ -1,5 +1,5 @@
 import {zodResolver} from '@hookform/resolvers/zod';
-import {isApiError} from '@qgames/api';
+import {applyFieldErrors, errorMessage, isApiError} from '@qgames/api';
 import {getGetCurrentUserQueryKey, useLogin} from '@qgames/api/gateway';
 import {Button} from '@qgames/ui/components/button';
 import {
@@ -12,8 +12,6 @@ import {Input} from '@qgames/ui/components/input';
 import {useQueryClient} from '@tanstack/react-query';
 import {useNavigate} from '@tanstack/react-router';
 import {useForm} from 'react-hook-form';
-
-import {applyFieldErrors, errorMessage} from '@/shared/lib';
 
 import {loginSchema, type LoginValues} from '../model/schema';
 

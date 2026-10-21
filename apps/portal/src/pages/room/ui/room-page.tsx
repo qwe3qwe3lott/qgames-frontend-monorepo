@@ -1,10 +1,10 @@
 import {isApiError} from '@qgames/api';
 import {useGetGame, useGetRoom} from '@qgames/api/gateway';
+import {PageLayout} from '@qgames/ui/components/page-layout';
 
 import type {GameEntry} from '@/entities/game';
 import {membership, roomErrorMessage, toRoomView} from '@/entities/room';
 import {useRoomPresence} from '@/features/room-membership';
-import {PageLayout} from '@/shared/ui';
 import {GameBoard} from '@/widgets/game-board';
 import {RoomPanel} from '@/widgets/room-panel';
 

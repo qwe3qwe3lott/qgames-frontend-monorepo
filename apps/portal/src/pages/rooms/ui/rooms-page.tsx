@@ -1,4 +1,4 @@
-import {PageLayout} from '@/shared/ui';
+import {PageLayout} from '@qgames/ui/components/page-layout';
 
 export function RoomsPage() {
   return (

@@ -1,4 +1,5 @@
 import {zodResolver} from '@hookform/resolvers/zod';
+import {applyFieldErrors} from '@qgames/api';
 import {useGetGame, useUpdateRoomSettings} from '@qgames/api/gateway';
 import type {GameRulesDto} from '@qgames/api/gateway/model';
 import {Button} from '@qgames/ui/components/button';
@@ -29,7 +30,6 @@ import {
   type RoomSettingsValues,
   type RoomView,
 } from '@/entities/room';
-import {applyFieldErrors} from '@/shared/lib';
 import {WithHint} from '@/shared/ui';
 
 const IN_GAME_HINT = 'Настройки меняются только между партиями';

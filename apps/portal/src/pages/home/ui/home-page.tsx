@@ -1,7 +1,6 @@
 import {Button} from '@qgames/ui/components/button';
+import {PageLayout} from '@qgames/ui/components/page-layout';
 import {Link} from '@tanstack/react-router';
-
-import {PageLayout} from '@/shared/ui';
 
 export function HomePage() {
   return (

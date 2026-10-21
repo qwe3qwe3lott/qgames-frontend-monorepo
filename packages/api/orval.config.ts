@@ -4,8 +4,17 @@ import {
   type OpenApiOperationObject,
 } from 'orval';
 
-const input = {target: './openapi/gateway.json'};
 const hooks = {afterAllFilesWrite: 'prettier --write'};
+
+/** Общие настройки react-query-клиента: один mutator на оба gateway. */
+const queryOverride = {
+  mutator: {path: './src/mutator.ts', name: 'apiFetch'},
+  fetch: {includeHttpResponseReturnType: false},
+  query: {signal: true, shouldExportKeys: true},
+};
+
+const gatewayInput = {target: './openapi/gateway.json'};
+const adminGatewayInput = {target: './openapi/admin-gateway.json'};
 
 const EVENT_STREAM = 'text/event-stream';
 
@@ -49,8 +58,9 @@ const withoutEventStreams = defineTransformer(spec => {
 });
 
 export default defineConfig({
+  // user-gateway — портал.
   gateway: {
-    input: {...input, override: {transformer: withoutEventStreams}},
+    input: {...gatewayInput, override: {transformer: withoutEventStreams}},
     hooks,
     output: {
       // Теги в спецификации на русском: tags-split дал бы кириллические имена файлов.
@@ -60,15 +70,11 @@ export default defineConfig({
       client: 'react-query',
       httpClient: 'fetch',
       clean: ['./src/generated/model'],
-      override: {
-        mutator: {path: './src/mutator.ts', name: 'apiFetch'},
-        fetch: {includeHttpResponseReturnType: false},
-        query: {signal: true, shouldExportKeys: true},
-      },
+      override: queryOverride,
     },
   },
   gatewayZod: {
-    input,
+    input: gatewayInput,
     hooks,
     output: {
       mode: 'single',
@@ -83,6 +89,29 @@ export default defineConfig({
           generateDiscriminatedUnion: true,
         },
       },
+    },
+  },
+  // admin-gateway — админка.
+  adminGateway: {
+    input: adminGatewayInput,
+    hooks,
+    output: {
+      mode: 'split',
+      target: './src/generated/admin-gateway/admin-gateway.ts',
+      schemas: './src/generated/admin-gateway/model',
+      client: 'react-query',
+      httpClient: 'fetch',
+      clean: ['./src/generated/admin-gateway/model'],
+      override: queryOverride,
+    },
+  },
+  adminGatewayZod: {
+    input: adminGatewayInput,
+    hooks,
+    output: {
+      mode: 'single',
+      target: './src/generated/admin-gateway/admin-gateway.zod.ts',
+      client: 'zod',
     },
   },
 });

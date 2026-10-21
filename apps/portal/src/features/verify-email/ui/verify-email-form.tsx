@@ -1,4 +1,5 @@
 import {zodResolver} from '@hookform/resolvers/zod';
+import {errorMessage} from '@qgames/api';
 import {
   getGetCurrentUserQueryKey,
   useResendCode,
@@ -17,8 +18,6 @@ import {useQueryClient} from '@tanstack/react-query';
 import {useNavigate} from '@tanstack/react-router';
 import {useState} from 'react';
 import {useForm} from 'react-hook-form';
-
-import {errorMessage} from '@/shared/lib';
 
 import {verifyEmailSchema, type VerifyEmailValues} from '../model/schema';
 

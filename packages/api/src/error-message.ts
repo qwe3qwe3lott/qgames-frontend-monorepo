@@ -1,5 +1,6 @@
-import {isApiError, NETWORK_ERROR_CODE} from '@qgames/api';
+import {isApiError, NETWORK_ERROR_CODE} from './api-error';
 
+/** Тексты общих кодов, которые может вернуть любой gateway. */
 const COMMON_MESSAGES: Readonly<Record<string, string>> = {
   [NETWORK_ERROR_CODE]:
     'Сервер недоступен. Проверьте соединение и попробуйте ещё раз.',

@@ -1,11 +1,19 @@
-import {isApiError} from '@qgames/api';
-import type {FieldValues, Path, UseFormSetError} from 'react-hook-form';
+import {isApiError} from './api-error';
 
 /**
  * Тексты в `errors` бэкенд пишет по-английски для разработчиков, пользователю их
  * не показываем (CLAUDE.md §5). Обычно такие значения ловит клиентская Zod-схема.
  */
 const SERVER_FIELD_MESSAGE = 'Сервер не принял это значение';
+
+/**
+ * Установка ошибки поля формы. Структурно совместима с `setError` из
+ * react-hook-form (`UseFormSetError`), поэтому пакет от него не зависит.
+ */
+export type SetFieldError<F extends string> = (
+  name: F,
+  error: {type: string; message: string},
+) => void;
 
 export interface ApplyFieldErrorsOptions {
   /**
@@ -19,10 +27,10 @@ export interface ApplyFieldErrorsOptions {
  * Подсвечивает поля из VALIDATION_ERROR (`ApiError.fieldErrors`) в форме.
  * Возвращает true, если хотя бы одна ошибка нашла своё поле.
  */
-export function applyFieldErrors<T extends FieldValues>(
+export function applyFieldErrors<F extends string>(
   error: unknown,
-  setError: UseFormSetError<T>,
-  fields: readonly Path<T>[],
+  setError: SetFieldError<F>,
+  fields: readonly F[],
   {prefix = ''}: ApplyFieldErrorsOptions = {},
 ): boolean {
   if (!isApiError(error)) {

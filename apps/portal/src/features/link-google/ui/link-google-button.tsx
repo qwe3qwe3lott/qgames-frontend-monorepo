@@ -1,3 +1,4 @@
+import {errorMessage} from '@qgames/api';
 import {
   getGetCurrentUserQueryKey,
   useAddGoogleLogin,
@@ -5,7 +6,6 @@ import {
 import {useQueryClient} from '@tanstack/react-query';
 
 import {env} from '@/shared/config';
-import {errorMessage} from '@/shared/lib';
 import {GoogleButton} from '@/shared/ui';
 
 const LINK_GOOGLE_MESSAGES = {

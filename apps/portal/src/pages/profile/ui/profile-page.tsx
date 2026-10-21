@@ -1,3 +1,4 @@
+import {errorMessage} from '@qgames/api';
 import {useGetCurrentUser} from '@qgames/api/gateway';
 import {
   Card,
@@ -5,13 +6,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@qgames/ui/components/card';
+import {PageLayout} from '@qgames/ui/components/page-layout';
 
 import {ChangePasswordDialog} from '@/features/change-password';
 import {LinkGoogleButton} from '@/features/link-google';
 import {SetPasswordDialog} from '@/features/set-password';
 import {UpdateProfileForm} from '@/features/update-profile';
-import {errorMessage} from '@/shared/lib';
-import {PageLayout} from '@/shared/ui';
 
 export function ProfilePage() {
   const {data: user, error, isPending} = useGetCurrentUser();

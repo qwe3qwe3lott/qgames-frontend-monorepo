@@ -1,7 +1,6 @@
+import {errorMessage} from '@qgames/api';
 import {Button} from '@qgames/ui/components/button';
-
-import {errorMessage} from '@/shared/lib';
-import {PageLayout} from '@/shared/ui';
+import {PageLayout} from '@qgames/ui/components/page-layout';
 
 export interface ErrorPageProps {
   error: unknown;

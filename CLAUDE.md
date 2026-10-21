@@ -9,8 +9,8 @@
 - **Не замалчивать проблемы.** Если по ходу работы что-то смущает (риск безопасности, противоречие правилам или ранее сказанному, сомнительное поведение, техдолг, расхождение кода, документации и контракта бэкенда), сразу сказать пользователю и спросить, как поступить, предложив варианты. Не чинить молча и не откладывать «на потом» без согласования.
 - **Бэкенд изучаем по его монорепозиторию** (`../qgames-backend-monorepo`), только чтение. Когда нужно понять, как работает бэкенд (поведение ручки, коды ошибок, валидация, куки и refresh, SSE, роли), смотреть туда, а не гадать:
   - `CLAUDE.md` бэкенда — архитектура и принятые решения;
-  - `user-gateway/user-gateway-public-sync-api` — публичный контракт: интерфейсы ручек с описаниями и кодами ошибок (`@Operation`/`@ApiResponses`) и DTO;
-  - `user-gateway/user-gateway` и сервисы (`user-auth`, `game`) — реализация (маппинг, проверки, куки, обработка ошибок);
+  - `user-gateway/user-gateway-public-sync-api` и `admin-gateway/admin-gateway-public-sync-api` — публичные контракты: интерфейсы ручек с описаниями и кодами ошибок (`@Operation`/`@ApiResponses`) и DTO;
+  - `user-gateway/user-gateway`, `admin-gateway/admin-gateway` и сервисы (`user-auth`, `game`, `admin-auth`) — реализация (маппинг, проверки, куки, обработка ошибок);
   - `docker-compose.yml`, `application.yml` сервисов — порты, адреса, настройки локального стенда.
 
   Клиент API (§5) генерируется только по OpenAPI; код бэкенда нужен для понимания поведения, а не для ручного описания типов.
@@ -37,7 +37,18 @@
 - `landing` — чистая статика: без server actions, route handlers, middleware, ISR и `next/image`-оптимизации. Нужен серверный режим Next — только по согласованию.
 - Динамические публичные страницы (профили, лидерборды) — решить при появлении такой задачи.
 - **Бэкенд приложений:** portal → `user-gateway`, admin → `admin-gateway` (отдельный сервис для администраторов, в паре с `admin-auth`), landing — без API.
-- **Админка ходит только в `admin-gateway`, никогда в `user-gateway`.** Сервиса пока нет; его устройство (вход админов, роли и права, порт, имена кук) решается на бэкенде — фронт подстраивается под его OpenAPI. До его появления в `apps/admin` нет обращений к API.
+- **Админка ходит только в `admin-gateway`, никогда в `user-gateway`.** admin-gateway локально — `http://localhost:8083`, сессия — в куках `admin_access_token` / `admin_refresh_token`. Пути `/api/auth/*` и 401 `UNAUTHENTICATED` у него такие же, как у user-gateway.
+
+### Маршруты админки
+
+| URL       | Страница                                              | Доступ      |
+| --------- | ----------------------------------------------------- | ----------- |
+| `/login`  | вход по логину и паролю (`?redirect=` — куда вернуть) | все         |
+| `/`       | редирект на `/admins`                                 | —           |
+| `/admins` | список администраторов, у текущего — метка «вы»       | после входа |
+
+- Гость — ответ 401 или 404 `ADMIN_NOT_FOUND` на `GET /api/admins/me` (`entities/admin`). Защищённые маршруты отправляют гостя на `/login?redirect=<текущий адрес>`, `redirect` принимается только как путь этого сайта (`/…`).
+- Регистрации нет, ролей нет: первого админа создаёт бэкенд (на стенде `admin` / `admin`).
 
 ### Маршруты портала
 
@@ -81,8 +92,8 @@ apps/
   landing/       статический Next.js
 packages/
   config/        @qgames/config: tsconfig-пресеты, фабрика ESLint flat-конфига, stylelint, prettier
-  ui/            @qgames/ui: компоненты shadcn/ui, cn(), globals.css (Tailwind 4, тема)
-  api/           @qgames/api: снапшот OpenAPI gateway, Orval-клиент (типы, queryOptions, хуки, Zod), fetch-mutator
+  ui/            @qgames/ui: компоненты shadcn/ui, общая разметка страниц PageLayout, cn(), globals.css (Tailwind 4, тема)
+  api/           @qgames/api: снапшоты OpenAPI user-gateway и admin-gateway, Orval-клиенты (типы, queryOptions, хуки, Zod), fetch-mutator, errorMessage и applyFieldErrors
   game-ui/       @qgames/game-ui: общий игровой UI (аватар, список игроков, описание комнаты, ход, конец партии)
   game-core/     @qgames/game-core: чистые функции партии — применитель патчей applySessionEvent, сверка seq, guard'ы модулей (core, turns, timer), checkSessionState, activeTimer
   games/
@@ -146,12 +157,12 @@ src/
 
 - **TanStack Query** — единственное место для серверных данных. `queryOptions`/`mutationOptions`/хуки и ключи берутся из `@qgames/api` (Orval), свои ключи и fetch-функции для ручек gateway не пишем (исключение — URL SSE-ручек, см. §5 Real-time). Копировать серверные данные в zustand или `useState` запрещено. Инвалидация — через `queryClient.invalidateQueries` по сгенерированным ключам.
 - **zustand** — только клиентский стейт (UI, локальное состояние игры до отправки хода). Стор живёт в `model/` своего слайса, экспортируется хук; селекторы обязательны (`useStore((s) => s.x)`), подписку на весь стор не делаем.
-- **Формы — react-hook-form + Zod 4** через `zodResolver` из `@hookform/resolvers`. Схема запроса берётся из сгенерированных Orval-Zod-схем; если форме нужно больше полей или правил (например, повтор пароля), схема расширяется в `model/` слайса. Поля верстаются компонентами `@qgames/ui`. Ошибки бэкенда показываются по `ApiError.code`; поля из `VALIDATION_ERROR` подсвечиваются `applyFieldErrors` (`@/shared/lib`) нейтральным русским текстом — английские тексты сервера не показываем. Сообщения Zod — на русском (`z.config(z.locales.ru())` при старте приложения).
+- **Формы — react-hook-form + Zod 4** через `zodResolver` из `@hookform/resolvers`. Схема запроса берётся из сгенерированных Orval-Zod-схем; если форме нужно больше полей или правил (например, повтор пароля), схема расширяется в `model/` слайса. Поля верстаются компонентами `@qgames/ui`. Ошибки бэкенда показываются по `ApiError.code`; поля из `VALIDATION_ERROR` подсвечиваются `applyFieldErrors` (`@qgames/api`) нейтральным русским текстом — английские тексты сервера не показываем. Сообщения Zod — на русском (`z.config(z.locales.ru())` при старте приложения).
 - **Комната — SSE + кеш Query:** события потока комнаты пишутся в кеш `GET /api/rooms/{id}` через `setQueryData` по сгенерированному ключу (`entities/room/model/use-room-events.ts`): `snapshot` заменяет данные, `users-changed`/`settings-changed` заменяют свои поля, `session-changed` → `invalidateRoom`, `room-deleted` → закрыть поток и перечитать (покажется `ROOM_NOT_FOUND`). Мутации, которые возвращают комнату (в том числе старт партии), кладут ответ в кеш (`setRoomCache`), а не перезапрашивают.
 - **Партия — SSE + кеш Query:** состояние партии хранится в кеше Query под ключом `['session-stream', sessionId]` (`entities/session`: `useSessionEvents` пишет, `useSession` читает). Это **исключение** из правила «ключи только из Orval»: у потока нет GET-ручки. Опроса нет ни в лобби, ни во время партии. Ответы 4xx запросы не повторяют (настройка `retry` в `app/router.ts`).
 - **TanStack Router** (portal, admin) — file-based роутинг, `autoCodeSplitting` (каждый роут — отдельный чанк). Search params типизируются через `validateSearch` со Zod-схемой. Навигация только через `Link`/`useNavigate`, строковые URL руками не собираем.
 - **Next.js** (landing) — только App Router и статический экспорт (§1).
-- **Стили — Tailwind 4 + shadcn/ui.** Только utility-классы и компоненты `@qgames/ui`; CSS-модулей, CSS-in-JS и inline `style` нет (кроме динамических значений, которые нельзя выразить классом). Классы объединяются через `cn()`. Тема (CSS-переменные, `@theme`) — только в `packages/ui/src/styles/globals.css`. Новые компоненты shadcn добавляются в `packages/ui` (`pnpm --filter @qgames/ui exec shadcn add <component>`), в приложения не копируются.
+- **Стили — Tailwind 4 + shadcn/ui.** Только utility-классы и компоненты `@qgames/ui`; CSS-модулей, CSS-in-JS и inline `style` нет (кроме динамических значений, которые нельзя выразить классом). Классы объединяются через `cn()`. Тема (CSS-переменные, `@theme`) — только в `packages/ui/src/styles/globals.css`. Новые компоненты shadcn добавляются в `packages/ui` (`pnpm --filter @qgames/ui exec shadcn add <component>`), в приложения не копируются. Свои общие компоненты разметки (`PageLayout`) лежат там же, в `packages/ui/src/components/`, рядом с shadcn; их имена не должны совпадать с именами компонентов shadcn.
 - **Курсоры:**
   - у кнопок и интерактивных элементов `pointer`, у заблокированных — `not-allowed`. Общее правило лежит в `globals.css`;
   - `disabled:pointer-events-none` не используем: он прячет курсор и подсказку.
@@ -162,13 +173,13 @@ src/
 
 ## 5. Взаимодействие с бэкендом
 
-- **Адресаты:** portal → `user-gateway`, admin → `admin-gateway` (REST/JSON). Браузер ходит в свой gateway **напрямую** на api-домен (`PUBLIC_API_URL`; локально user-gateway — `http://localhost:8080`, порт admin-gateway решит бэкенд) с `credentials: 'include'`. CORS с `allowCredentials` настраивается на каждом gateway для своего фронта. Same-site (фронт и api на одном регистрируемом домене) обязателен: куки `SameSite=Lax`.
-- **Клиент admin-gateway** — решить при начале работ над админкой. Рекомендация: второй снапшот `packages/api/openapi/admin-gateway.json` и вторая цель Orval с экспортом `@qgames/api/admin-gateway`; отдельный пакет — только если клиенты разойдутся. Mutator сейчас хранит один базовый URL и путь refresh — их нужно будет параметризовать. Куки admin-gateway должны называться иначе, чем у user-gateway: локально оба gateway на `localhost`, а куки по порту не изолируются.
-- **Аутентификация:** токены живут только в HttpOnly-куках, которые ставит gateway; фронт их не видит и не хранит. Признак «залогинен» — успешный `GET /api/users/me`. На 401 с кодом `UNAUTHENTICATED` mutator делает один общий (single-flight) `POST /api/auth/refresh` и повторяет исходный запрос один раз; если refresh вернул 401, пользователь — гость. Другие 401 (например, `INVALID_GOOGLE_TOKEN`) — обычные ошибки, сессию не трогают. Запросы `/api/auth/*` не повторяются.
-- **Контракт** — OpenAPI gateway. Снапшот `packages/api/openapi/gateway.json` и сгенерированный код `packages/api/src/generated/` коммитятся; руками сгенерированный код и типы API не пишем.
-  - Обновление контракта: запустить бэкенд, `pnpm api:fetch` (снимает `/v3/api-docs`), `pnpm api:generate`, проверить дифф.
-  - Импорты: `@qgames/api` — `configureApi`, `ApiError`, `isApiError`, `refreshSession` (общий single-flight refresh), `resolveUrl`; `@qgames/api/gateway` — функции, `queryOptions`, хуки и ключи; `@qgames/api/gateway/model` — типы; `@qgames/api/gateway/zod` — Zod-схемы запросов и всех схем components (`generateReusableSchemas`, union — `discriminatedUnion` через `generateDiscriminatedUnion`).
-  - SSE-ручки (ответ 200 — `text/event-stream`) исключены из генерации react-query/fetch трансформером входа в `orval.config.ts`: сгенерированный fetch повис бы на бесконечном потоке. Модели и Zod-схемы их событий генерируются.
+- **Адресаты:** portal → `user-gateway`, admin → `admin-gateway` (REST/JSON). Браузер ходит в свой gateway **напрямую** на api-домен (`PUBLIC_API_URL`; локально user-gateway — `http://localhost:8080`, admin-gateway — `http://localhost:8083`) с `credentials: 'include'`. CORS с `allowCredentials` настраивается на каждом gateway для своего фронта. Same-site (фронт и api на одном регистрируемом домене) обязателен: куки `SameSite=Lax`.
+- **Клиент admin-gateway** — в том же `@qgames/api`: второй снапшот `packages/api/openapi/admin-gateway.json` и вторые цели Orval (`adminGateway`, `adminGatewayZod`), код в `src/generated/admin-gateway/`. Отдельный пакет — только если клиенты разойдутся. Mutator общий: каждое приложение вызывает `configureApi` со своим URL. Это работает, пока у gateway'ев одинаковы пути `/api/auth/*` и 401 `UNAUTHENTICATED`.
+- **Аутентификация:** токены живут только в HttpOnly-куках, которые ставит gateway; фронт их не видит и не хранит. Признак «залогинен» — успешный `GET /api/users/me` (в админке — `GET /api/admins/me`). На 401 с кодом `UNAUTHENTICATED` mutator делает один общий (single-flight) `POST /api/auth/refresh` и повторяет исходный запрос один раз; если refresh вернул 401, пользователь — гость. Другие 401 (например, `INVALID_GOOGLE_TOKEN`) — обычные ошибки, сессию не трогают. Запросы `/api/auth/*` не повторяются.
+- **Контракт** — OpenAPI gateway'ев. Снапшоты `packages/api/openapi/gateway.json` (user-gateway) и `admin-gateway.json` и сгенерированный код `packages/api/src/generated/` коммитятся; руками сгенерированный код и типы API не пишем.
+  - Обновление контракта: запустить бэкенд, `pnpm api:fetch` (снимает `/v3/api-docs` обоих gateway), `pnpm api:generate`, проверить дифф.
+  - Импорты: `@qgames/api` — `configureApi`, `ApiError`, `isApiError`, `refreshSession` (общий single-flight refresh), `resolveUrl`, `errorMessage`, `applyFieldErrors`; `@qgames/api/gateway` — функции, `queryOptions`, хуки и ключи; `@qgames/api/gateway/model` — типы; `@qgames/api/gateway/zod` — Zod-схемы запросов и всех схем components (`generateReusableSchemas`, union — `discriminatedUnion` через `generateDiscriminatedUnion`). Для админки — `@qgames/api/admin-gateway` (`/model`, `/zod`; в `/zod` — схемы ручек, без схем components: `generateReusableSchemas` у цели `adminGatewayZod` не включён).
+  - SSE-ручки (ответ 200 — `text/event-stream`) исключены из генерации react-query/fetch трансформером входа user-gateway в `orval.config.ts`: сгенерированный fetch повис бы на бесконечном потоке. Модели и Zod-схемы их событий генерируются.
   - Orval работает в режиме `split` (один файл ручек), а не `tags-split`: теги в спецификации на русском и дали бы кириллические имена файлов.
   - Если контракт неудобен или неполон — сказать пользователю, а не обходить на фронте (§0).
   - Известные расхождения контракта и генерации (фронт их обходит, обходы помечены комментариями со ссылкой сюда):
@@ -176,7 +187,7 @@ src/
     - шаблон `VerifyEmailRequest.code` — `[0-9]{6}` без якорей `^…$`: по семантике OpenAPI (поиск подстроки) его проходит и «1234567». Код проверяется своей схемой (`features/verify-email/model/schema.ts`); на бэкенде стоит добавить якоря;
     - тексты в `errors` у `VALIDATION_ERROR` — на английском, поэтому поля подсвечиваются нейтральным русским текстом (`applyFieldErrors`);
     - сгенерированный Zod даёт nullable-полям `.nullish()` (`T | null | undefined`), а модель Orval — `T | null`; с `exactOptionalPropertyTypes` они несовместимы. Данные потока комнаты перед записью в кеш нормализуются (`undefined` → `null`) в `entities/room/lib/stream-data.ts`.
-- **Ошибки:** все 4xx/5xx приходят как `ProblemDetail` с машиночитаемым `code`. Mutator превращает их в `ApiError` (`status`, `code`, `detail`, `reason` у `MOVE_REJECTED`, `fieldErrors` у `VALIDATION_ERROR`); недоступный сервер — `NETWORK_ERROR`. UI ветвится только по `code` (тексты — `errorMessage` из `@/shared/lib`, для комнат — `roomErrorMessage`), тексты `detail` пользователю не показываем.
+- **Ошибки:** все 4xx/5xx приходят как `ProblemDetail` с машиночитаемым `code`. Mutator превращает их в `ApiError` (`status`, `code`, `detail`, `reason` у `MOVE_REJECTED`, `fieldErrors` у `VALIDATION_ERROR`); недоступный сервер — `NETWORK_ERROR`. UI ветвится только по `code` (общие тексты — `errorMessage` из `@qgames/api`, тексты по своим кодам — в слайсах, для комнат — `roomErrorMessage`), тексты `detail` пользователю не показываем.
 - **Real-time:** ходы и действия — REST, события — SSE от gateway (gateway проксирует поток из сервиса `game`). WebSocket — только для real-time игр (сейчас таких нет).
   - **Обёртка** — `apps/portal/src/shared/lib/sse` (`createEventStream(url, {schema, types, onEvent, onOpen, onError, onInvalid})`): `EventSource` с `withCredentials: true`, каждое сообщение `{type: e.type, data: JSON.parse(e.data)}` проверяется Zod-схемой union событий из components (§6). Когда поток закрылся (`readyState === CLOSED`, в том числе 401 до старта), — `refreshSession()` и переподключение с backoff 1 → 30 с; если refresh вернул false (гость), переподключения нет. Статус ответа из `EventSource` не узнать, поэтому refresh делается перед каждой попыткой.
   - URL SSE-ручки собирается через `resolveUrl` рядом с хуком (Orval её не генерирует).
@@ -223,14 +234,14 @@ pnpm build                   # сборка всего
 pnpm typecheck               # проверка типов
 pnpm lint                    # ESLint + Stylelint
 pnpm format                  # Prettier
-pnpm api:fetch               # снять OpenAPI с запущенного gateway в packages/api/openapi/gateway.json
+pnpm api:fetch               # снять OpenAPI с запущенных gateway в packages/api/openapi/ (GATEWAY_URL, ADMIN_GATEWAY_URL)
 pnpm api:generate            # сгенерировать клиент API (Orval)
 ```
 
 - Порты: portal — http://localhost:3000, admin — http://localhost:3001, landing — http://localhost:3002.
 - Вход через Google локально: в Google Cloud Console настроить OAuth consent screen (External, Testing, себя — в Test users), создать OAuth client ID типа Web application с Authorized JavaScript origins `http://localhost:3000` и `http://localhost` (redirect URI не нужны). Client ID прописать в `GOOGLE_CLIENT_IDS` (`.env` бэкенда, затем `docker compose up -d`) и в `PUBLIC_GOOGLE_CLIENT_ID` (`apps/portal/.env`).
 - Прод-сборка в Docker: `docker compose up --build -d --wait` (portal :3000, admin :3001, landing :3002; статику раздаёт nginx не от root — `nginxinc/nginx-unprivileged`, внутри контейнера порт 8080; hot reload нет — для разработки `pnpm dev`). Общий образ — `docker/app.Dockerfile` (аргументы `APP`, `OUT`, `NGINX_CONF`), конфиги nginx — `docker/nginx/` (`spa.conf` — fallback на `index.html`, `landing.conf` — `404.html`); заголовки безопасности (`X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`) задаются на уровне server и через `add_header_inherit merge` приходят на всех ответах. CSP — решить при настройке прод-деплоя. Переменные `PUBLIC_*`/`NEXT_PUBLIC_*` вшиваются при сборке из `apps/<app>/.env` (нет файла — сборка падает): после правки `.env` — `--build`. Бэкенд в этот compose не входит.
-- Бэкенд поднимается в его репозитории: `docker compose up --build -d --wait`. Gateway и Swagger: http://localhost:8080/swagger-ui.html, письма с кодами — Mailpit http://localhost:8025.
+- Бэкенд поднимается в его репозитории: `docker compose up --build -d --wait`. Swagger: user-gateway — http://localhost:8080/swagger-ui.html, admin-gateway — http://localhost:8083/swagger-ui.html. Письма с кодами — Mailpit http://localhost:8025. Вход в админку на стенде — `admin` / `admin`.
 - Переменные окружения приложений — в `.env` приложения (шаблон — `.env.example`).
 - Статический результат `landing` — `apps/landing/out/`, Rsbuild-приложений — `apps/<app>/dist/`.
 

@@ -1,4 +1,5 @@
 import {zodResolver} from '@hookform/resolvers/zod';
+import {applyFieldErrors, errorMessage} from '@qgames/api';
 import {useRegister} from '@qgames/api/gateway';
 import {Button} from '@qgames/ui/components/button';
 import {
@@ -14,7 +15,6 @@ import {useNavigate} from '@tanstack/react-router';
 import {Controller, useForm} from 'react-hook-form';
 
 import {AvatarPicker} from '@/entities/user';
-import {applyFieldErrors, errorMessage} from '@/shared/lib';
 
 import {registerSchema, type RegisterValues} from '../model/schema';
 
