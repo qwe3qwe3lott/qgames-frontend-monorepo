@@ -1,5 +1,6 @@
 import {errorMessage} from '@qgames/api';
 import {useGetGame} from '@qgames/api/gateway';
+import {PageLayout} from '@qgames/ui/components/page-layout';
 
 import {
   GAME_UNAVAILABLE_HINT,
@@ -7,7 +8,6 @@ import {
   type GameEntry,
 } from '@/entities/game';
 import {CreateRoomDialog} from '@/features/create-room';
-import {PageLayout} from '@/shared/ui';
 
 export interface GameRoomsPageProps {
   game: GameEntry;

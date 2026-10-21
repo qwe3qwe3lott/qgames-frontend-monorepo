@@ -8,10 +8,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@qgames/ui/components/card';
+import {PageLayout} from '@qgames/ui/components/page-layout';
 import {cn} from '@qgames/ui/lib/utils';
 import {Link} from '@tanstack/react-router';
-
-import {PageLayout} from '@/shared/ui';
 
 /** DISABLED-игра бледная, с пометкой и без перехода к созданию комнаты. */
 function GameCard({game}: {game: GameSummaryDto}) {

@@ -2,6 +2,7 @@ import {errorMessage} from '@qgames/api';
 import {useGetAdmins} from '@qgames/api/admin-gateway';
 import type {AdminResponse} from '@qgames/api/admin-gateway/model';
 import {Button} from '@qgames/ui/components/button';
+import {PageLayout} from '@qgames/ui/components/page-layout';
 import {
   Table,
   TableBody,
@@ -10,7 +11,6 @@ import {
   TableHeader,
   TableRow,
 } from '@qgames/ui/components/table';
-import type {ReactNode} from 'react';
 
 import {useCurrentAdmin} from '@/entities/admin';
 
@@ -20,15 +20,6 @@ const CREATED_AT_FORMAT = new Intl.DateTimeFormat('ru-RU', {
   dateStyle: 'medium',
   timeStyle: 'short',
 });
-
-function AdminsLayout({children}: {children: ReactNode}) {
-  return (
-    <main className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-8">
-      <h1 className="text-3xl font-bold">{TITLE}</h1>
-      {children}
-    </main>
-  );
-}
 
 interface AdminRowProps {
   admin: AdminResponse;
@@ -62,14 +53,14 @@ export function AdminsPage() {
 
   if (isPending) {
     return (
-      <AdminsLayout>
+      <PageLayout title={TITLE}>
         <p className="text-muted-foreground">Загружаем администраторов…</p>
-      </AdminsLayout>
+      </PageLayout>
     );
   }
   if (error !== null) {
     return (
-      <AdminsLayout>
+      <PageLayout title={TITLE}>
         <div className="flex flex-col items-start gap-3" role="alert">
           <p className="text-destructive">{errorMessage(error)}</p>
           <Button
@@ -82,14 +73,14 @@ export function AdminsPage() {
             Повторить
           </Button>
         </div>
-      </AdminsLayout>
+      </PageLayout>
     );
   }
 
   const currentId = current.status === 'admin' ? current.admin.id : undefined;
 
   return (
-    <AdminsLayout>
+    <PageLayout title={TITLE}>
       {data.admins.length === 0 ? (
         <p className="text-muted-foreground">Администраторов нет.</p>
       ) : (
@@ -111,6 +102,6 @@ export function AdminsPage() {
           </TableBody>
         </Table>
       )}
-    </AdminsLayout>
+    </PageLayout>
   );
 }

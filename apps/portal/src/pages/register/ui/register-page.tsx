@@ -1,8 +1,8 @@
+import {PageLayout} from '@qgames/ui/components/page-layout';
 import {Link} from '@tanstack/react-router';
 
 import {GoogleLoginButton} from '@/features/google-login';
 import {RegisterForm} from '@/features/register';
-import {PageLayout} from '@/shared/ui';
 
 export interface RegisterPageProps {
   redirect: string | undefined;
