@@ -5,11 +5,9 @@
  * OpenAPI spec version: v0
  */
 import type {GameSummaryDtoCode} from './gameSummaryDtoCode';
-import type {GameSummaryDtoPublishStatus} from './gameSummaryDtoPublishStatus';
 
 export interface GameSummaryDto {
   code: GameSummaryDtoCode;
   description: string;
-  publishStatus: GameSummaryDtoPublishStatus;
   title: string;
 }

@@ -5,13 +5,11 @@
  * OpenAPI spec version: v0
  */
 import type {GameDetailsResponseCode} from './gameDetailsResponseCode';
-import type {GameDetailsResponsePublishStatus} from './gameDetailsResponsePublishStatus';
 import type {GameRulesDto} from './gameRulesDto';
 
 export interface GameDetailsResponse {
   code: GameDetailsResponseCode;
   description: string;
-  publishStatus: GameDetailsResponsePublishStatus;
   rules: GameRulesDto;
   title: string;
 }

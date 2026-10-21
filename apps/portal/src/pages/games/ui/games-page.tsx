@@ -7,36 +7,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@qgames/ui/components/card';
-import {cn} from '@qgames/ui/lib/utils';
 import {Link} from '@tanstack/react-router';
 
 import {errorMessage} from '@/shared/lib';
 import {PageLayout} from '@/shared/ui';
 
-/** DISABLED-игра бледная, с пометкой и без перехода к созданию комнаты. */
+/** Карточка игры каталога со ссылкой на создание комнаты. */
 function GameCard({game}: {game: GameSummaryDto}) {
-  const disabled = game.publishStatus === 'DISABLED';
-  const content = (
-    <Card
-      className={cn(
-        'h-full transition-colors',
-        disabled ? 'opacity-60' : 'hover:border-foreground/30',
-      )}
-    >
-      <CardHeader>
-        <CardTitle>{game.title}</CardTitle>
-        <CardDescription>{game.description}</CardDescription>
-        {disabled ? (
-          <p className="text-sm font-medium text-muted-foreground">
-            Временно недоступна
-          </p>
-        ) : null}
-      </CardHeader>
-    </Card>
-  );
-  if (disabled) {
-    return <li>{content}</li>;
-  }
   return (
     <li>
       <Link
@@ -44,7 +21,12 @@ function GameCard({game}: {game: GameSummaryDto}) {
         params={{gameCode: game.code}}
         className="block h-full rounded-xl"
       >
-        {content}
+        <Card className="h-full transition-colors hover:border-foreground/30">
+          <CardHeader>
+            <CardTitle>{game.title}</CardTitle>
+            <CardDescription>{game.description}</CardDescription>
+          </CardHeader>
+        </Card>
       </Link>
     </li>
   );
