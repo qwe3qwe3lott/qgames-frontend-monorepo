@@ -23,7 +23,6 @@ import {useForm} from 'react-hook-form';
 
 import {
   GAME_IN_DEVELOPMENT_HINT,
-  GAME_UNAVAILABLE_HINT,
   playersLabel,
   type GameCode,
   type GameEntry,
@@ -41,7 +40,7 @@ import {WithHint} from '@/shared/ui';
 
 export interface CreateRoomDialogProps {
   game: GameEntry;
-  /** Игра из `GET /api/games/{gameCode}`: статус и правила для формы. */
+  /** Игра из `GET /api/games/{gameCode}`: название и правила для формы. */
   details: GameDetailsResponse;
 }
 
@@ -110,23 +109,10 @@ function CreateRoomForm({gameCode, rules}: CreateRoomFormProps) {
   );
 }
 
-/** Почему создать комнату нельзя; null — можно. */
-function unavailableHint(
-  game: GameEntry,
-  details: GameDetailsResponse,
-): string | null {
-  if (details.publishStatus === 'DISABLED') {
-    return GAME_UNAVAILABLE_HINT;
-  }
-  if (game.load === undefined) {
-    return GAME_IN_DEVELOPMENT_HINT;
-  }
-  return null;
-}
-
 /** Создание комнаты с настройками игры: число раундов и правила времени. */
 export function CreateRoomDialog({game, details}: CreateRoomDialogProps) {
-  const hint = unavailableHint(game, details);
+  // Без пакета игры на фронте доску не нарисовать — комнату не создаём.
+  const hint = game.load === undefined ? GAME_IN_DEVELOPMENT_HINT : null;
   const {rules} = details;
   return (
     <Dialog>

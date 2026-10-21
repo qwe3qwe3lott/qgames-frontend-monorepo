@@ -2,11 +2,7 @@ import {errorMessage} from '@qgames/api';
 import {useGetGame} from '@qgames/api/gateway';
 import {PageLayout} from '@qgames/ui/components/page-layout';
 
-import {
-  GAME_UNAVAILABLE_HINT,
-  playersLabel,
-  type GameEntry,
-} from '@/entities/game';
+import {playersLabel, type GameEntry} from '@/entities/game';
 import {CreateRoomDialog} from '@/features/create-room';
 
 export interface GameRoomsPageProps {
@@ -45,12 +41,6 @@ export function GameRoomsPage({game}: GameRoomsPageProps) {
       <p className="text-sm">
         {playersLabel(rules.minPlayers, rules.maxPlayers)}
       </p>
-      {data.publishStatus === 'DISABLED' ? (
-        <p className="text-sm text-muted-foreground">
-          {GAME_UNAVAILABLE_HINT}: новые комнаты создать нельзя, идущие партии
-          продолжаются.
-        </p>
-      ) : null}
       <p className="text-muted-foreground">
         Список публичных комнат этой игры пока не реализован.
       </p>

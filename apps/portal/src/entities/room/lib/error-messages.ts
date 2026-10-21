@@ -3,8 +3,6 @@ import {errorMessage, isApiError} from '@qgames/api';
 const ROOM_MESSAGES: Readonly<Record<string, string>> = {
   ROOM_NOT_FOUND: 'Комнаты нет или она удалена.',
   GAME_NOT_FOUND: 'Игра недоступна.',
-  GAME_UNAVAILABLE:
-    'Игра временно недоступна — новые комнаты и партии создать нельзя.',
   GAME_TYPE_MISMATCH: 'Комната относится к другой игре.',
   NOT_ROOM_MEMBER: 'Сначала войдите в комнату.',
   NOT_ROOM_OWNER: 'Это может сделать только владелец комнаты.',
