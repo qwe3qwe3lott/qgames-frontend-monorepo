@@ -4,9 +4,10 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
+import type {CheckersSessionStateDto} from './checkersSessionStateDto';
 import type {NothingSessionStateDto} from './nothingSessionStateDto';
 
 /**
- * Состояние партии конкретной игры: блоки модулей (players, timer, turns) и поля игры. Игра — meta.game.code снапшота; этой схемой клиент проверяет состояние после каждого события
+ * Состояние партии конкретной игры: блоки модулей (players, timer, turns, result) и поля игры. Игра — meta.game.code снапшота; этой схемой клиент проверяет состояние после каждого события
  */
-export type SessionStateDto = NothingSessionStateDto;
+export type SessionStateDto = NothingSessionStateDto | CheckersSessionStateDto;

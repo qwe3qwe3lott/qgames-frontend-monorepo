@@ -414,6 +414,9 @@ importers:
       '@qgames/api':
         specifier: workspace:*
         version: link:../../packages/api
+      '@qgames/game-checkers':
+        specifier: workspace:*
+        version: link:../../packages/games/checkers
       '@qgames/game-core':
         specifier: workspace:*
         version: link:../../packages/game-core
@@ -584,6 +587,40 @@ importers:
       '@qgames/config':
         specifier: workspace:*
         version: link:../config
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.3.0
+      eslint:
+        specifier: 'catalog:'
+        version: 9.39.5(jiti@2.7.0)(supports-color@10.2.2)
+      react:
+        specifier: 'catalog:'
+        version: 19.3.1
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+
+  packages/games/checkers:
+    dependencies:
+      '@qgames/api':
+        specifier: workspace:*
+        version: link:../../api
+      '@qgames/game-core':
+        specifier: workspace:*
+        version: link:../../game-core
+      '@qgames/game-ui':
+        specifier: workspace:*
+        version: link:../../game-ui
+      '@qgames/ui':
+        specifier: workspace:*
+        version: link:../../ui
+      lucide-react:
+        specifier: 'catalog:'
+        version: 1.59.0(@types/react@19.3.0)(react@19.3.1)
+    devDependencies:
+      '@qgames/config':
+        specifier: workspace:*
+        version: link:../../config
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0

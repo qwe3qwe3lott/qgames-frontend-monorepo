@@ -14,6 +14,7 @@
   "dependencies": {
     "@hookform/resolvers": "catalog:",
     "@qgames/api": "workspace:*",
+    "@qgames/game-checkers": "workspace:*",
     "@qgames/game-core": "workspace:*",
     "@qgames/game-nothing": "workspace:*",
     "@qgames/game-ui": "workspace:*",

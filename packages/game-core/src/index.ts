@@ -13,6 +13,13 @@ export {
 } from './modules/core';
 export type {SessionModule, SessionModuleName} from './modules/module';
 export {
+  isResultBlock,
+  resultModule,
+  sessionResult,
+  type ResultBlock,
+  type SessionResult,
+} from './modules/result';
+export {
   activeTimer,
   isTimerBlock,
   timerModule,

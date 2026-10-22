@@ -1,7 +1,7 @@
 import type {SessionState} from '../session';
 
 /** Имя модуля-механики — как модули `GameRules` на бэкенде. */
-export type SessionModuleName = 'core' | 'turns' | 'timer';
+export type SessionModuleName = 'core' | 'turns' | 'timer' | 'result';
 
 /**
  * Модуль-механика партии: guard своего блока состояния (проверяет только свой

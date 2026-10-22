@@ -22,7 +22,15 @@ import type {SessionEventPut} from './sessionEventPut';
  * - game-paused — PATCH ["state", "timer"] {status: PAUSED, pausedAt}: пауза;
  * - game-resumed — PATCH ["state", "timer"] {status: RUNNING, deadline, pausedAt: null}: продолжение;
  * - timer-stopped — PUT ["state", "timer"]: таймер остановлен перед концом или отменой партии;
- * - player-passed («игра в ничто») — PATCH ["state"] {moves}: игрок пропустил ход; по истечении времени — INFO {playerId, timeout: true}.
+ * - result-set — PUT ["state", "result"] {outcome, winnerIds, reason}: итог партии, только перед session-finished;
+ * - player-passed («игра в ничто») — PATCH ["state"] {moves}: игрок пропустил ход; по истечении времени — INFO {playerId, timeout: true};
+ * - piece-moved (шашки) — PATCH ["state", "pieces", {id}] {square}: шашка встала на последнюю клетку пути;
+ * - piece-captured (шашки) — DELETE ["state", "pieces", {id}]: шашка сбита (на каждую сбитую);
+ * - piece-crowned (шашки) — PATCH ["state", "pieces", {id}] {kind: KING}: шашка стала дамкой;
+ * - last-move-changed (шашки) — PUT ["state", "lastMove"] {pieceId, path, captured}: последний ход;
+ * - counters-changed (шашки) — PATCH ["state"] {quietMoves}: счётчик ходов дамками без взятий;
+ * - player-resigned (шашки) — INFO {playerId}: игрок сдался;
+ * - move-timed-out (шашки) — INFO {playerId}: время хода игрока вышло (поражение).
  */
 export type SessionPatchEvent =
   SessionEventPut | SessionEventPatch | SessionEventDelete | SessionEventInfo;

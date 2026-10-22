@@ -7,7 +7,7 @@ import type {GameModule} from './types';
  * `import()` пакета игры. Название, описание и правила приходят с бэкенда
  * (`GET /api/games`, `GET /api/games/{код}`).
  */
-export const GAME_CODES = ['nothing', 'carcassonne'] as const;
+export const GAME_CODES = ['nothing', 'carcassonne', 'checkers'] as const;
 
 export type GameCode = (typeof GAME_CODES)[number];
 
@@ -30,6 +30,11 @@ export const GAMES: Readonly<Record<GameCode, GameEntry>> = {
       import('@qgames/game-nothing').then(module => module.nothingGame),
   },
   carcassonne: {code: 'carcassonne'},
+  checkers: {
+    code: 'checkers',
+    load: () =>
+      import('@qgames/game-checkers').then(module => module.checkersGame),
+  },
 };
 
 export function isGameCode(value: string): value is GameCode {

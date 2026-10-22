@@ -485,7 +485,8 @@
               "type": "string",
               "enum": [
                 "nothing",
-                "carcassonne"
+                "carcassonne",
+                "checkers"
               ]
             }
           }
@@ -552,7 +553,8 @@
               "type": "string",
               "enum": [
                 "nothing",
-                "carcassonne"
+                "carcassonne",
+                "checkers"
               ]
             }
           }
@@ -627,7 +629,7 @@
     },
     "/api/games/{gameCode}/rooms/{roomId}/moves": {
       "post": {
-        "description": "Ручка одна на все игры: код игры — в пути, ход — общий конверт `{type, data}`. `type` — вид действия (`PASS` в «игре в ничто»), `data` — его параметры в формате игры; допустимые сейчас ходы игрока — moveOptions его игрока в состоянии партии. Код игры должен совпадать с игрой комнаты. Ходить может только игрок партии, находящийся в комнате. Ход проверяется по текущему состоянию партии. Ответ без тела: изменения (ход, очерёдность, варианты ходов, таймер, конец партии) приходят событиями потока партии. Когда партия заканчивается, комната возвращается в ожидание.",
+        "description": "Ручка одна на все игры: код игры — в пути, ход — общий конверт `{type, data}`. `type` — вид действия (`PASS` в «игре в ничто», `MOVE` и `RESIGN` в шашках), `data` — его параметры в формате игры (схема в components: у шашек — CheckersMoveDataDto, полный путь шашки); допустимые сейчас ходы игрока — moveOptions его игрока в состоянии партии. Код игры должен совпадать с игрой комнаты. Ходить может только игрок партии, находящийся в комнате. Ход проверяется по текущему состоянию партии. Ответ без тела: изменения (ход, очерёдность, варианты ходов, таймер, конец партии) приходят событиями потока партии. Когда партия заканчивается, комната возвращается в ожидание.",
         "operationId": "makeMove",
         "parameters": [
           {
@@ -639,7 +641,8 @@
               "type": "string",
               "enum": [
                 "nothing",
-                "carcassonne"
+                "carcassonne",
+                "checkers"
               ]
             }
           },
@@ -725,7 +728,7 @@
                 }
               }
             },
-            "description": "Ход нарушает правила игры (MOVE_REJECTED, причина — в поле reason, например NOT_YOUR_TURN)"
+            "description": "Ход нарушает правила игры (MOVE_REJECTED, причина — в поле reason: NOT_YOUR_TURN, UNKNOWN_MOVE, GAME_FINISHED; в шашках ещё ILLEGAL_MOVE — путь не по правилам)"
           },
           "503": {
             "content": {
@@ -746,7 +749,7 @@
     },
     "/api/games/{gameCode}/rooms/{roomId}/sessions/{sessionId}/events": {
       "get": {
-        "description": "Server-Sent Events (EventSource с withCredentials): сообщения `event: <тип>` + `data: <json>`, без `id:`, раз в ~5 с комментарий `: ping`. Схема пары тип + данные — SessionStreamEvent ({type, data}, дискриминатор type).\n\nПервое сообщение — snapshot: документ партии для этого зрителя `{seq, status, serverTime, meta, state}`; так же после каждого переподключения. meta.game — код игры и правила партии, закреплённые при старте; по meta.game.code клиент выбирает схему состояния (NothingSessionStateDto). state — блоки модулей (players с moveOptions, timer, turns) и поля игры.\n\nДальше — события журнала партии `{seq, at, method, code, data}` (SessionPatchEvent), тип сообщения — method в нижнем регистре (put, patch, delete, info). seq непрерывен и продолжает seq снапшота: дыра означает потерю (переподключиться), повтор с уже применённым seq отбрасывается. Каждое событие — одна операция над документом `{status, meta, state}` по пути data.path (строка — ключ объекта, {id} — элемент массива по id): PUT заменяет или создаёт значение, PATCH сливает поля объекта неглубоко, DELETE удаляет, INFO состояние не меняет. Клиент применяет события по method, code — для журнала и логов. Начало и конец партии — тоже патчи: session-started (PUT []), session-finished и session-cancelled (PATCH [] {status}), после конца сервер закрывает поток. Несуществующий путь или состояние не по схеме игры — переподключиться за свежим снапшотом.\n\nСобытия маскируются под зрителя: варианты ходов (moveOptions) видит только сам игрок, остальным приходит пустой список, но событие доставляется. После конца партии всё публично: на завершённую или отменённую партию приходит полный снапшот, и поток закрывается. Подписаться может участник комнаты (открытый поток комнаты). Access-токен проверяется только при подключении.",
+        "description": "Server-Sent Events (EventSource с withCredentials): сообщения `event: <тип>` + `data: <json>`, без `id:`, раз в ~5 с комментарий `: ping`. Схема пары тип + данные — SessionStreamEvent ({type, data}, дискриминатор type).\n\nПервое сообщение — snapshot: документ партии для этого зрителя `{seq, status, serverTime, meta, state}`; так же после каждого переподключения. meta.game — код игры и правила партии, закреплённые при старте; по meta.game.code клиент выбирает схему состояния (NothingSessionStateDto, CheckersSessionStateDto) и правил хода meta.moveRules (CheckersMoveRulesDto; null — у игры их нет). state — блоки модулей (players с moveOptions и полями игры, timer, turns, result — итог партии) и поля игры.\n\nДальше — события журнала партии `{seq, at, method, code, data}` (SessionPatchEvent), тип сообщения — method в нижнем регистре (put, patch, delete, info). seq непрерывен и продолжает seq снапшота: дыра означает потерю (переподключиться), повтор с уже применённым seq отбрасывается. Каждое событие — одна операция над документом `{status, meta, state}` по пути data.path (строка — ключ объекта, {id} — элемент массива по id): PUT заменяет или создаёт значение, PATCH сливает поля объекта неглубоко, DELETE удаляет, INFO состояние не меняет. Клиент применяет события по method, code — для журнала и логов. Начало и конец партии — тоже патчи: session-started (PUT []), session-finished и session-cancelled (PATCH [] {status}), после конца сервер закрывает поток. Несуществующий путь или состояние не по схеме игры — переподключиться за свежим снапшотом.\n\nСобытия маскируются под зрителя: варианты ходов (moveOptions) видит только сам игрок, остальным приходит пустой список, но событие доставляется. После конца партии всё публично: на завершённую или отменённую партию приходит полный снапшот, и поток закрывается. Подписаться может участник комнаты (открытый поток комнаты). Access-токен проверяется только при подключении.",
         "operationId": "sessionEvents",
         "parameters": [
           {
@@ -758,7 +761,8 @@
               "type": "string",
               "enum": [
                 "nothing",
-                "carcassonne"
+                "carcassonne",
+                "checkers"
               ]
             }
           },
@@ -863,7 +867,8 @@
               "type": "string",
               "enum": [
                 "nothing",
-                "carcassonne"
+                "carcassonne",
+                "checkers"
               ]
             }
           },
@@ -1867,6 +1872,279 @@
           "role"
         ]
       },
+      "CheckersLastMoveDto": {
+        "type": "object",
+        "properties": {
+          "captured": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          },
+          "path": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          },
+          "pieceId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "captured",
+          "path",
+          "pieceId"
+        ]
+      },
+      "CheckersMoveDataDto": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          }
+        },
+        "required": [
+          "path"
+        ]
+      },
+      "CheckersMoveRulesDto": {
+        "type": "object",
+        "properties": {
+          "boardSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "captureRequired": {
+            "type": "boolean"
+          },
+          "firstColor": {
+            "type": "string",
+            "enum": [
+              "WHITE",
+              "BLACK"
+            ]
+          },
+          "flyingKings": {
+            "type": "boolean"
+          },
+          "maxCaptureRequired": {
+            "type": "boolean"
+          },
+          "menCaptureBackward": {
+            "type": "boolean"
+          },
+          "menMoveBackward": {
+            "type": "boolean"
+          },
+          "promoteMidCapture": {
+            "type": "boolean"
+          },
+          "removeCapturedAfterMove": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "boardSize",
+          "captureRequired",
+          "firstColor",
+          "flyingKings",
+          "maxCaptureRequired",
+          "menCaptureBackward",
+          "menMoveBackward",
+          "promoteMidCapture",
+          "removeCapturedAfterMove"
+        ]
+      },
+      "CheckersPieceDto": {
+        "type": "object",
+        "properties": {
+          "color": {
+            "type": "string",
+            "enum": [
+              "WHITE",
+              "BLACK"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "MAN",
+              "KING"
+            ]
+          },
+          "square": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "maxItems": 2,
+            "minItems": 2
+          }
+        },
+        "required": [
+          "color",
+          "id",
+          "kind",
+          "square"
+        ]
+      },
+      "CheckersPlayerDto": {
+        "type": "object",
+        "properties": {
+          "color": {
+            "type": "string",
+            "enum": [
+              "WHITE",
+              "BLACK"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "moveOptions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MoveOptionDto"
+            }
+          }
+        },
+        "required": [
+          "color",
+          "id",
+          "moveOptions"
+        ]
+      },
+      "CheckersSessionStateDto": {
+        "type": "object",
+        "properties": {
+          "lastMove": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/CheckersLastMoveDto"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pieces": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CheckersPieceDto"
+            }
+          },
+          "players": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CheckersPlayerDto"
+            }
+          },
+          "quietMoves": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Сколько ходов подряд (обеих сторон в сумме) сделано только дамками без взятий; на 30 (по 15 у каждой стороны) партия заканчивается ничьей (DRAW_RULE)"
+          },
+          "result": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SessionResultDto"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "timer": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SessionTimerDto"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "turns": {
+            "$ref": "#/components/schemas/SessionTurnsDto"
+          }
+        },
+        "required": [
+          "pieces",
+          "players",
+          "quietMoves",
+          "turns"
+        ]
+      },
+      "CheckersSettingsDto": {
+        "type": "object",
+        "properties": {
+          "gameCode": {
+            "type": "string",
+            "enum": [
+              "checkers"
+            ]
+          },
+          "variant": {
+            "type": "string",
+            "enum": [
+              "RUSSIAN",
+              "INTERNATIONAL",
+              "ENGLISH"
+            ]
+          }
+        },
+        "required": [
+          "gameCode",
+          "variant"
+        ]
+      },
+      "CheckersSettingsLimitsDto": {
+        "type": "object",
+        "properties": {
+          "gameCode": {
+            "type": "string",
+            "enum": [
+              "checkers"
+            ]
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "RUSSIAN",
+                "INTERNATIONAL",
+                "ENGLISH"
+              ]
+            }
+          }
+        },
+        "required": [
+          "gameCode",
+          "variants"
+        ]
+      },
       "CreateRoomRequest": {
         "type": "object",
         "properties": {
@@ -1905,7 +2183,8 @@
             "type": "string",
             "enum": [
               "nothing",
-              "carcassonne"
+              "carcassonne",
+              "checkers"
             ]
           },
           "description": {
@@ -1972,6 +2251,7 @@
         "description": "Настройки конкретной игры, вид — по полю gameCode",
         "discriminator": {
           "mapping": {
+            "checkers": "#/components/schemas/CheckersSettingsDto",
             "nothing": "#/components/schemas/NothingSettingsDto"
           },
           "propertyName": "gameCode"
@@ -1979,6 +2259,9 @@
         "oneOf": [
           {
             "$ref": "#/components/schemas/NothingSettingsDto"
+          },
+          {
+            "$ref": "#/components/schemas/CheckersSettingsDto"
           }
         ]
       },
@@ -1986,6 +2269,7 @@
         "description": "Границы настроек конкретной игры, вид — по полю gameCode",
         "discriminator": {
           "mapping": {
+            "checkers": "#/components/schemas/CheckersSettingsLimitsDto",
             "nothing": "#/components/schemas/NothingSettingsLimitsDto"
           },
           "propertyName": "gameCode"
@@ -1993,6 +2277,9 @@
         "oneOf": [
           {
             "$ref": "#/components/schemas/NothingSettingsLimitsDto"
+          },
+          {
+            "$ref": "#/components/schemas/CheckersSettingsLimitsDto"
           }
         ]
       },
@@ -2003,7 +2290,8 @@
             "type": "string",
             "enum": [
               "nothing",
-              "carcassonne"
+              "carcassonne",
+              "checkers"
             ]
           },
           "description": {
@@ -2097,7 +2385,8 @@
               "object",
               "null"
             ],
-            "additionalProperties": {}
+            "additionalProperties": {},
+            "description": "Параметры действия в формате игры; у PASS и RESIGN их нет. Схемы по играм — в components: шашки, MOVE — CheckersMoveDataDto"
           },
           "type": {
             "type": "string",
@@ -2120,6 +2409,16 @@
             "items": {
               "$ref": "#/components/schemas/SessionPlayerDto"
             }
+          },
+          "result": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SessionResultDto"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "timer": {
             "oneOf": [
@@ -2428,7 +2727,8 @@
             "type": "string",
             "enum": [
               "nothing",
-              "carcassonne"
+              "carcassonne",
+              "checkers"
             ]
           },
           "id": {
@@ -2789,7 +3089,8 @@
             "type": "string",
             "enum": [
               "nothing",
-              "carcassonne"
+              "carcassonne",
+              "checkers"
             ]
           },
           "rules": {
@@ -2806,14 +3107,32 @@
         "properties": {
           "game": {
             "$ref": "#/components/schemas/SessionGameDto"
+          },
+          "moveRules": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SessionMoveRulesDto"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
           "game"
         ]
       },
+      "SessionMoveRulesDto": {
+        "description": "Правила хода конкретной игры для подсказок ввода (игра — meta.game.code); ход окончательно проверяет сервер",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/CheckersMoveRulesDto"
+          }
+        ]
+      },
       "SessionPatchEvent": {
-        "description": "Событие журнала партии {seq, at, method, code, data}: одна операция над документом партии {status, meta, state}. Состояние меняется только по method (PUT, PATCH, DELETE; INFO не меняет), code — что произошло, для журнала и логов. Несуществующий путь у PATCH/DELETE или неподходящий тип — рассинхронизация, клиент переподключается за свежим снапшотом.\n\nИзвестные коды (code):\n- session-started — PUT [] {status, meta, state}: первое событие журнала (обычно уже в снапшоте);\n- session-finished — PATCH [] {status: FINISHED}: партия закончилась, последнее событие, поток закрывается;\n- session-cancelled — PATCH [] {status: CANCELLED}: партию отменил владелец, последнее событие, поток закрывается;\n- move-options-changed — PUT [\"state\", \"players\", {id}, \"moveOptions\"]: варианты ходов игрока (чужим зрителям — пустой список);\n- turn-changed — PUT [\"state\", \"turns\"]: сменился текущий игрок или раунд;\n- timer-started — PUT [\"state\", \"timer\"]: таймер следующего хода;\n- game-paused — PATCH [\"state\", \"timer\"] {status: PAUSED, pausedAt}: пауза;\n- game-resumed — PATCH [\"state\", \"timer\"] {status: RUNNING, deadline, pausedAt: null}: продолжение;\n- timer-stopped — PUT [\"state\", \"timer\"]: таймер остановлен перед концом или отменой партии;\n- player-passed («игра в ничто») — PATCH [\"state\"] {moves}: игрок пропустил ход; по истечении времени — INFO {playerId, timeout: true}.",
+        "description": "Событие журнала партии {seq, at, method, code, data}: одна операция над документом партии {status, meta, state}. Состояние меняется только по method (PUT, PATCH, DELETE; INFO не меняет), code — что произошло, для журнала и логов. Несуществующий путь у PATCH/DELETE или неподходящий тип — рассинхронизация, клиент переподключается за свежим снапшотом.\n\nИзвестные коды (code):\n- session-started — PUT [] {status, meta, state}: первое событие журнала (обычно уже в снапшоте);\n- session-finished — PATCH [] {status: FINISHED}: партия закончилась, последнее событие, поток закрывается;\n- session-cancelled — PATCH [] {status: CANCELLED}: партию отменил владелец, последнее событие, поток закрывается;\n- move-options-changed — PUT [\"state\", \"players\", {id}, \"moveOptions\"]: варианты ходов игрока (чужим зрителям — пустой список);\n- turn-changed — PUT [\"state\", \"turns\"]: сменился текущий игрок или раунд;\n- timer-started — PUT [\"state\", \"timer\"]: таймер следующего хода;\n- game-paused — PATCH [\"state\", \"timer\"] {status: PAUSED, pausedAt}: пауза;\n- game-resumed — PATCH [\"state\", \"timer\"] {status: RUNNING, deadline, pausedAt: null}: продолжение;\n- timer-stopped — PUT [\"state\", \"timer\"]: таймер остановлен перед концом или отменой партии;\n- result-set — PUT [\"state\", \"result\"] {outcome, winnerIds, reason}: итог партии, только перед session-finished;\n- player-passed («игра в ничто») — PATCH [\"state\"] {moves}: игрок пропустил ход; по истечении времени — INFO {playerId, timeout: true};\n- piece-moved (шашки) — PATCH [\"state\", \"pieces\", {id}] {square}: шашка встала на последнюю клетку пути;\n- piece-captured (шашки) — DELETE [\"state\", \"pieces\", {id}]: шашка сбита (на каждую сбитую);\n- piece-crowned (шашки) — PATCH [\"state\", \"pieces\", {id}] {kind: KING}: шашка стала дамкой;\n- last-move-changed (шашки) — PUT [\"state\", \"lastMove\"] {pieceId, path, captured}: последний ход;\n- counters-changed (шашки) — PATCH [\"state\"] {quietMoves}: счётчик ходов дамками без взятий;\n- player-resigned (шашки) — INFO {playerId}: игрок сдался;\n- move-timed-out (шашки) — INFO {playerId}: время хода игрока вышло (поражение).",
         "discriminator": {
           "mapping": {
             "DELETE": "#/components/schemas/SessionEventDelete",
@@ -2900,6 +3219,33 @@
           "status"
         ]
       },
+      "SessionResultDto": {
+        "type": "object",
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "WIN",
+              "DRAW"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          },
+          "winnerIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": [
+          "outcome",
+          "reason",
+          "winnerIds"
+        ]
+      },
       "SessionSnapshotDto": {
         "type": "object",
         "properties": {
@@ -2954,10 +3300,13 @@
         ]
       },
       "SessionStateDto": {
-        "description": "Состояние партии конкретной игры: блоки модулей (players, timer, turns) и поля игры. Игра — meta.game.code снапшота; этой схемой клиент проверяет состояние после каждого события",
+        "description": "Состояние партии конкретной игры: блоки модулей (players, timer, turns, result) и поля игры. Игра — meta.game.code снапшота; этой схемой клиент проверяет состояние после каждого события",
         "oneOf": [
           {
             "$ref": "#/components/schemas/NothingSessionStateDto"
+          },
+          {
+            "$ref": "#/components/schemas/CheckersSessionStateDto"
           }
         ]
       },

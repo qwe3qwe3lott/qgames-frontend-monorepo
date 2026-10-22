@@ -4,9 +4,10 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
+import type {CheckersSettingsDto} from './checkersSettingsDto';
 import type {NothingSettingsDto} from './nothingSettingsDto';
 
 /**
  * Настройки конкретной игры, вид — по полю gameCode
  */
-export type GameSettingsDto = NothingSettingsDto;
+export type GameSettingsDto = NothingSettingsDto | CheckersSettingsDto;

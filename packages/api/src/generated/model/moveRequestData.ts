@@ -6,6 +6,7 @@
  */
 
 /**
+ * Параметры действия в формате игры; у PASS и RESIGN их нет. Схемы по играм — в components: шашки, MOVE — CheckersMoveDataDto
  * @nullable
  */
 export type MoveRequestData = {[key: string]: unknown} | null;

@@ -7,7 +7,10 @@
 import type {MoveRequestData} from './moveRequestData';
 
 export interface MoveRequest {
-  /** @nullable */
+  /**
+   * Параметры действия в формате игры; у PASS и RESIGN их нет. Схемы по играм — в components: шашки, MOVE — CheckersMoveDataDto
+   * @nullable
+   */
   data?: MoveRequestData;
   /** @minLength 1 */
   type: string;
