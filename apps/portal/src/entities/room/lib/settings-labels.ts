@@ -1,4 +1,6 @@
 import type {
+  CheckersSettingsDtoVariant,
+  GameSettingsDto,
   RoomSettingsDto,
   TimeControlDtoMode,
 } from '@qgames/api/gateway/model';
@@ -8,6 +10,15 @@ export const TIME_CONTROL_MODE_LABELS: Readonly<
 > = {
   NONE: 'Без таймера',
   PER_MOVE: 'Время на ход',
+};
+
+/** Варианты правил шашек (`CheckersVariant`). */
+export const CHECKERS_VARIANT_LABELS: Readonly<
+  Record<CheckersSettingsDtoVariant, string>
+> = {
+  RUSSIAN: 'Русские',
+  INTERNATIONAL: 'Международные',
+  ENGLISH: 'Английские',
 };
 
 /** «30 с», «2 мин», «1 мин 30 с». */
@@ -27,11 +38,24 @@ export interface SettingsRow {
   value: string;
 }
 
-/** Строки описания настроек комнаты: раунды и правила времени. */
+/** Строка описания настроек игры — по `gameCode`. */
+function gameSettingsRow(settings: GameSettingsDto): SettingsRow {
+  switch (settings.gameCode) {
+    case 'nothing':
+      return {label: 'Раундов', value: String(settings.rounds)};
+    case 'checkers':
+      return {
+        label: 'Вариант правил',
+        value: CHECKERS_VARIANT_LABELS[settings.variant],
+      };
+  }
+}
+
+/** Строки описания настроек комнаты: настройки игры и правила времени. */
 export function roomSettingsRows(settings: RoomSettingsDto): SettingsRow[] {
   const {mode, moveSeconds} = settings.timeControl;
   return [
-    {label: 'Раундов', value: String(settings.gameSettings.rounds)},
+    gameSettingsRow(settings.gameSettings),
     {
       label: TIME_CONTROL_MODE_LABELS.PER_MOVE,
       value:

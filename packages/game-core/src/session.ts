@@ -17,12 +17,18 @@ export type SessionLogEvent = SessionPatchEventOutput;
 
 export type SessionStatus = SessionSnapshotDtoOutput['status'];
 
-/** Описание партии, закреплённое при старте: код игры и правила. */
-export type SessionMeta = SessionMetaDtoOutput;
+/**
+ * Описание партии, закреплённое при старте: код игры и правила. `moveRules` —
+ * правила хода конкретной игры (у игры без них — null): общая проверка
+ * документа их не разбирает, форму проверяет guard игры по `meta.game.code`.
+ */
+export type SessionMeta = Omit<SessionMetaDtoOutput, 'moveRules'> & {
+  moveRules?: unknown;
+};
 
 /**
  * Состояние партии любой игры: объект из блоков модулей-механик (`players`,
- * `turns`, `timer`) и полей игры. Блоки проверяют guard'ы модулей
+ * `turns`, `timer`, `result`) и полей игры. Блоки проверяют guard'ы модулей
  * (`checkSessionState`), поля игры — guard пакета игры; конкретный тип сужает
  * guard игры по `meta.game.code` (например, `isNothingSession`).
  */

@@ -29,6 +29,138 @@ export const ChangeRoleRequest = zod.object({
 export type ChangeRoleRequest = zod.input<typeof ChangeRoleRequest>;
 export type ChangeRoleRequestOutput = zod.output<typeof ChangeRoleRequest>;
 
+export const CheckersLastMoveDto = zod.object({
+  captured: zod.array(zod.array(zod.int())),
+  path: zod.array(zod.array(zod.int())),
+  pieceId: zod.string(),
+});
+
+export type CheckersLastMoveDto = zod.input<typeof CheckersLastMoveDto>;
+export type CheckersLastMoveDtoOutput = zod.output<typeof CheckersLastMoveDto>;
+
+export const CheckersMoveDataDto = zod.object({
+  path: zod.array(zod.array(zod.int())),
+});
+
+export type CheckersMoveDataDto = zod.input<typeof CheckersMoveDataDto>;
+export type CheckersMoveDataDtoOutput = zod.output<typeof CheckersMoveDataDto>;
+
+export const CheckersMoveRulesDto = zod.object({
+  boardSize: zod.int(),
+  captureRequired: zod.boolean(),
+  firstColor: zod.enum(['WHITE', 'BLACK']),
+  flyingKings: zod.boolean(),
+  maxCaptureRequired: zod.boolean(),
+  menCaptureBackward: zod.boolean(),
+  menMoveBackward: zod.boolean(),
+  promoteMidCapture: zod.boolean(),
+  removeCapturedAfterMove: zod.boolean(),
+});
+
+export type CheckersMoveRulesDto = zod.input<typeof CheckersMoveRulesDto>;
+export type CheckersMoveRulesDtoOutput = zod.output<
+  typeof CheckersMoveRulesDto
+>;
+
+export const checkersPieceDtoSquareMin = 2;
+export const checkersPieceDtoSquareMax = 2;
+
+export const CheckersPieceDto = zod.object({
+  color: zod.enum(['WHITE', 'BLACK']),
+  id: zod.string(),
+  kind: zod.enum(['MAN', 'KING']),
+  square: zod
+    .array(zod.int())
+    .min(checkersPieceDtoSquareMin)
+    .max(checkersPieceDtoSquareMax),
+});
+
+export type CheckersPieceDto = zod.input<typeof CheckersPieceDto>;
+export type CheckersPieceDtoOutput = zod.output<typeof CheckersPieceDto>;
+
+export const MoveOptionDto = zod.object({
+  data: zod.record(zod.string(), zod.unknown()).nullish(),
+  type: zod.string(),
+});
+
+export type MoveOptionDto = zod.input<typeof MoveOptionDto>;
+export type MoveOptionDtoOutput = zod.output<typeof MoveOptionDto>;
+
+export const CheckersPlayerDto = zod.object({
+  color: zod.enum(['WHITE', 'BLACK']),
+  id: zod.uuid(),
+  moveOptions: zod.array(MoveOptionDto),
+});
+
+export type CheckersPlayerDto = zod.input<typeof CheckersPlayerDto>;
+export type CheckersPlayerDtoOutput = zod.output<typeof CheckersPlayerDto>;
+
+export const SessionResultDto = zod.object({
+  outcome: zod.enum(['WIN', 'DRAW']),
+  reason: zod.string(),
+  winnerIds: zod.array(zod.uuid()),
+});
+
+export type SessionResultDto = zod.input<typeof SessionResultDto>;
+export type SessionResultDtoOutput = zod.output<typeof SessionResultDto>;
+
+export const SessionTimerDto = zod.object({
+  deadline: zod.iso.datetime({offset: true}).nullish(),
+  pausedAt: zod.iso.datetime({offset: true}).nullish(),
+  status: zod.enum(['RUNNING', 'PAUSED', 'STOPPED']),
+});
+
+export type SessionTimerDto = zod.input<typeof SessionTimerDto>;
+export type SessionTimerDtoOutput = zod.output<typeof SessionTimerDto>;
+
+export const SessionTurnsDto = zod.object({
+  currentPlayerId: zod.uuid().nullish(),
+  round: zod.int(),
+  rounds: zod.int().nullish(),
+});
+
+export type SessionTurnsDto = zod.input<typeof SessionTurnsDto>;
+export type SessionTurnsDtoOutput = zod.output<typeof SessionTurnsDto>;
+
+export const CheckersSessionStateDto = zod.object({
+  lastMove: zod.union([CheckersLastMoveDto, zod.null()]).optional(),
+  pieces: zod.array(CheckersPieceDto),
+  players: zod.array(CheckersPlayerDto),
+  quietMoves: zod
+    .int()
+    .describe(
+      'Сколько ходов подряд (обеих сторон в сумме) сделано только дамками без взятий; на 30 (по 15 у каждой стороны) партия заканчивается ничьей (DRAW_RULE)',
+    ),
+  result: zod.union([SessionResultDto, zod.null()]).optional(),
+  timer: zod.union([SessionTimerDto, zod.null()]).optional(),
+  turns: SessionTurnsDto,
+});
+
+export type CheckersSessionStateDto = zod.input<typeof CheckersSessionStateDto>;
+export type CheckersSessionStateDtoOutput = zod.output<
+  typeof CheckersSessionStateDto
+>;
+
+export const CheckersSettingsDto = zod.object({
+  gameCode: zod.enum(['checkers']),
+  variant: zod.enum(['RUSSIAN', 'INTERNATIONAL', 'ENGLISH']),
+});
+
+export type CheckersSettingsDto = zod.input<typeof CheckersSettingsDto>;
+export type CheckersSettingsDtoOutput = zod.output<typeof CheckersSettingsDto>;
+
+export const CheckersSettingsLimitsDto = zod.object({
+  gameCode: zod.enum(['checkers']),
+  variants: zod.array(zod.enum(['RUSSIAN', 'INTERNATIONAL', 'ENGLISH'])),
+});
+
+export type CheckersSettingsLimitsDto = zod.input<
+  typeof CheckersSettingsLimitsDto
+>;
+export type CheckersSettingsLimitsDtoOutput = zod.output<
+  typeof CheckersSettingsLimitsDto
+>;
+
 export const NothingSettingsDto = zod.object({
   gameCode: zod.enum(['nothing']),
   rounds: zod.int(),
@@ -37,9 +169,9 @@ export const NothingSettingsDto = zod.object({
 export type NothingSettingsDto = zod.input<typeof NothingSettingsDto>;
 export type NothingSettingsDtoOutput = zod.output<typeof NothingSettingsDto>;
 
-export const GameSettingsDto = NothingSettingsDto.describe(
-  'Настройки конкретной игры, вид — по полю gameCode',
-);
+export const GameSettingsDto = zod
+  .discriminatedUnion('gameCode', [NothingSettingsDto, CheckersSettingsDto])
+  .describe('Настройки конкретной игры, вид — по полю gameCode');
 
 export type GameSettingsDto = zod.input<typeof GameSettingsDto>;
 export type GameSettingsDtoOutput = zod.output<typeof GameSettingsDto>;
@@ -123,9 +255,12 @@ export type NothingSettingsLimitsDtoOutput = zod.output<
   typeof NothingSettingsLimitsDto
 >;
 
-export const GameSettingsLimitsDto = NothingSettingsLimitsDto.describe(
-  'Границы настроек конкретной игры, вид — по полю gameCode',
-);
+export const GameSettingsLimitsDto = zod
+  .discriminatedUnion('gameCode', [
+    NothingSettingsLimitsDto,
+    CheckersSettingsLimitsDto,
+  ])
+  .describe('Границы настроек конкретной игры, вид — по полю gameCode');
 
 export type GameSettingsLimitsDto = zod.input<typeof GameSettingsLimitsDto>;
 export type GameSettingsLimitsDtoOutput = zod.output<
@@ -154,7 +289,7 @@ export type GameRulesDto = zod.input<typeof GameRulesDto>;
 export type GameRulesDtoOutput = zod.output<typeof GameRulesDto>;
 
 export const GameDetailsResponse = zod.object({
-  code: zod.enum(['nothing', 'carcassonne']),
+  code: zod.enum(['nothing', 'carcassonne', 'checkers']),
   description: zod.string(),
   rules: GameRulesDto,
   title: zod.string(),
@@ -164,7 +299,7 @@ export type GameDetailsResponse = zod.input<typeof GameDetailsResponse>;
 export type GameDetailsResponseOutput = zod.output<typeof GameDetailsResponse>;
 
 export const GameSummaryDto = zod.object({
-  code: zod.enum(['nothing', 'carcassonne']),
+  code: zod.enum(['nothing', 'carcassonne', 'checkers']),
   description: zod.string(),
   title: zod.string(),
 });
@@ -205,16 +340,13 @@ export const LoginRequest = zod.object({
 export type LoginRequest = zod.input<typeof LoginRequest>;
 export type LoginRequestOutput = zod.output<typeof LoginRequest>;
 
-export const MoveOptionDto = zod.object({
-  data: zod.record(zod.string(), zod.unknown()).nullish(),
-  type: zod.string(),
-});
-
-export type MoveOptionDto = zod.input<typeof MoveOptionDto>;
-export type MoveOptionDtoOutput = zod.output<typeof MoveOptionDto>;
-
 export const MoveRequest = zod.object({
-  data: zod.record(zod.string(), zod.unknown()).nullish(),
+  data: zod
+    .record(zod.string(), zod.unknown())
+    .nullish()
+    .describe(
+      'Параметры действия в формате игры; у PASS и RESIGN их нет. Схемы по играм — в components: шашки, MOVE — CheckersMoveDataDto',
+    ),
   type: zod.string().min(1),
 });
 
@@ -229,27 +361,10 @@ export const SessionPlayerDto = zod.object({
 export type SessionPlayerDto = zod.input<typeof SessionPlayerDto>;
 export type SessionPlayerDtoOutput = zod.output<typeof SessionPlayerDto>;
 
-export const SessionTimerDto = zod.object({
-  deadline: zod.iso.datetime({offset: true}).nullish(),
-  pausedAt: zod.iso.datetime({offset: true}).nullish(),
-  status: zod.enum(['RUNNING', 'PAUSED', 'STOPPED']),
-});
-
-export type SessionTimerDto = zod.input<typeof SessionTimerDto>;
-export type SessionTimerDtoOutput = zod.output<typeof SessionTimerDto>;
-
-export const SessionTurnsDto = zod.object({
-  currentPlayerId: zod.uuid().nullish(),
-  round: zod.int(),
-  rounds: zod.int().nullish(),
-});
-
-export type SessionTurnsDto = zod.input<typeof SessionTurnsDto>;
-export type SessionTurnsDtoOutput = zod.output<typeof SessionTurnsDto>;
-
 export const NothingSessionStateDto = zod.object({
   moves: zod.int(),
   players: zod.array(SessionPlayerDto),
+  result: zod.union([SessionResultDto, zod.null()]).optional(),
   timer: zod.union([SessionTimerDto, zod.null()]).optional(),
   turns: SessionTurnsDto,
 });
@@ -401,7 +516,7 @@ export type SessionResponseOutput = zod.output<typeof SessionResponse>;
 
 export const RoomResponse = zod.object({
   createdAt: zod.iso.datetime({offset: true}),
-  gameCode: zod.enum(['nothing', 'carcassonne']),
+  gameCode: zod.enum(['nothing', 'carcassonne', 'checkers']),
   id: zod.uuid(),
   maxPlayers: zod.int(),
   members: zod.array(RoomMemberResponse),
@@ -579,15 +694,23 @@ export type SessionEventPut = zod.input<typeof SessionEventPut>;
 export type SessionEventPutOutput = zod.output<typeof SessionEventPut>;
 
 export const SessionGameDto = zod.object({
-  code: zod.enum(['nothing', 'carcassonne']),
+  code: zod.enum(['nothing', 'carcassonne', 'checkers']),
   rules: RoomSettingsDto,
 });
 
 export type SessionGameDto = zod.input<typeof SessionGameDto>;
 export type SessionGameDtoOutput = zod.output<typeof SessionGameDto>;
 
+export const SessionMoveRulesDto = CheckersMoveRulesDto.describe(
+  'Правила хода конкретной игры для подсказок ввода (игра — meta.game.code); ход окончательно проверяет сервер',
+);
+
+export type SessionMoveRulesDto = zod.input<typeof SessionMoveRulesDto>;
+export type SessionMoveRulesDtoOutput = zod.output<typeof SessionMoveRulesDto>;
+
 export const SessionMetaDto = zod.object({
   game: SessionGameDto,
+  moveRules: zod.union([SessionMoveRulesDto, zod.null()]).optional(),
 });
 
 export type SessionMetaDto = zod.input<typeof SessionMetaDto>;
@@ -601,7 +724,7 @@ export const SessionPatchEvent = zod
     SessionEventInfo,
   ])
   .describe(
-    'Событие журнала партии {seq, at, method, code, data}: одна операция над документом партии {status, meta, state}. Состояние меняется только по method (PUT, PATCH, DELETE; INFO не меняет), code — что произошло, для журнала и логов. Несуществующий путь у PATCH/DELETE или неподходящий тип — рассинхронизация, клиент переподключается за свежим снапшотом.\n\nИзвестные коды (code):\n- session-started — PUT [] {status, meta, state}: первое событие журнала (обычно уже в снапшоте);\n- session-finished — PATCH [] {status: FINISHED}: партия закончилась, последнее событие, поток закрывается;\n- session-cancelled — PATCH [] {status: CANCELLED}: партию отменил владелец, последнее событие, поток закрывается;\n- move-options-changed — PUT ["state", "players", {id}, "moveOptions"]: варианты ходов игрока (чужим зрителям — пустой список);\n- turn-changed — PUT ["state", "turns"]: сменился текущий игрок или раунд;\n- timer-started — PUT ["state", "timer"]: таймер следующего хода;\n- game-paused — PATCH ["state", "timer"] {status: PAUSED, pausedAt}: пауза;\n- game-resumed — PATCH ["state", "timer"] {status: RUNNING, deadline, pausedAt: null}: продолжение;\n- timer-stopped — PUT ["state", "timer"]: таймер остановлен перед концом или отменой партии;\n- player-passed («игра в ничто») — PATCH ["state"] {moves}: игрок пропустил ход; по истечении времени — INFO {playerId, timeout: true}.',
+    'Событие журнала партии {seq, at, method, code, data}: одна операция над документом партии {status, meta, state}. Состояние меняется только по method (PUT, PATCH, DELETE; INFO не меняет), code — что произошло, для журнала и логов. Несуществующий путь у PATCH/DELETE или неподходящий тип — рассинхронизация, клиент переподключается за свежим снапшотом.\n\nИзвестные коды (code):\n- session-started — PUT [] {status, meta, state}: первое событие журнала (обычно уже в снапшоте);\n- session-finished — PATCH [] {status: FINISHED}: партия закончилась, последнее событие, поток закрывается;\n- session-cancelled — PATCH [] {status: CANCELLED}: партию отменил владелец, последнее событие, поток закрывается;\n- move-options-changed — PUT ["state", "players", {id}, "moveOptions"]: варианты ходов игрока (чужим зрителям — пустой список);\n- turn-changed — PUT ["state", "turns"]: сменился текущий игрок или раунд;\n- timer-started — PUT ["state", "timer"]: таймер следующего хода;\n- game-paused — PATCH ["state", "timer"] {status: PAUSED, pausedAt}: пауза;\n- game-resumed — PATCH ["state", "timer"] {status: RUNNING, deadline, pausedAt: null}: продолжение;\n- timer-stopped — PUT ["state", "timer"]: таймер остановлен перед концом или отменой партии;\n- result-set — PUT ["state", "result"] {outcome, winnerIds, reason}: итог партии, только перед session-finished;\n- player-passed («игра в ничто») — PATCH ["state"] {moves}: игрок пропустил ход; по истечении времени — INFO {playerId, timeout: true};\n- piece-moved (шашки) — PATCH ["state", "pieces", {id}] {square}: шашка встала на последнюю клетку пути;\n- piece-captured (шашки) — DELETE ["state", "pieces", {id}]: шашка сбита (на каждую сбитую);\n- piece-crowned (шашки) — PATCH ["state", "pieces", {id}] {kind: KING}: шашка стала дамкой;\n- last-move-changed (шашки) — PUT ["state", "lastMove"] {pieceId, path, captured}: последний ход;\n- counters-changed (шашки) — PATCH ["state"] {quietMoves}: счётчик ходов дамками без взятий;\n- player-resigned (шашки) — INFO {playerId}: игрок сдался;\n- move-timed-out (шашки) — INFO {playerId}: время хода игрока вышло (поражение).',
   );
 
 export type SessionPatchEvent = zod.input<typeof SessionPatchEvent>;
@@ -621,9 +744,11 @@ export type SessionPatchStreamEventOutput = zod.output<
   typeof SessionPatchStreamEvent
 >;
 
-export const SessionStateDto = NothingSessionStateDto.describe(
-  'Состояние партии конкретной игры: блоки модулей (players, timer, turns) и поля игры. Игра — meta.game.code снапшота; этой схемой клиент проверяет состояние после каждого события',
-);
+export const SessionStateDto = zod
+  .union([NothingSessionStateDto, CheckersSessionStateDto])
+  .describe(
+    'Состояние партии конкретной игры: блоки модулей (players, timer, turns, result) и поля игры. Игра — meta.game.code снапшота; этой схемой клиент проверяет состояние после каждого события',
+  );
 
 export type SessionStateDto = zod.input<typeof SessionStateDto>;
 export type SessionStateDtoOutput = zod.output<typeof SessionStateDto>;
@@ -784,7 +909,9 @@ export const ListGamesResponse = GameListResponse;
  * @summary Игра
  */
 export const GetGameParams = zod.object({
-  gameCode: zod.enum(['nothing', 'carcassonne']).describe('Код игры'),
+  gameCode: zod
+    .enum(['nothing', 'carcassonne', 'checkers'])
+    .describe('Код игры'),
 });
 
 export const GetGameResponse = GameDetailsResponse;
@@ -794,7 +921,9 @@ export const GetGameResponse = GameDetailsResponse;
  * @summary Создать комнату
  */
 export const CreateRoomParams = zod.object({
-  gameCode: zod.enum(['nothing', 'carcassonne']).describe('Код игры'),
+  gameCode: zod
+    .enum(['nothing', 'carcassonne', 'checkers'])
+    .describe('Код игры'),
 });
 
 export const CreateRoomBody = CreateRoomRequest;
@@ -802,11 +931,13 @@ export const CreateRoomBody = CreateRoomRequest;
 export const CreateRoomResponse = RoomResponse;
 
 /**
- * Ручка одна на все игры: код игры — в пути, ход — общий конверт `{type, data}`. `type` — вид действия (`PASS` в «игре в ничто»), `data` — его параметры в формате игры; допустимые сейчас ходы игрока — moveOptions его игрока в состоянии партии. Код игры должен совпадать с игрой комнаты. Ходить может только игрок партии, находящийся в комнате. Ход проверяется по текущему состоянию партии. Ответ без тела: изменения (ход, очерёдность, варианты ходов, таймер, конец партии) приходят событиями потока партии. Когда партия заканчивается, комната возвращается в ожидание.
+ * Ручка одна на все игры: код игры — в пути, ход — общий конверт `{type, data}`. `type` — вид действия (`PASS` в «игре в ничто», `MOVE` и `RESIGN` в шашках), `data` — его параметры в формате игры (схема в components: у шашек — CheckersMoveDataDto, полный путь шашки); допустимые сейчас ходы игрока — moveOptions его игрока в состоянии партии. Код игры должен совпадать с игрой комнаты. Ходить может только игрок партии, находящийся в комнате. Ход проверяется по текущему состоянию партии. Ответ без тела: изменения (ход, очерёдность, варианты ходов, таймер, конец партии) приходят событиями потока партии. Когда партия заканчивается, комната возвращается в ожидание.
  * @summary Сделать ход
  */
 export const MakeMoveParams = zod.object({
-  gameCode: zod.enum(['nothing', 'carcassonne']).describe('Код игры'),
+  gameCode: zod
+    .enum(['nothing', 'carcassonne', 'checkers'])
+    .describe('Код игры'),
   roomId: zod.uuid(),
 });
 
@@ -817,7 +948,7 @@ export const MakeMoveResponse = zod.void();
 /**
  * Server-Sent Events (EventSource с withCredentials): сообщения `event: <тип>` + `data: <json>`, без `id:`, раз в ~5 с комментарий `: ping`. Схема пары тип + данные — SessionStreamEvent ({type, data}, дискриминатор type).
  *
- * Первое сообщение — snapshot: документ партии для этого зрителя `{seq, status, serverTime, meta, state}`; так же после каждого переподключения. meta.game — код игры и правила партии, закреплённые при старте; по meta.game.code клиент выбирает схему состояния (NothingSessionStateDto). state — блоки модулей (players с moveOptions, timer, turns) и поля игры.
+ * Первое сообщение — snapshot: документ партии для этого зрителя `{seq, status, serverTime, meta, state}`; так же после каждого переподключения. meta.game — код игры и правила партии, закреплённые при старте; по meta.game.code клиент выбирает схему состояния (NothingSessionStateDto, CheckersSessionStateDto) и правил хода meta.moveRules (CheckersMoveRulesDto; null — у игры их нет). state — блоки модулей (players с moveOptions и полями игры, timer, turns, result — итог партии) и поля игры.
  *
  * Дальше — события журнала партии `{seq, at, method, code, data}` (SessionPatchEvent), тип сообщения — method в нижнем регистре (put, patch, delete, info). seq непрерывен и продолжает seq снапшота: дыра означает потерю (переподключиться), повтор с уже применённым seq отбрасывается. Каждое событие — одна операция над документом `{status, meta, state}` по пути data.path (строка — ключ объекта, {id} — элемент массива по id): PUT заменяет или создаёт значение, PATCH сливает поля объекта неглубоко, DELETE удаляет, INFO состояние не меняет. Клиент применяет события по method, code — для журнала и логов. Начало и конец партии — тоже патчи: session-started (PUT []), session-finished и session-cancelled (PATCH [] {status}), после конца сервер закрывает поток. Несуществующий путь или состояние не по схеме игры — переподключиться за свежим снапшотом.
  *
@@ -825,7 +956,9 @@ export const MakeMoveResponse = zod.void();
  * @summary Поток событий партии
  */
 export const SessionEventsParams = zod.object({
-  gameCode: zod.enum(['nothing', 'carcassonne']).describe('Код игры'),
+  gameCode: zod
+    .enum(['nothing', 'carcassonne', 'checkers'])
+    .describe('Код игры'),
   roomId: zod.uuid(),
   sessionId: zod.uuid(),
 });
@@ -837,7 +970,9 @@ export const SessionEventsResponse = zod.unknown();
  * @summary Изменить настройки комнаты
  */
 export const UpdateRoomSettingsParams = zod.object({
-  gameCode: zod.enum(['nothing', 'carcassonne']).describe('Код игры'),
+  gameCode: zod
+    .enum(['nothing', 'carcassonne', 'checkers'])
+    .describe('Код игры'),
   roomId: zod.uuid(),
 });
 

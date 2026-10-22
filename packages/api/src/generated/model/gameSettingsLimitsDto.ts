@@ -4,9 +4,11 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
+import type {CheckersSettingsLimitsDto} from './checkersSettingsLimitsDto';
 import type {NothingSettingsLimitsDto} from './nothingSettingsLimitsDto';
 
 /**
  * Границы настроек конкретной игры, вид — по полю gameCode
  */
-export type GameSettingsLimitsDto = NothingSettingsLimitsDto;
+export type GameSettingsLimitsDto =
+  NothingSettingsLimitsDto | CheckersSettingsLimitsDto;

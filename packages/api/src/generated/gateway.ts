@@ -952,7 +952,9 @@ export function useListGames<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-export const getGetGameUrl = (gameCode: 'nothing' | 'carcassonne') => {
+export const getGetGameUrl = (
+  gameCode: 'nothing' | 'carcassonne' | 'checkers',
+) => {
   return `/api/games/${gameCode}`;
 };
 
@@ -961,7 +963,7 @@ export const getGetGameUrl = (gameCode: 'nothing' | 'carcassonne') => {
  * @summary Игра
  */
 export const getGame = async (
-  gameCode: 'nothing' | 'carcassonne',
+  gameCode: 'nothing' | 'carcassonne' | 'checkers',
   options?: Parameters<typeof apiFetch>[1],
 ): Promise<GameDetailsResponse> => {
   return apiFetch<GameDetailsResponse>(getGetGameUrl(gameCode), {
@@ -970,7 +972,9 @@ export const getGame = async (
   });
 };
 
-export const getGetGameQueryKey = (gameCode: 'nothing' | 'carcassonne') => {
+export const getGetGameQueryKey = (
+  gameCode: 'nothing' | 'carcassonne' | 'checkers',
+) => {
   return [`/api/games/${gameCode}`] as const;
 };
 
@@ -978,7 +982,7 @@ export const getGetGameQueryOptions = <
   TData = Awaited<ReturnType<typeof getGame>>,
   TError = ErrorType<ProblemDetail>,
 >(
-  gameCode: 'nothing' | 'carcassonne',
+  gameCode: 'nothing' | 'carcassonne' | 'checkers',
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof getGame>>, TError, TData>
@@ -1013,7 +1017,7 @@ export function useGetGame<
   TData = Awaited<ReturnType<typeof getGame>>,
   TError = ErrorType<ProblemDetail>,
 >(
-  gameCode: 'nothing' | 'carcassonne',
+  gameCode: 'nothing' | 'carcassonne' | 'checkers',
   options: {
     query: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof getGame>>, TError, TData>
@@ -1036,7 +1040,7 @@ export function useGetGame<
   TData = Awaited<ReturnType<typeof getGame>>,
   TError = ErrorType<ProblemDetail>,
 >(
-  gameCode: 'nothing' | 'carcassonne',
+  gameCode: 'nothing' | 'carcassonne' | 'checkers',
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof getGame>>, TError, TData>
@@ -1057,7 +1061,7 @@ export function useGetGame<
   TData = Awaited<ReturnType<typeof getGame>>,
   TError = ErrorType<ProblemDetail>,
 >(
-  gameCode: 'nothing' | 'carcassonne',
+  gameCode: 'nothing' | 'carcassonne' | 'checkers',
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof getGame>>, TError, TData>
@@ -1074,7 +1078,7 @@ export function useGetGame<
   TData = Awaited<ReturnType<typeof getGame>>,
   TError = ErrorType<ProblemDetail>,
 >(
-  gameCode: 'nothing' | 'carcassonne',
+  gameCode: 'nothing' | 'carcassonne' | 'checkers',
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof getGame>>, TError, TData>
@@ -1095,7 +1099,9 @@ export function useGetGame<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-export const getCreateRoomUrl = (gameCode: 'nothing' | 'carcassonne') => {
+export const getCreateRoomUrl = (
+  gameCode: 'nothing' | 'carcassonne' | 'checkers',
+) => {
   return `/api/games/${gameCode}/rooms`;
 };
 
@@ -1104,7 +1110,7 @@ export const getCreateRoomUrl = (gameCode: 'nothing' | 'carcassonne') => {
  * @summary Создать комнату
  */
 export const createRoom = async (
-  gameCode: 'nothing' | 'carcassonne',
+  gameCode: 'nothing' | 'carcassonne' | 'checkers',
   createRoomRequest: CreateRoomRequest,
   options?: Parameters<typeof apiFetch>[1],
 ): Promise<RoomResponse> => {
@@ -1186,7 +1192,7 @@ export type CreateRoomMutationResult = NonNullable<
 export type CreateRoomMutationBody = CreateRoomRequest;
 export type CreateRoomMutationError = ErrorType<ProblemDetail>;
 export type CreateRoomMutationVariables = {
-  gameCode: 'nothing' | 'carcassonne';
+  gameCode: 'nothing' | 'carcassonne' | 'checkers';
   data: CreateRoomRequest;
 };
 
@@ -1217,18 +1223,18 @@ export const useCreateRoom = <
 };
 
 export const getMakeMoveUrl = (
-  gameCode: 'nothing' | 'carcassonne',
+  gameCode: 'nothing' | 'carcassonne' | 'checkers',
   roomId: string,
 ) => {
   return `/api/games/${gameCode}/rooms/${roomId}/moves`;
 };
 
 /**
- * Ручка одна на все игры: код игры — в пути, ход — общий конверт `{type, data}`. `type` — вид действия (`PASS` в «игре в ничто»), `data` — его параметры в формате игры; допустимые сейчас ходы игрока — moveOptions его игрока в состоянии партии. Код игры должен совпадать с игрой комнаты. Ходить может только игрок партии, находящийся в комнате. Ход проверяется по текущему состоянию партии. Ответ без тела: изменения (ход, очерёдность, варианты ходов, таймер, конец партии) приходят событиями потока партии. Когда партия заканчивается, комната возвращается в ожидание.
+ * Ручка одна на все игры: код игры — в пути, ход — общий конверт `{type, data}`. `type` — вид действия (`PASS` в «игре в ничто», `MOVE` и `RESIGN` в шашках), `data` — его параметры в формате игры (схема в components: у шашек — CheckersMoveDataDto, полный путь шашки); допустимые сейчас ходы игрока — moveOptions его игрока в состоянии партии. Код игры должен совпадать с игрой комнаты. Ходить может только игрок партии, находящийся в комнате. Ход проверяется по текущему состоянию партии. Ответ без тела: изменения (ход, очерёдность, варианты ходов, таймер, конец партии) приходят событиями потока партии. Когда партия заканчивается, комната возвращается в ожидание.
  * @summary Сделать ход
  */
 export const makeMove = async (
-  gameCode: 'nothing' | 'carcassonne',
+  gameCode: 'nothing' | 'carcassonne' | 'checkers',
   roomId: string,
   moveRequest: MoveRequest,
   options?: Parameters<typeof apiFetch>[1],
@@ -1311,7 +1317,7 @@ export type MakeMoveMutationResult = NonNullable<
 export type MakeMoveMutationBody = MoveRequest;
 export type MakeMoveMutationError = ErrorType<ProblemDetail>;
 export type MakeMoveMutationVariables = {
-  gameCode: 'nothing' | 'carcassonne';
+  gameCode: 'nothing' | 'carcassonne' | 'checkers';
   roomId: string;
   data: MoveRequest;
 };
@@ -1343,7 +1349,7 @@ export const useMakeMove = <
 };
 
 export const getUpdateRoomSettingsUrl = (
-  gameCode: 'nothing' | 'carcassonne',
+  gameCode: 'nothing' | 'carcassonne' | 'checkers',
   roomId: string,
 ) => {
   return `/api/games/${gameCode}/rooms/${roomId}/settings`;
@@ -1354,7 +1360,7 @@ export const getUpdateRoomSettingsUrl = (
  * @summary Изменить настройки комнаты
  */
 export const updateRoomSettings = async (
-  gameCode: 'nothing' | 'carcassonne',
+  gameCode: 'nothing' | 'carcassonne' | 'checkers',
   roomId: string,
   roomSettingsDto: RoomSettingsDto,
   options?: Parameters<typeof apiFetch>[1],
@@ -1438,7 +1444,7 @@ export type UpdateRoomSettingsMutationResult = NonNullable<
 export type UpdateRoomSettingsMutationBody = RoomSettingsDto;
 export type UpdateRoomSettingsMutationError = ErrorType<ProblemDetail>;
 export type UpdateRoomSettingsMutationVariables = {
-  gameCode: 'nothing' | 'carcassonne';
+  gameCode: 'nothing' | 'carcassonne' | 'checkers';
   roomId: string;
   data: RoomSettingsDto;
 };

@@ -1,6 +1,7 @@
 import {
   checkSessionState,
   coreModule,
+  resultModule,
   timerModule,
   turnsModule,
   type GameStateRules,
@@ -18,7 +19,7 @@ export const NOTHING_CODE = 'nothing';
 /** Единственный вид хода: «Завершить ход». */
 export const PASS = 'PASS';
 
-/** Состояние партии «ничто» для зрителя: модули core, turns, timer и число ходов. */
+/** Состояние партии «ничто» для зрителя: модули core, turns, timer, result и число ходов. */
 export type NothingState = NothingSessionStateDtoOutput;
 
 export interface NothingSession extends SessionData {
@@ -34,11 +35,12 @@ function isNothingFields(state: SessionState): boolean {
 }
 
 /**
- * Состояние «ничто» (как `GameRules` на бэкенде): модули core, turns, timer
- * (таймер может быть null — партия без времени на ход) и игровые поля.
+ * Состояние «ничто» (как `GameRules` на бэкенде): модули core, turns, timer,
+ * result (таймер может быть null — партия без времени на ход, итог у «ничто»
+ * всегда null) и игровые поля.
  */
 export const nothingRules: GameStateRules = {
-  modules: [coreModule, turnsModule, timerModule],
+  modules: [coreModule, turnsModule, timerModule, resultModule],
   isGameState: isNothingFields,
 };
 

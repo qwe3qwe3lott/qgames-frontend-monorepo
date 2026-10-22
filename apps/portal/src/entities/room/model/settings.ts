@@ -1,5 +1,13 @@
-import type {GameRulesDto, RoomSettingsDto} from '@qgames/api/gateway/model';
-import {UpdateRoomSettingsBody} from '@qgames/api/gateway/zod';
+import type {
+  GameRulesDto,
+  GameSettingsLimitsDto,
+  RoomSettingsDto,
+} from '@qgames/api/gateway/model';
+import {
+  CheckersSettingsDto,
+  NothingSettingsDto,
+  UpdateRoomSettingsBody,
+} from '@qgames/api/gateway/zod';
 import type {Path} from 'react-hook-form';
 import {z} from 'zod';
 
@@ -7,15 +15,37 @@ import {z} from 'zod';
 const DEFAULT_MOVE_SECONDS = 30;
 
 /**
+ * Схема настроек игры: union по `gameCode` из сгенерированных схем, вариант
+ * игры комнаты дополнен её границами (`gameSettingsLimits`). Остальные
+ * варианты union — без границ: форма заполняется настройками своей игры.
+ */
+function gameSettingsSchema(limits: GameSettingsLimitsDto) {
+  const nothing =
+    limits.gameCode === 'nothing'
+      ? NothingSettingsDto.extend({
+          rounds: NothingSettingsDto.shape.rounds
+            .min(limits.rounds.min)
+            .max(limits.rounds.max),
+        })
+      : NothingSettingsDto;
+  const checkers =
+    limits.gameCode === 'checkers'
+      ? CheckersSettingsDto.extend({
+          variant: CheckersSettingsDto.shape.variant.refine(
+            variant => limits.variants.includes(variant),
+            'Этот вариант игра не поддерживает',
+          ),
+        })
+      : CheckersSettingsDto;
+  return z.discriminatedUnion('gameCode', [nothing, checkers]);
+}
+
+/**
  * Схема формы настроек комнаты: сгенерированная схема `RoomSettingsDto`,
  * дополненная границами игры из `rules` ответа `GET /api/games/{gameCode}`.
- *
- * `gameSettings` сейчас один вариант (`nothing`, `rounds`); со второй игрой
- * здесь появится выбор схемы по `gameCode`.
  */
 export function roomSettingsSchema(rules: GameRulesDto) {
   const {modes, moveSeconds} = rules.timeControl;
-  const {rounds} = rules.gameSettingsLimits;
   const body = UpdateRoomSettingsBody.shape;
   return z.object({
     timeControl: z
@@ -43,9 +73,7 @@ export function roomSettingsSchema(rules: GameRulesDto) {
           });
         }
       }),
-    gameSettings: body.gameSettings.extend({
-      rounds: body.gameSettings.shape.rounds.min(rounds.min).max(rounds.max),
-    }),
+    gameSettings: gameSettingsSchema(rules.gameSettingsLimits),
   });
 }
 
@@ -59,6 +87,7 @@ export const ROOM_SETTINGS_FIELDS = [
   'timeControl.mode',
   'timeControl.moveSeconds',
   'gameSettings.rounds',
+  'gameSettings.variant',
 ] as const satisfies readonly Path<RoomSettingsValues>[];
 
 /** Значения формы из настроек комнаты (или настроек игры по умолчанию). */

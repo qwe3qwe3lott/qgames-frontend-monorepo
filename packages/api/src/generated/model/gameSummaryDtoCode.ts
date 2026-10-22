@@ -11,4 +11,5 @@ export type GameSummaryDtoCode =
 export const GameSummaryDtoCode = {
   nothing: 'nothing',
   carcassonne: 'carcassonne',
+  checkers: 'checkers',
 } as const;

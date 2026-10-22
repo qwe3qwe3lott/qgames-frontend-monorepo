@@ -1,0 +1,30 @@
+{
+  "name": "@qgames/game-checkers",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@qgames/api": "workspace:*",
+    "@qgames/game-core": "workspace:*",
+    "@qgames/game-ui": "workspace:*",
+    "@qgames/ui": "workspace:*",
+    "lucide-react": "catalog:"
+  },
+  "devDependencies": {
+    "@qgames/config": "workspace:*",
+    "@types/react": "catalog:",
+    "eslint": "catalog:",
+    "react": "catalog:",
+    "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "catalog:"
+  }
+}

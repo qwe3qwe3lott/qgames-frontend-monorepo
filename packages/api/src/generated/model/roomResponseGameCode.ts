@@ -11,4 +11,5 @@ export type RoomResponseGameCode =
 export const RoomResponseGameCode = {
   nothing: 'nothing',
   carcassonne: 'carcassonne',
+  checkers: 'checkers',
 } as const;
