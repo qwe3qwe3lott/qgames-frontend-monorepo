@@ -1,5 +1,5 @@
 # Контекст сборки — корень репозитория (docker/app.Dockerfile).
-# apps/*/.env НЕ исключаются: из них сборка берёт PUBLIC_* / NEXT_PUBLIC_*.
+# apps/*/.env НЕ исключаются: из них сборка берёт PUBLIC_*.
 
 **/node_modules
 **/.turbo

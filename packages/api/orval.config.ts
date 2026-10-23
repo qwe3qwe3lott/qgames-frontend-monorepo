@@ -63,13 +63,13 @@ export default defineConfig({
     input: {...gatewayInput, override: {transformer: withoutEventStreams}},
     hooks,
     output: {
-      // Теги в спецификации на русском: tags-split дал бы кириллические имена файлов.
-      mode: 'split',
-      target: './src/generated/gateway.ts',
-      schemas: './src/generated/model',
+      // Файл ручек на каждый тег (теги — латиницей), barrel — query/index.ts.
+      mode: 'tags-split',
+      target: './src/generated/gateway/query/index.ts',
+      schemas: './src/generated/gateway/model',
       client: 'react-query',
       httpClient: 'fetch',
-      clean: ['./src/generated/model'],
+      clean: true,
       override: queryOverride,
     },
   },
@@ -77,9 +77,10 @@ export default defineConfig({
     input: gatewayInput,
     hooks,
     output: {
-      mode: 'single',
-      target: './src/generated/gateway.zod.ts',
+      mode: 'tags-split',
+      target: './src/generated/gateway/zod/index.ts',
       client: 'zod',
+      clean: true,
       override: {
         zod: {
           // Схемы всех components: Zod для text/event-stream Orval не строит,
@@ -96,12 +97,12 @@ export default defineConfig({
     input: adminGatewayInput,
     hooks,
     output: {
-      mode: 'split',
-      target: './src/generated/admin-gateway/admin-gateway.ts',
+      mode: 'tags-split',
+      target: './src/generated/admin-gateway/query/index.ts',
       schemas: './src/generated/admin-gateway/model',
       client: 'react-query',
       httpClient: 'fetch',
-      clean: ['./src/generated/admin-gateway/model'],
+      clean: true,
       override: queryOverride,
     },
   },
@@ -109,9 +110,10 @@ export default defineConfig({
     input: adminGatewayInput,
     hooks,
     output: {
-      mode: 'single',
-      target: './src/generated/admin-gateway/admin-gateway.zod.ts',
+      mode: 'tags-split',
+      target: './src/generated/admin-gateway/zod/index.ts',
       client: 'zod',
+      clean: true,
     },
   },
 });

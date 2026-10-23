@@ -1,6 +1,6 @@
 # Локальный запуск фронта в прод-сборке: docker compose up --build -d --wait
 # Приложения собираются в статику и раздаются nginx (без hot reload; для разработки — pnpm dev):
-# portal — http://localhost:3000, admin — http://localhost:3001, landing — http://localhost:3002.
+# portal — http://localhost:3000, admin — http://localhost:3001.
 # Переменные окружения вшиваются при сборке из apps/<app>/.env (шаблон — .env.example): после правки — --build.
 # Бэкенд поднимается отдельно в своём репозитории (qgames-backend-monorepo): docker compose up --build -d --wait.
 
@@ -37,15 +37,4 @@ services:
         NGINX_CONF: spa.conf
     ports:
       - '3001:8080'
-    healthcheck: *app-healthcheck
-
-  landing:
-    build:
-      <<: *app-build
-      args:
-        APP: landing
-        OUT: out
-        NGINX_CONF: landing.conf
-    ports:
-      - '3002:8080'
     healthcheck: *app-healthcheck

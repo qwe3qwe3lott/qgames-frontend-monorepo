@@ -1,14 +1,13 @@
 # syntax=docker/dockerfile:1.7
-# Общий multi-stage образ для всех приложений: приложение задаётся аргументом APP (portal | admin | landing),
-# каталог статики — аргументом OUT (dist у Rsbuild, out у статического экспорта Next).
+# Общий multi-stage образ для всех приложений: приложение задаётся аргументом APP (portal | admin),
+# каталог статики — аргументом OUT (dist у Rsbuild).
 # Контекст сборки — корень репозитория, потому что приложения зависят от packages/*.
-# Переменные PUBLIC_* / NEXT_PUBLIC_* берутся из apps/${APP}/.env и вшиваются в бандл при сборке:
+# Переменные PUBLIC_* берутся из apps/${APP}/.env и вшиваются в бандл при сборке:
 # смена значения — пересборка образа.
 
 FROM node:24-alpine AS build
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0 \
-    TURBO_TELEMETRY_DISABLED=1 \
-    NEXT_TELEMETRY_DISABLED=1
+    TURBO_TELEMETRY_DISABLED=1
 # pnpm нужной версии (packageManager в package.json) ставит corepack.
 RUN corepack enable
 WORKDIR /workspace
@@ -37,7 +36,7 @@ RUN pnpm turbo run build --filter="@qgames/${APP}"
 FROM nginxinc/nginx-unprivileged:1.30.6-alpine
 ARG APP
 ARG OUT
-# Конфиг nginx: spa.conf (portal, admin) или landing.conf.
+# Конфиг nginx: spa.conf (portal, admin).
 ARG NGINX_CONF
 # Без аргумента COPY ниже скопировал бы весь docker/nginx/ в app.conf, и nginx упал бы при старте.
 RUN test -n "${NGINX_CONF}" \

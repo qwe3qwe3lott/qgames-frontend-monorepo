@@ -15,15 +15,12 @@ const ALLOWED_IMPORTS = {
   shared: [],
 };
 
-/**
- * @param {'spa' | 'next'} kind spa — Rsbuild + TanStack Router, next — Next.js App Router.
- */
-function elements(kind) {
-  // partialMatch: false — паттерн сопоставляется от корня пакета, а не с концом пути
-  // (иначе `app` Next.js совпал бы и с `src/app`).
+/** Элементы FSD приложения на Rsbuild + TanStack Router. */
+function elements() {
+  // partialMatch: false — паттерн сопоставляется от корня пакета, а не с концом пути.
   return [
-    // Роутинг: файлы роутов TanStack Router или App Router Next.js в корне приложения.
-    {type: 'routes', pattern: kind === 'spa' ? 'src/routes' : 'app'},
+    // Роутинг: файлы роутов TanStack Router.
+    {type: 'routes', pattern: 'src/routes'},
     {type: 'app', pattern: 'src/app'},
     ...SLICED_LAYERS.map(layer => ({
       type: layer,

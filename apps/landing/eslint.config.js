@@ -1,9 +1,0 @@
-// @ts-check
-import {createConfig} from '@qgames/config/eslint';
-
-export default createConfig({
-  tsconfigRootDir: import.meta.dirname,
-  react: true,
-  next: true,
-  fsd: 'next',
-});

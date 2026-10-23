@@ -1,5 +1,4 @@
 import {PageLayout} from '@qgames/ui/components/page-layout';
-import {Link} from '@tanstack/react-router';
 
 import {GoogleLoginButton} from '@/features/google-login';
 import {LoginForm} from '@/features/login';
@@ -13,13 +12,7 @@ export function LoginPage({redirect}: LoginPageProps) {
     <PageLayout title="Вход">
       <div className="flex max-w-sm flex-col gap-6">
         <LoginForm redirect={redirect} />
-        <GoogleLoginButton redirect={redirect} text="signin_with" />
-        <p className="text-sm text-muted-foreground">
-          Нет аккаунта?{' '}
-          <Link to="/register" search={{redirect}} className="underline">
-            Зарегистрируйтесь
-          </Link>
-        </p>
+        <GoogleLoginButton redirect={redirect} />
       </div>
     </PageLayout>
   );
