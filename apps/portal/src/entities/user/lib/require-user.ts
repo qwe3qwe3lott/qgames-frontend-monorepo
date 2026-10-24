@@ -1,5 +1,5 @@
 import {isApiError} from '@qgames/api';
-import {getGetCurrentUserQueryOptions} from '@qgames/api/gateway';
+import {getGetCurrentUserQueryOptions} from '@qgames/api/portal';
 import type {QueryClient} from '@tanstack/react-query';
 import {redirect} from '@tanstack/react-router';
 

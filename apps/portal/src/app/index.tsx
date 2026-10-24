@@ -11,7 +11,7 @@ import {App} from './app';
 
 // Сообщения валидации форм (в том числе Orval-схем) — на русском.
 z.config(z.locales.ru());
-configureApi({baseUrl: env.PUBLIC_API_URL});
+configureApi({baseUrl: env.PUBLIC_API_URL, authPath: '/api/auth'});
 
 const rootElement = document.getElementById('root');
 if (rootElement === null) {

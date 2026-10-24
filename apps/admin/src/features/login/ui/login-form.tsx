@@ -1,6 +1,6 @@
 import {zodResolver} from '@hookform/resolvers/zod';
 import {applyFieldErrors, errorMessage} from '@qgames/api';
-import {getGetCurrentAdminQueryKey, useLogin} from '@qgames/api/admin-gateway';
+import {getGetCurrentAdminQueryKey, useLogin} from '@qgames/api/admin';
 import {Button} from '@qgames/ui/components/button';
 import {
   Field,

@@ -4,7 +4,7 @@
 // (422 MOVE_REJECTED, ILLEGAL_MOVE). Логика повторяет генератор ходов бэкенда
 // (`CheckersBoard`).
 
-import type {CheckersPieceDtoOutput} from '@qgames/api/gateway/zod';
+import type {CheckersPieceDtoOutput} from '@qgames/api/portal/zod';
 
 import type {CheckersColor, CheckersMoveRules} from '../state';
 

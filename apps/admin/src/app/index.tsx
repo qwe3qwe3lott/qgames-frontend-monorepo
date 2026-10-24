@@ -11,8 +11,8 @@ import {App} from './app';
 
 // Сообщения валидации форм (в том числе Orval-схем) — на русском.
 z.config(z.locales.ru());
-// Админка ходит только в admin-gateway (CLAUDE.md §1).
-configureApi({baseUrl: env.PUBLIC_API_URL});
+// Админка ходит только в группу API admin (`/api/admin/**`, CLAUDE.md §1).
+configureApi({baseUrl: env.PUBLIC_API_URL, authPath: '/api/admin/auth'});
 
 const rootElement = document.getElementById('root');
 if (rootElement === null) {

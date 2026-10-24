@@ -1,7 +1,7 @@
 import {zodResolver} from '@hookform/resolvers/zod';
 import {applyFieldErrors, errorMessage} from '@qgames/api';
-import {getGetCurrentUserQueryKey, useUpdateProfile} from '@qgames/api/gateway';
-import type {UpdateProfileRequest} from '@qgames/api/gateway/model';
+import {getGetCurrentUserQueryKey, useUpdateProfile} from '@qgames/api/portal';
+import type {UpdateProfileRequest} from '@qgames/api/portal/model';
 import {Button} from '@qgames/ui/components/button';
 import {
   Field,

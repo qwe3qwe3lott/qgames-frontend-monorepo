@@ -1,4 +1,4 @@
-import {SessionMetaDto, SessionSnapshotDto} from '@qgames/api/gateway/zod';
+import {SessionMetaDto, SessionSnapshotDto} from '@qgames/api/portal/zod';
 
 import {isRecord} from './lib/json';
 import {isCoreBlock} from './modules/core';

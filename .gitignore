@@ -27,5 +27,5 @@ pnpm-debug.log*
 # Кеш TanStack Router plugin
 .tanstack/
 
-# Снапшоты OpenAPI gateway'ев — вход Orval, снимаются `pnpm api:fetch` (CLAUDE.md §5)
+# Снапшоты OpenAPI групп portal и admin — вход Orval, снимаются `pnpm api:fetch` (CLAUDE.md §5)
 packages/api/openapi/

@@ -1,10 +1,9 @@
 import {isApiError, NETWORK_ERROR_CODE} from './api-error';
 
-/** Тексты общих кодов, которые может вернуть любой gateway. */
+/** Тексты общих кодов, которые может вернуть бэкенд в любой группе API. */
 const COMMON_MESSAGES: Readonly<Record<string, string>> = {
   [NETWORK_ERROR_CODE]:
     'Сервер недоступен. Проверьте соединение и попробуйте ещё раз.',
-  SERVICE_UNAVAILABLE: 'Сервис временно недоступен. Попробуйте позже.',
   UNAUTHENTICATED: 'Нужно войти в аккаунт.',
 };
 

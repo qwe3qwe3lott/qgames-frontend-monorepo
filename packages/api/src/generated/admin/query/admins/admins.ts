@@ -47,7 +47,7 @@ const withQueryKey = <T extends object, K>(
 };
 
 export const getGetAdminsUrl = () => {
-  return `/api/admins`;
+  return `/api/admin/admins`;
 };
 
 /**
@@ -64,7 +64,7 @@ export const getAdmins = async (
 };
 
 export const getGetAdminsQueryKey = () => {
-  return [`/api/admins`] as const;
+  return [`/api/admin/admins`] as const;
 };
 
 export const getGetAdminsQueryOptions = <
@@ -179,7 +179,7 @@ export function useGetAdmins<
 }
 
 export const getGetCurrentAdminUrl = () => {
-  return `/api/admins/me`;
+  return `/api/admin/admins/me`;
 };
 
 /**
@@ -196,7 +196,7 @@ export const getCurrentAdmin = async (
 };
 
 export const getGetCurrentAdminQueryKey = () => {
-  return [`/api/admins/me`] as const;
+  return [`/api/admin/admins/me`] as const;
 };
 
 export const getGetCurrentAdminQueryOptions = <

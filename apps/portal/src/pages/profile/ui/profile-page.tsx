@@ -1,5 +1,5 @@
 import {errorMessage} from '@qgames/api';
-import {useGetCurrentUser} from '@qgames/api/gateway';
+import {useGetCurrentUser} from '@qgames/api/portal';
 import {
   Card,
   CardContent,

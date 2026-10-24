@@ -2,7 +2,7 @@ import {isApiError} from '@qgames/api';
 import {
   getGetGameQueryOptions,
   getGetRoomQueryOptions,
-} from '@qgames/api/gateway';
+} from '@qgames/api/portal';
 import {createFileRoute, notFound} from '@tanstack/react-router';
 import {z} from 'zod';
 

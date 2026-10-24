@@ -6,15 +6,15 @@ import {
 
 const hooks = {afterAllFilesWrite: 'prettier --write'};
 
-/** Общие настройки react-query-клиента: один mutator на оба gateway. */
+/** Общие настройки react-query-клиента: один mutator на обе группы API. */
 const queryOverride = {
   mutator: {path: './src/mutator.ts', name: 'apiFetch'},
   fetch: {includeHttpResponseReturnType: false},
   query: {signal: true, shouldExportKeys: true},
 };
 
-const gatewayInput = {target: './openapi/gateway.json'};
-const adminGatewayInput = {target: './openapi/admin-gateway.json'};
+const portalInput = {target: './openapi/portal.json'};
+const adminInput = {target: './openapi/admin.json'};
 
 const EVENT_STREAM = 'text/event-stream';
 
@@ -58,27 +58,27 @@ const withoutEventStreams = defineTransformer(spec => {
 });
 
 export default defineConfig({
-  // user-gateway — портал.
-  gateway: {
-    input: {...gatewayInput, override: {transformer: withoutEventStreams}},
+  // Группа API `portal` — портал.
+  portal: {
+    input: {...portalInput, override: {transformer: withoutEventStreams}},
     hooks,
     output: {
       // Файл ручек на каждый тег (теги — латиницей), barrel — query/index.ts.
       mode: 'tags-split',
-      target: './src/generated/gateway/query/index.ts',
-      schemas: './src/generated/gateway/model',
+      target: './src/generated/portal/query/index.ts',
+      schemas: './src/generated/portal/model',
       client: 'react-query',
       httpClient: 'fetch',
       clean: true,
       override: queryOverride,
     },
   },
-  gatewayZod: {
-    input: gatewayInput,
+  portalZod: {
+    input: portalInput,
     hooks,
     output: {
       mode: 'tags-split',
-      target: './src/generated/gateway/zod/index.ts',
+      target: './src/generated/portal/zod/index.ts',
       client: 'zod',
       clean: true,
       override: {
@@ -92,26 +92,26 @@ export default defineConfig({
       },
     },
   },
-  // admin-gateway — админка.
-  adminGateway: {
-    input: adminGatewayInput,
+  // Группа API `admin` — админка.
+  admin: {
+    input: adminInput,
     hooks,
     output: {
       mode: 'tags-split',
-      target: './src/generated/admin-gateway/query/index.ts',
-      schemas: './src/generated/admin-gateway/model',
+      target: './src/generated/admin/query/index.ts',
+      schemas: './src/generated/admin/model',
       client: 'react-query',
       httpClient: 'fetch',
       clean: true,
       override: queryOverride,
     },
   },
-  adminGatewayZod: {
-    input: adminGatewayInput,
+  adminZod: {
+    input: adminInput,
     hooks,
     output: {
       mode: 'tags-split',
-      target: './src/generated/admin-gateway/zod/index.ts',
+      target: './src/generated/admin/zod/index.ts',
       client: 'zod',
       clean: true,
     },

@@ -1,5 +1,5 @@
 import {isApiError} from '@qgames/api';
-import {useGetCurrentUser} from '@qgames/api/gateway';
+import {useGetCurrentUser} from '@qgames/api/portal';
 
 import {toViewer, type Viewer} from '../model/types';
 

@@ -7,7 +7,7 @@
 | `apps/portal` | Игровой портал (CSR, Rsbuild + TanStack Router) | 3000 |
 | `apps/admin`  | Админка (CSR, Rsbuild + TanStack Router)        | 3001 |
 
-Общие пакеты: `packages/ui` (shadcn/ui + Tailwind), `packages/api` (клиенты user-gateway и admin-gateway из OpenAPI, Orval), `packages/config` (TypeScript, ESLint, Stylelint, Prettier), `packages/game-ui` (общий игровой UI), `packages/games/*` (модули игр, каждая — отдельный чанк).
+Общие пакеты: `packages/ui` (shadcn/ui + Tailwind), `packages/api` (клиенты групп API `portal` и `admin` бэкенда из OpenAPI, Orval), `packages/config` (TypeScript, ESLint, Stylelint, Prettier), `packages/game-ui` (общий игровой UI), `packages/games/*` (модули игр, каждая — отдельный чанк).
 
 ## Запуск
 
@@ -43,7 +43,7 @@ pnpm build          # сборка
 pnpm typecheck      # проверка типов
 pnpm lint           # ESLint + Stylelint
 pnpm format         # Prettier
-pnpm api:fetch      # снять OpenAPI с запущенных user-gateway и admin-gateway (снапшоты не коммитятся)
+pnpm api:fetch      # снять OpenAPI групп portal и admin с запущенного бэкенда (API_URL, по умолчанию http://localhost:8080; снапшоты не коммитятся)
 pnpm api:generate   # сгенерировать клиент API
 ```
 

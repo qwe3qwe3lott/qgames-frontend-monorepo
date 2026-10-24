@@ -3,13 +3,13 @@ import type {
   RoomResponse,
   RoomSettingsDto,
   SessionResponse,
-} from '@qgames/api/gateway/model';
+} from '@qgames/api/portal/model';
 import type {
   RoomMemberResponseOutput,
   RoomResponseOutput,
   RoomSettingsDtoOutput,
   SessionResponseOutput,
-} from '@qgames/api/gateway/zod';
+} from '@qgames/api/portal/zod';
 
 // Данные событий потока проходят сгенерированные Zod-схемы, а кеш комнаты
 // хранит типы модели Orval. У nullable-полей Zod (`.nullish()`) даёт

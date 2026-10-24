@@ -3,7 +3,7 @@ import type {
   SessionPatchEventOutput,
   SessionSnapshotDtoOutput,
   SessionStreamEventOutput,
-} from '@qgames/api/gateway/zod';
+} from '@qgames/api/portal/zod';
 
 /** Сообщение потока партии `{type, data}` после проверки Zod-схемой контракта. */
 export type SessionStreamEvent = SessionStreamEventOutput;

@@ -1,4 +1,4 @@
-import {UpdateProfileBody, UserResponse} from '@qgames/api/gateway/zod';
+import {UpdateProfileBody, UserResponse} from '@qgames/api/portal/zod';
 import type {z} from 'zod';
 
 import {nicknameSchema} from '@/entities/user';

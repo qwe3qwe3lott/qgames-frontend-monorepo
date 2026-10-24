@@ -3,8 +3,8 @@ import {
   usePauseSession,
   useResumeSession,
   useStartSession,
-} from '@qgames/api/gateway';
-import type {RoomResponse} from '@qgames/api/gateway/model';
+} from '@qgames/api/portal';
+import type {RoomResponse} from '@qgames/api/portal/model';
 import {activeTimer} from '@qgames/game-core';
 import {Button} from '@qgames/ui/components/button';
 import {useQueryClient} from '@tanstack/react-query';

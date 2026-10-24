@@ -1,5 +1,5 @@
-import {getGetRoomQueryKey} from '@qgames/api/gateway';
-import type {RoomResponse} from '@qgames/api/gateway/model';
+import {getGetRoomQueryKey} from '@qgames/api/portal';
+import type {RoomResponse} from '@qgames/api/portal/model';
 import type {QueryClient} from '@tanstack/react-query';
 
 /** Ручки комнат возвращают новое состояние комнаты — кладём его в кеш без перезапроса. */

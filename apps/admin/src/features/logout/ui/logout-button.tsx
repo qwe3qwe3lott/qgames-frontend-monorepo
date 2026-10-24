@@ -1,4 +1,4 @@
-import {useLogout} from '@qgames/api/admin-gateway';
+import {useLogout} from '@qgames/api/admin';
 import {Button} from '@qgames/ui/components/button';
 import {useQueryClient} from '@tanstack/react-query';
 import {useNavigate} from '@tanstack/react-router';

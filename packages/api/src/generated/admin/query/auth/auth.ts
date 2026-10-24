@@ -12,146 +12,25 @@ import type {
   UseMutationResult,
 } from '@tanstack/react-query';
 
-import type {
-  GoogleIdTokenRequest,
-  LoginRequest,
-  ProblemDetail,
-  UserResponse,
-} from '../../model';
+import type {AdminResponse, LoginRequest, ProblemDetail} from '../../model';
 
 import {apiFetch} from '../../../../mutator';
 import type {ErrorType} from '../../../../mutator';
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-export const getLoginWithGoogleUrl = () => {
-  return `/api/auth/google`;
-};
-
-/**
- * Принимает Google ID token из Google Identity Services. Это единственный способ создать аккаунт: новый Google-аккаунт создаёт аккаунт с email из Google (он должен быть подтверждён в Google: это логин для входа по паролю), ником вида player-a1b2c3 и аватаром CAT — их можно сменить в профиле. К существующему аккаунту с тем же email Google автоматически не привязывается.
- * @summary Вход через Google
- */
-export const loginWithGoogle = async (
-  googleIdTokenRequest: GoogleIdTokenRequest,
-  options?: Parameters<typeof apiFetch>[1],
-): Promise<UserResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit['headers']>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          entry => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<
-      string | readonly string[] | undefined
-    >(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-  return apiFetch<UserResponse>(getLoginWithGoogleUrl(), {
-    ...options,
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getHeaders(options?.headers),
-    },
-    body: JSON.stringify(googleIdTokenRequest),
-  });
-};
-
-export const getLoginWithGoogleMutationKey = () => ['loginWithGoogle'] as const;
-
-export const getLoginWithGoogleMutationOptions = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof loginWithGoogle>>,
-    TError,
-    LoginWithGoogleMutationVariables,
-    TContext
-  >;
-  request?: SecondParameter<typeof apiFetch>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof loginWithGoogle>>,
-  TError,
-  LoginWithGoogleMutationVariables,
-  TContext
-> => {
-  const mutationKey = getLoginWithGoogleMutationKey();
-  const {mutation: mutationOptions, request: requestOptions} = options
-    ? options.mutation &&
-      'mutationKey' in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-    : {mutation: {mutationKey}, request: undefined};
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof loginWithGoogle>>,
-    LoginWithGoogleMutationVariables
-  > = props => {
-    const {data} = props ?? {};
-
-    return loginWithGoogle(data, requestOptions);
-  };
-
-  return {mutationFn, ...mutationOptions};
-};
-
-export type LoginWithGoogleMutationResult = NonNullable<
-  Awaited<ReturnType<typeof loginWithGoogle>>
->;
-export type LoginWithGoogleMutationBody = GoogleIdTokenRequest;
-export type LoginWithGoogleMutationError = ErrorType<ProblemDetail>;
-export type LoginWithGoogleMutationVariables = {data: GoogleIdTokenRequest};
-
-/**
- * @summary Вход через Google
- */
-export const useLoginWithGoogle = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof loginWithGoogle>>,
-      TError,
-      LoginWithGoogleMutationVariables,
-      TContext
-    >;
-    request?: SecondParameter<typeof apiFetch>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<
-  Awaited<ReturnType<typeof loginWithGoogle>>,
-  TError,
-  LoginWithGoogleMutationVariables,
-  TContext
-> => {
-  return useMutation(getLoginWithGoogleMutationOptions(options), queryClient);
-};
 export const getLoginUrl = () => {
-  return `/api/auth/login`;
+  return `/api/admin/auth/login`;
 };
 
 /**
- * Открывает сессию: ставит куки access_token (15 минут) и refresh_token (30 дней). Пароль задаётся в профиле аккаунта, созданного через Google, логин — email этого Google-аккаунта. Сброса пароля нет: забывший пароль входит через Google и задаёт новый.
- * @summary Вход по email и паролю
+ * Открывает сессию администратора: ставит куки admin_access_token (5 минут) и admin_refresh_token (15 минут, продлевается при каждом обновлении сессии). Логин сравнивается точно, с учётом регистра и без обрезки пробелов.
+ * @summary Вход по логину и паролю
  */
 export const login = async (
   loginRequest: LoginRequest,
   options?: Parameters<typeof apiFetch>[1],
-): Promise<UserResponse> => {
+): Promise<AdminResponse> => {
   const getHeaders = (
     h?: NonNullable<RequestInit['headers']>,
   ): Record<string, string | readonly string[]> => {
@@ -173,7 +52,7 @@ export const login = async (
     }
     return headers;
   };
-  return apiFetch<UserResponse>(getLoginUrl(), {
+  return apiFetch<AdminResponse>(getLoginUrl(), {
     ...options,
     method: 'POST',
     headers: {
@@ -232,7 +111,7 @@ export type LoginMutationError = ErrorType<ProblemDetail>;
 export type LoginMutationVariables = {data: LoginRequest};
 
 /**
- * @summary Вход по email и паролю
+ * @summary Вход по логину и паролю
  */
 export const useLogin = <TError = ErrorType<ProblemDetail>, TContext = unknown>(
   options?: {
@@ -254,11 +133,11 @@ export const useLogin = <TError = ErrorType<ProblemDetail>, TContext = unknown>(
   return useMutation(getLoginMutationOptions(options), queryClient);
 };
 export const getLogoutUrl = () => {
-  return `/api/auth/logout`;
+  return `/api/admin/auth/logout`;
 };
 
 /**
- * Отзывает сессию по куке refresh_token и удаляет обе куки. Без куки просто удаляет куки.
+ * Отзывает сессию по куке admin_refresh_token и удаляет обе куки. Без куки просто удаляет куки.
  * @summary Выход
  */
 export const logout = async (
@@ -273,7 +152,7 @@ export const logout = async (
 export const getLogoutMutationKey = () => ['logout'] as const;
 
 export const getLogoutMutationOptions = <
-  TError = ErrorType<ProblemDetail>,
+  TError = ErrorType<unknown>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -312,15 +191,12 @@ export type LogoutMutationResult = NonNullable<
   Awaited<ReturnType<typeof logout>>
 >;
 
-export type LogoutMutationError = ErrorType<ProblemDetail>;
+export type LogoutMutationError = ErrorType<unknown>;
 
 /**
  * @summary Выход
  */
-export const useLogout = <
-  TError = ErrorType<ProblemDetail>,
-  TContext = unknown,
->(
+export const useLogout = <TError = ErrorType<unknown>, TContext = unknown>(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof logout>>,
@@ -340,17 +216,17 @@ export const useLogout = <
   return useMutation(getLogoutMutationOptions(options), queryClient);
 };
 export const getRefreshUrl = () => {
-  return `/api/auth/refresh`;
+  return `/api/admin/auth/refresh`;
 };
 
 /**
- * Берёт refresh-токен из куки refresh_token и ставит новые куки. Вызывать, когда access-токен истёк (защищённые ручки ответили 401). Параллельные вызовы из нескольких вкладок в течение 10 секунд допустимы. При ошибке обе куки удаляются.
+ * Берёт refresh-токен из куки admin_refresh_token и ставит новые куки; новый refresh-токен снова действует 15 минут. Вызывать, когда access-токен истёк (защищённые ручки ответили 401). Параллельные вызовы из нескольких вкладок в течение 10 секунд допустимы. При ошибке обе куки удаляются.
  * @summary Обновление сессии
  */
 export const refresh = async (
   options?: Parameters<typeof apiFetch>[1],
-): Promise<UserResponse> => {
-  return apiFetch<UserResponse>(getRefreshUrl(), {
+): Promise<AdminResponse> => {
+  return apiFetch<AdminResponse>(getRefreshUrl(), {
     ...options,
     method: 'POST',
   });

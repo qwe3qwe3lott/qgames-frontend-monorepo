@@ -1,7 +1,7 @@
 import {zodResolver} from '@hookform/resolvers/zod';
 import {applyFieldErrors} from '@qgames/api';
-import {useGetGame, useUpdateRoomSettings} from '@qgames/api/gateway';
-import type {GameRulesDto} from '@qgames/api/gateway/model';
+import {useGetGame, useUpdateRoomSettings} from '@qgames/api/portal';
+import type {GameRulesDto} from '@qgames/api/portal/model';
 import {Button} from '@qgames/ui/components/button';
 import {
   Dialog,

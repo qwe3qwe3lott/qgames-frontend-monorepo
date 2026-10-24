@@ -1,8 +1,5 @@
 import {errorMessage} from '@qgames/api';
-import {
-  getGetCurrentUserQueryKey,
-  useAddGoogleLogin,
-} from '@qgames/api/gateway';
+import {getGetCurrentUserQueryKey, useAddGoogleLogin} from '@qgames/api/portal';
 import {useQueryClient} from '@tanstack/react-query';
 
 import {env} from '@/shared/config';

@@ -1,7 +1,7 @@
 import {
   SessionTimerDto,
   type SessionTimerDtoOutput,
-} from '@qgames/api/gateway/zod';
+} from '@qgames/api/portal/zod';
 
 import type {SessionData, SessionState} from '../session';
 import type {SessionModule} from './module';

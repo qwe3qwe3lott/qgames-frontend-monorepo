@@ -2,7 +2,7 @@ import {errorMessage} from '@qgames/api';
 import {
   getGetCurrentUserQueryKey,
   useLoginWithGoogle,
-} from '@qgames/api/gateway';
+} from '@qgames/api/portal';
 import {useQueryClient} from '@tanstack/react-query';
 import {useNavigate} from '@tanstack/react-router';
 

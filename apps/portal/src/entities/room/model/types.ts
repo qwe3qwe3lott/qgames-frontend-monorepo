@@ -4,7 +4,7 @@ import type {
   RoomResponseGameCode,
   RoomSettingsDto,
   SessionResponse,
-} from '@qgames/api/gateway/model';
+} from '@qgames/api/portal/model';
 
 export type RoomStatus = 'WAITING' | 'IN_GAME';
 export type RoomRole = 'PLAYER' | 'SPECTATOR';
