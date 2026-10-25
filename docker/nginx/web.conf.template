@@ -1,0 +1,69 @@
+# nginx образа web: статика portal и admin + reverse proxy API на бэкенд (same-origin, CLAUDE.md §5).
+# Шаблон: при старте контейнера entrypoint образа nginx подставляет переменные окружения
+# (envsubst заменяет только заданные переменные, поэтому $uri, $host и т.п. остаются переменными nginx)
+# и кладёт результат в /etc/nginx/conf.d/web.conf. Значения по умолчанию — ENV в docker/app.Dockerfile:
+#   PORTAL_LISTEN / ADMIN_LISTEN           — порты сайтов (3000 / 3001);
+#   PORTAL_SERVER_NAME / ADMIN_SERVER_NAME — имена хостов (_ — любой; в проде — <имя>.duckdns.org и admin.<имя>.duckdns.org);
+#   API_UPSTREAM                           — бэкенд (host.docker.internal:8080 — бэкенд в своём compose);
+#     в upstream попадает только его IPv4-адрес (API_UPSTREAM_IPV4, см. 18-api-upstream-ipv4.envsh).
+
+# Заголовки ответа: add_header в location дополняет заголовки server, а не отменяет их (nginx >= 1.29.3).
+add_header_inherit merge;
+server_tokens off;
+# Относительный Location в редиректах nginx: снаружи порт может быть другим.
+absolute_redirect off;
+
+# Keep-alive до бэкенда: соединения переиспользуются. Один сервер (IPv4): nginx не помечает его
+# недоступным после ошибок, max_fails/fail_timeout для единственного сервера не действуют.
+upstream qgames_api {
+    server ${API_UPSTREAM_IPV4};
+    keepalive 16;
+}
+
+server {
+    listen ${PORTAL_LISTEN};
+    server_name ${PORTAL_SERVER_NAME};
+    root /usr/share/nginx/html/portal;
+
+    # Заголовки безопасности на всех ответах (always — и на 4xx/5xx, и на ответах бэкенда).
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header X-Frame-Options "DENY" always;
+    # Google Identity Services (кнопка входа): скрипт, стили, iframe и запросы — только с accounts.google.com/gsi.
+    # style-src 'unsafe-inline': GIS ставит inline-стили, react-remove-scroll (Radix Dialog/Select) — <style>.
+    # script-src строгий.
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' https://accounts.google.com/gsi/client; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; frame-src https://accounts.google.com/gsi/; connect-src 'self' https://accounts.google.com/gsi/; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" always;
+
+    # API админки — только на её хосте.
+    location /api/admin/ {
+        return 404;
+    }
+
+    location /api/ {
+        include /etc/nginx/snippets/api-proxy.conf;
+    }
+
+    include /etc/nginx/snippets/spa.conf;
+}
+
+server {
+    listen ${ADMIN_LISTEN};
+    server_name ${ADMIN_SERVER_NAME};
+    root /usr/share/nginx/html/admin;
+
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header Content-Security-Policy "default-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" always;
+
+    # Админка ходит только в группу API admin (CLAUDE.md §1): прочие /api/ на её хосте — 404.
+    location /api/admin/ {
+        include /etc/nginx/snippets/api-proxy.conf;
+    }
+
+    location /api/ {
+        return 404;
+    }
+
+    include /etc/nginx/snippets/spa.conf;
+}

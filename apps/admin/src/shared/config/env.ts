@@ -1,10 +1,7 @@
 import {z} from 'zod';
 
-const envSchema = z.object({
-  PUBLIC_API_URL: z.url(),
-});
+// Переменных пока нет: адрес API не нужен (same-origin, CLAUDE.md §5).
+const envSchema = z.object({});
 
 /** Переменные окружения, проверенные при старте (CLAUDE.md §4). */
-export const env = envSchema.parse({
-  PUBLIC_API_URL: import.meta.env.PUBLIC_API_URL,
-});
+export const env = envSchema.parse({});

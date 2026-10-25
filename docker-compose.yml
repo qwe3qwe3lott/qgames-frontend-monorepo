@@ -1,40 +1,39 @@
 # Локальный запуск фронта в прод-сборке: docker compose up --build -d --wait
-# Приложения собираются в статику и раздаются nginx (без hot reload; для разработки — pnpm dev):
-# portal — http://localhost:3000, admin — http://localhost:3001.
+# Один сервис web (nginx): статика обоих приложений и reverse proxy API на бэкенд — same-origin, как в проде.
+# portal — http://localhost:3000 (/api/** → бэкенд), admin — http://localhost:3001 (/api/admin/** → бэкенд).
+# Без hot reload; для разработки — pnpm dev.
 # Переменные окружения вшиваются при сборке из apps/<app>/.env (шаблон — .env.example): после правки — --build.
 # Бэкенд поднимается отдельно в своём репозитории (qgames-backend-monorepo): docker compose up --build -d --wait.
 
-x-app-build: &app-build
-  context: .
-  dockerfile: docker/app.Dockerfile
-
-# 127.0.0.1, а не localhost: nginx слушает только IPv4 (порт 8080 — nginx-unprivileged), а localhost в alpine может разрешиться в ::1.
-x-app-healthcheck: &app-healthcheck
-  test: ['CMD', 'wget', '-q', '--spider', 'http://127.0.0.1:8080/']
-  interval: 10s
-  timeout: 3s
-  retries: 6
-  start_period: 5s
-
 services:
-  portal:
+  web:
     build:
-      <<: *app-build
-      args:
-        APP: portal
-        OUT: dist
-        NGINX_CONF: spa.conf
+      context: .
+      dockerfile: docker/app.Dockerfile
     ports:
-      - '3000:8080'
-    healthcheck: *app-healthcheck
-
-  admin:
-    build:
-      <<: *app-build
-      args:
-        APP: admin
-        OUT: dist
-        NGINX_CONF: spa.conf
-    ports:
-      - '3001:8080'
-    healthcheck: *app-healthcheck
+      - '3000:3000'
+      - '3001:3001'
+    environment:
+      # Порты и имена хостов сайтов (шаблон docker/nginx/web.conf.template); в проде — имена DuckDNS.
+      PORTAL_LISTEN: '3000'
+      PORTAL_SERVER_NAME: '_'
+      ADMIN_LISTEN: '3001'
+      ADMIN_SERVER_NAME: '_'
+      # Бэкенд из своего compose, опубликованный на хосте.
+      API_UPSTREAM: 'host.docker.internal:8080'
+    # host.docker.internal на Linux (в Docker Desktop есть и так). Резолвится и в IPv6 — в upstream nginx
+    # берётся только IPv4 (docker/nginx/18-api-upstream-ipv4.envsh).
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    # Без свопа: memswap_limit = mem_limit. Замер: простой ~14 MiB, 360 SSE 5 мин — пик ~29 MiB.
+    mem_limit: 48m
+    memswap_limit: 48m
+    # Оба сайта; 127.0.0.1, а не localhost: localhost в alpine может разрешиться в ::1.
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget -q --spider http://127.0.0.1:3000/ && wget -q --spider http://127.0.0.1:3001/
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 5s

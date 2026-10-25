@@ -4,6 +4,7 @@ import {ApiError, NETWORK_ERROR_CODE} from './api-error';
 const UNAUTHENTICATED_CODE = 'UNAUTHENTICATED';
 
 interface ApiConfig {
+  /** Адрес бэкенда; пустая строка — тот же origin, что и страница (относительные URL). */
   baseUrl: string;
   /** Префикс ручек сессии приложения без `/` в конце (`/api/auth`, `/api/admin/auth`). */
   authPath: string;
@@ -31,7 +32,7 @@ function requireConfig(): ApiConfig {
   return config;
 }
 
-/** Полный адрес ручки бэкенда по пути из сгенерированного клиента (`get…Url`). */
+/** Адрес ручки бэкенда (`baseUrl` + путь из сгенерированного клиента `get…Url`). */
 export function resolveUrl(path: string): string {
   return `${requireConfig().baseUrl}${path}`;
 }

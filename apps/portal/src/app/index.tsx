@@ -1,17 +1,15 @@
 import './styles/index.css';
+// Первым: настройка Zod до создания схем в остальных модулях.
+import './zod-config';
 
 import {configureApi} from '@qgames/api';
 import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
-import {z} from 'zod';
-
-import {env} from '@/shared/config';
 
 import {App} from './app';
 
-// Сообщения валидации форм (в том числе Orval-схем) — на русском.
-z.config(z.locales.ru());
-configureApi({baseUrl: env.PUBLIC_API_URL, authPath: '/api/auth'});
+// API — на том же origin, что и страница (dev-proxy Rsbuild, nginx в Docker; CLAUDE.md §5).
+configureApi({baseUrl: '', authPath: '/api/auth'});
 
 const rootElement = document.getElementById('root');
 if (rootElement === null) {
