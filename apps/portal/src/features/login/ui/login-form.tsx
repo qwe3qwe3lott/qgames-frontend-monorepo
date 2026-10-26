@@ -1,6 +1,6 @@
 import {zodResolver} from '@hookform/resolvers/zod';
-import {applyFieldErrors, errorMessage, isApiError} from '@qgames/api';
-import {getGetCurrentUserQueryKey, useLogin} from '@qgames/api/gateway';
+import {applyFieldErrors, errorMessage} from '@qgames/api';
+import {getGetCurrentUserQueryKey, useLogin} from '@qgames/api/portal';
 import {Button} from '@qgames/ui/components/button';
 import {
   Field,
@@ -37,14 +37,7 @@ export function LoginForm({redirect}: LoginFormProps) {
         queryClient.setQueryData(getGetCurrentUserQueryKey(), user);
         void navigate({href: redirect ?? '/'});
       },
-      onError: (error, {data}) => {
-        if (isApiError(error) && error.code === 'EMAIL_NOT_VERIFIED') {
-          void navigate({
-            to: '/verify-email',
-            search: {email: data.email, redirect},
-          });
-          return;
-        }
+      onError: error => {
         if (!applyFieldErrors(error, form.setError, ['email', 'password'])) {
           form.setError('root', {message: errorMessage(error, LOGIN_MESSAGES)});
         }

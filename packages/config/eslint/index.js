@@ -1,7 +1,6 @@
 // @ts-check
 import path from 'node:path';
 
-import nextPlugin from '@next/eslint-plugin-next';
 import queryPlugin from '@tanstack/eslint-plugin-query';
 import boundaries from 'eslint-plugin-boundaries';
 import reactHooks from 'eslint-plugin-react-hooks';
@@ -19,8 +18,7 @@ const JS_FILES = ['**/*.js', '**/*.mjs', '**/*.cjs'];
  * @typedef {object} ConfigOptions
  * @property {string} tsconfigRootDir Каталог пакета (`import.meta.dirname` в eslint.config.js).
  * @property {boolean} [react] React-правила (react-hooks, TanStack Query).
- * @property {boolean} [next] Правила Next.js.
- * @property {'spa' | 'next'} [fsd] Проверка границ FSD (CLAUDE.md §3).
+ * @property {'spa'} [fsd] Проверка границ FSD (CLAUDE.md §3): spa — Rsbuild + TanStack Router.
  * @property {string[]} [ignores] Дополнительные игнорируемые пути.
  */
 
@@ -31,7 +29,6 @@ const JS_FILES = ['**/*.js', '**/*.mjs', '**/*.cjs'];
 export function createConfig({
   tsconfigRootDir,
   react = false,
-  next = false,
   fsd,
   ignores = [],
 }) {
@@ -40,10 +37,7 @@ export function createConfig({
       ignores: [
         '**/node_modules/',
         '**/dist/',
-        '**/out/',
-        '**/.next/',
         '**/.turbo/',
-        '**/next-env.d.ts',
         '**/routeTree.gen.ts',
         ...ignores,
       ],
@@ -108,7 +102,6 @@ export function createConfig({
           ...queryPlugin.configs['flat/recommended'],
         ]
       : []),
-    ...(next ? [nextPlugin.configs['core-web-vitals']] : []),
     ...(fsd === undefined
       ? []
       : [
@@ -117,7 +110,7 @@ export function createConfig({
             plugins: {boundaries},
             settings: {
               'boundaries/root-path': tsconfigRootDir,
-              'boundaries/elements': fsdBoundaries.elements(fsd),
+              'boundaries/elements': fsdBoundaries.elements(),
               'import/resolver': {
                 typescript: {
                   project: path.join(tsconfigRootDir, 'tsconfig.json'),

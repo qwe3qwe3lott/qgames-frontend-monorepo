@@ -1,9 +1,6 @@
 import {zodResolver} from '@hookform/resolvers/zod';
 import {applyFieldErrors, errorMessage, isApiError} from '@qgames/api';
-import {
-  getGetCurrentUserQueryKey,
-  useChangePassword,
-} from '@qgames/api/gateway';
+import {getGetCurrentUserQueryKey, useChangePassword} from '@qgames/api/portal';
 import {Button} from '@qgames/ui/components/button';
 import {
   Dialog,

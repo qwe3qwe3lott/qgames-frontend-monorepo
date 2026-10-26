@@ -1,6 +1,6 @@
 # CLAUDE.md — правила разработки qgames-frontend
 
-Фронтенд игрового портала qgames: монорепозиторий с CSR-приложениями (портал, админка) и статическим лендингом. Бэкенд — отдельный репозиторий `qgames-backend-monorepo`, оркестратор агентов — `qgames-workspace`. Все три репозитория лежат рядом в одной родительской папке, поэтому бэкенд доступен по относительному пути `../qgames-backend-monorepo`.
+Фронтенд игрового портала qgames: монорепозиторий с CSR-приложениями (портал, админка). Бэкенд — отдельный репозиторий `qgames-backend-monorepo`, оркестратор агентов — `qgames-workspace`. Все три репозитория лежат рядом в одной родительской папке, поэтому бэкенд доступен по относительному пути `../qgames-backend-monorepo`.
 
 ## 0. Процесс принятия решений (главное правило)
 
@@ -9,13 +9,13 @@
 - **Не замалчивать проблемы.** Если по ходу работы что-то смущает (риск безопасности, противоречие правилам или ранее сказанному, сомнительное поведение, техдолг, расхождение кода, документации и контракта бэкенда), сразу сказать пользователю и спросить, как поступить, предложив варианты. Не чинить молча и не откладывать «на потом» без согласования.
 - **Бэкенд изучаем по его монорепозиторию** (`../qgames-backend-monorepo`), только чтение. Когда нужно понять, как работает бэкенд (поведение ручки, коды ошибок, валидация, куки и refresh, SSE, роли), смотреть туда, а не гадать:
   - `CLAUDE.md` бэкенда — архитектура и принятые решения;
-  - `user-gateway/user-gateway-public-sync-api` и `admin-gateway/admin-gateway-public-sync-api` — публичные контракты: интерфейсы ручек с описаниями и кодами ошибок (`@Operation`/`@ApiResponses`) и DTO;
-  - `user-gateway/user-gateway`, `admin-gateway/admin-gateway` и сервисы (`user-auth`, `game`, `admin-auth`) — реализация (маппинг, проверки, куки, обработка ошибок);
-  - `docker-compose.yml`, `application.yml` сервисов — порты, адреса, настройки локального стенда.
+  - `<m>/<m>-api` модулей (`user-auth`, `admin-auth`, `game`) — публичные контракты: REST-интерфейсы ручек с описаниями и кодами ошибок (`@Operation`/`@ApiResponses`), DTO, имена и пути кук;
+  - `<m>/<m>` — реализация модулей (маппинг, проверки, куки, обработка ошибок), `app` — Security (две цепочки: портал и `/api/admin/**`), группы OpenAPI `portal`/`admin`, `application.yml`;
+  - `docker-compose.yml` бэкенда — порты, адреса, настройки локального стенда.
 
   Клиент API (§5) генерируется только по OpenAPI; код бэкенда нужен для понимания поведения, а не для ручного описания типов.
 
-- **Репозиторий бэкенда не правим.** Если фронту нужна правка бэкенда (новая ручка, поле, CORS, код ошибки), описать её пользователю — правку делает он.
+- **Репозиторий бэкенда не правим.** Если фронту нужна правка бэкенда (новая ручка, поле, код ошибки), описать её пользователю — правку делает он.
 - **Git:** рабочая и основная ветка — `master` (`main` не используется). Коммиты делает пользователь; без явной просьбы не коммитить и не пушить.
 
 ### Как вести этот файл
@@ -24,6 +24,7 @@
 - **Раздел 11 — отклонённые решения.** Варианты, которые обсуждались и были отвергнуты, с причиной и тем, что выбрано вместо. Повторно такой вариант предлагать только с новым аргументом, и этот аргумент нужно назвать явно.
 - **Журнала изменений и дат нет:** файл описывает текущее состояние. Если решение меняется, профильный раздел переписывается на месте, а прежнее решение переносится в раздел 11 с причиной отказа.
 - Отложенные вопросы записываются в профильном разделе пометкой «решить при …», а не в отклонённых.
+- **От технологии, приложения или фичи отказались — сведения о ней удаляются целиком**, включая отклонённые решения о ней в разделе 11. В разделе 11 остаются только альтернативы действующим решениям.
 
 ## 1. Приложения
 
@@ -31,13 +32,10 @@
 | -------------- | ----------------------------------------------------- | ------------------- | ----------------------------------- | ---------- |
 | `apps/portal`  | Игровой портал: вход, профиль, комнаты, партии        | Rsbuild (Rspack)    | CSR SPA, чанки по роутам            | 3000       |
 | `apps/admin`   | Админка портала                                       | Rsbuild (Rspack)    | CSR SPA, чанки по роутам            | 3001       |
-| `apps/landing` | Публичные SEO-страницы: лендинг, каталог игр, правила | Next.js (Turbopack) | Только статика (`output: 'export'`) | 3002       |
 
-- Страницы, закрытые логином, SEO не нужен — они живут в `portal`. Всё, что должно индексироваться, — в `landing`.
-- `landing` — чистая статика: без server actions, route handlers, middleware, ISR и `next/image`-оптимизации. Нужен серверный режим Next — только по согласованию.
-- Динамические публичные страницы (профили, лидерборды) — решить при появлении такой задачи.
-- **Бэкенд приложений:** portal → `user-gateway`, admin → `admin-gateway` (отдельный сервис для администраторов, в паре с `admin-auth`), landing — без API.
-- **Админка ходит только в `admin-gateway`, никогда в `user-gateway`.** admin-gateway локально — `http://localhost:8083`, сессия — в куках `admin_access_token` / `admin_refresh_token`. Пути `/api/auth/*` и 401 `UNAUTHENTICATED` у него такие же, как у user-gateway.
+- **Бэкенд — одно приложение** (`http://localhost:8080` локально), API разделён на две группы: portal → группа `portal` (`/api/**`, кроме `/api/admin/**`), admin → группа `admin` (`/api/admin/**`).
+- Приложения ходят в API **того же origin**, что и страница: портал — `/api/**` своего хоста (прод — `https://<имя>.duckdns.org`), админка — `/api/admin/**` своего хоста (прод — `https://admin.<имя>.duckdns.org`). API админки на хосте портала закрыт (404), API портала на хосте админки — тоже. Локально: portal :3000, admin :3001, бэкенд :8080 за прокси.
+- **Админка ходит только в группу `admin` (`/api/admin/**`), никогда в ручки портала.** Сессия — в куках `admin_access_token` (`Path=/api/admin`) / `admin_refresh_token` (`Path=/api/admin/auth`), ручки сессии — `/api/admin/auth/*`, 401 `UNAUTHENTICATED` — как у портала.
 
 ### Маршруты админки
 
@@ -47,7 +45,7 @@
 | `/`       | редирект на `/admins`                                 | —           |
 | `/admins` | список администраторов, у текущего — метка «вы»       | после входа |
 
-- Гость — ответ 401 или 404 `ADMIN_NOT_FOUND` на `GET /api/admins/me` (`entities/admin`). Защищённые маршруты отправляют гостя на `/login?redirect=<текущий адрес>`, `redirect` принимается только как путь этого сайта (`/…`).
+- Гость — ответ 401 или 404 `ADMIN_NOT_FOUND` на `GET /api/admin/admins/me` (`entities/admin`). Защищённые маршруты отправляют гостя на `/login?redirect=<текущий адрес>`, `redirect` принимается только как путь этого сайта (`/…`).
 - Регистрации нет, ролей нет: первого админа создаёт бэкенд (на стенде `admin` / `admin`).
 
 ### Маршруты портала
@@ -55,8 +53,7 @@
 | URL                                 | Страница                                                 | Доступ      |
 | ----------------------------------- | -------------------------------------------------------- | ----------- |
 | `/`                                 | главная                                                  | все         |
-| `/login`, `/register`               | вход, регистрация (`?redirect=` — куда вернуть)          | все         |
-| `/verify-email?email=`              | подтверждение email 6-значным кодом                      | все         |
+| `/login`                            | вход по email и паролю или через Google (`?redirect=` — куда вернуть) | все         |
 | `/profile`                          | ник и аватар, способы входа (пароль, Google)             | после входа |
 | `/games`                            | список игр из `GET /api/games`                           | все         |
 | `/rooms`                            | публичные комнаты всех игр (пока не реализован)          | все         |
@@ -67,7 +64,7 @@
 - Реестр `entities/game/model/registry.ts` — ручной список кодов (`GAME_CODES`) и `load` (динамический `import()`); название, описание и правила игры приходят с бэкенда (`GET /api/games`, `GET /api/games/{код}`). Игра без пакета на фронте — запись без `load`: доска не рисуется, создание комнаты заблокировано.
 - **Каталог и статусы игр.** Статус публикации живёт только на бэкенде (`PUBLISHED`, `HIDDEN`, `NOT_PUBLISHED`), в ответах его нет. `GET /api/games` отдаёт только опубликованные игры; скрытая доступна по прямой ссылке и ведёт себя как опубликованная. Карточка игры (`/games/<код>/rooms`) берёт `GET /api/games/{код}`: число игроков и форма настроек — из `rules`; кнопка «Создать комнату» блокируется (`WithHint`) только у игры без пакета на фронте. `GAME_NOT_FOUND` (игра не опубликована — в разработке или отключена; её комнаты бэкенд удаляет) → 404 на карточке, «Игра недоступна» на странице комнаты.
 - Гостя защищённые маршруты отправляют на `/login?redirect=<текущий адрес>`; `redirect` принимается только как путь этого сайта (`/…`).
-- **Вход через Google** — Google Identity Services: скрипт GIS грузится по требованию (`shared/lib/google-identity.ts`), стандартную кнопку рисует сам GIS (`shared/ui/google-button.tsx`). ID token уходит в `POST /api/auth/google` (кнопка на `/login` и `/register`) или `POST /api/users/me/login-methods/google` (привязка в `/profile`). На `ACCOUNT_LINK_REQUIRED` (аккаунт с таким email уже есть) пользователь входит паролем и привязывает Google в профиле. Без `PUBLIC_GOOGLE_CLIENT_ID` кнопки Google скрыты; тот же Client ID должен быть в `GOOGLE_CLIENT_IDS` бэкенда.
+- **Вход через Google** — Google Identity Services: скрипт GIS грузится по требованию (`shared/lib/google-identity.ts`), стандартную кнопку рисует сам GIS (`shared/ui/google-button.tsx`). ID token уходит в `POST /api/auth/google` (кнопка на `/login`) или `POST /api/users/me/login-methods/google` (привязка в `/profile`). Google — единственный способ создать аккаунт (первый вход создаёт аккаунт), пароль добавляется в профиле, вход по паролю — по email Google-аккаунта. На `ACCOUNT_LINK_REQUIRED` (аккаунт с таким email уже есть) пользователь входит паролем и привязывает Google в профиле. Без `PUBLIC_GOOGLE_CLIENT_ID` кнопка Google и подсказка о создании аккаунта скрыты; тот же Client ID должен быть в `GOOGLE_CLIENT_IDS` бэкенда.
 - **Настройки комнаты** (правила времени `timeControl` и полиморфный `gameSettings`):
   - задаются при создании (`POST /api/games/{код}/rooms`); владелец меняет их между партиями в модальном окне (`PUT …/rooms/{id}/settings`);
   - границы, режимы и значения по умолчанию формы берутся из `rules` ответа `GET /api/games/{код}`, на фронте не хардкодятся;
@@ -91,11 +88,10 @@
 apps/
   portal/        CSR SPA (Rsbuild + TanStack Router)
   admin/         CSR SPA (Rsbuild + TanStack Router)
-  landing/       статический Next.js
 packages/
   config/        @qgames/config: tsconfig-пресеты, фабрика ESLint flat-конфига, stylelint, prettier
   ui/            @qgames/ui: компоненты shadcn/ui, общая разметка страниц PageLayout, cn(), globals.css (Tailwind 4, тема)
-  api/           @qgames/api: снапшоты OpenAPI user-gateway и admin-gateway, Orval-клиенты (типы, queryOptions, хуки, Zod), fetch-mutator, errorMessage и applyFieldErrors
+  api/           @qgames/api: Orval-клиенты групп API `portal` и `admin` (типы, queryOptions, хуки, Zod; снапшоты OpenAPI — вход генерации, не коммитятся), fetch-mutator, errorMessage и applyFieldErrors
   game-ui/       @qgames/game-ui: общий игровой UI (аватар, список игроков, описание комнаты, ход, конец партии)
   game-core/     @qgames/game-core: чистые функции партии — применитель патчей applySessionEvent, сверка seq, guard'ы модулей (core, turns, timer, result), checkSessionState, activeTimer, sessionResult
   games/
@@ -132,7 +128,7 @@ packages/
 - **Защита цепочки поставок pnpm не ослабляется:** релизы моложе `minimumReleaseAge` (по умолчанию pnpm) не ставим — берём предыдущую версию, исключения (`minimumReleaseAgeExclude`) не добавляем. Install-скрипты зависимостей запрещены (`allowBuilds: <пакет>: false`); разрешить скрипт — только по согласованию.
 - CLI-генераторы (shadcn и т.п.) могут сами дописывать зависимости и каталог: после запуска проверить дифф `package.json` и `pnpm-workspace.yaml`. Известный случай: шаблоны shadcn импортируют `cn` из npm-пакета `cn` и дописывают его в каталог. Импорт заменить на `@qgames/ui/lib/utils`, правки зависимостей откатить.
 - Зависимость объявляется в `package.json` того пакета, который её импортирует (корневой `package.json` — только инструменты уровня репозитория: turbo, prettier).
-- **Внутренние пакеты не собираются:** `exports` указывает на `.ts`-исходники, транспилирует их сборщик приложения (в Next — `transpilePackages`). Имена — `@qgames/<пакет>`, подключение — `workspace:*`.
+- **Внутренние пакеты не собираются:** `exports` указывает на `.ts`-исходники, транспилирует их сборщик приложения. Имена — `@qgames/<пакет>`, подключение — `workspace:*`.
 - Приложение зависит только от `packages/*`, никогда от другого приложения. `packages/*` не зависят от приложений.
 - **Пустые пакеты «на вырост» не заводим.** Пакет появляется вместе с первым содержимым и удаляется, если опустел.
 
@@ -157,20 +153,18 @@ src/
 - Имена файлов — kebab-case (`home-page.tsx`, `current-user.tsx`), как у компонентов shadcn.
 - Правила проверяет `eslint-plugin-boundaries` (`packages/config/eslint/fsd.js`): слои сверху вниз и импорт слайса только через `index.ts`.
 - **Роутинг — отдельно от слоёв:**
-  - в Rsbuild-приложениях `src/routes/` — файлы роутов TanStack Router; в них только объявление роута (loader, `validateSearch`) и подключение страницы из `pages/`. `src/app/routeTree.gen.ts` генерируется плагином, коммитится, руками не правится;
-  - в `landing` директория `app/` в корне приложения — только App Router (`page.tsx`, `layout.tsx`, `robots.ts`, `sitemap.ts`), страницы реэкспортируются из `src/pages/`. Пустая корневая `pages/` (с README) обязательна: без неё Next принимает `src/pages` за Pages Router.
-  - роутинг может импортировать любые слои, включая `app` (глобальные стили в `layout.tsx`).
+  - `src/routes/` — файлы роутов TanStack Router; в них только объявление роута (loader, `validateSearch`) и подключение страницы из `pages/`. `src/app/routeTree.gen.ts` генерируется плагином, коммитится, руками не правится;
+  - роутинг может импортировать любые слои, включая `app`.
 - Общие для нескольких приложений вещи выносятся в `packages/*`, а не копируются. UI-кит — `@qgames/ui`, клиент API — `@qgames/api`.
 
 ## 4. Правила использования библиотек
 
-- **TanStack Query** — единственное место для серверных данных. `queryOptions`/`mutationOptions`/хуки и ключи берутся из `@qgames/api` (Orval), свои ключи и fetch-функции для ручек gateway не пишем (исключение — URL SSE-ручек, см. §5 Real-time). Копировать серверные данные в zustand или `useState` запрещено. Инвалидация — через `queryClient.invalidateQueries` по сгенерированным ключам.
+- **TanStack Query** — единственное место для серверных данных. `queryOptions`/`mutationOptions`/хуки и ключи берутся из `@qgames/api` (Orval), свои ключи и fetch-функции для ручек бэкенда не пишем (исключение — URL SSE-ручек, см. §5 Real-time). Копировать серверные данные в zustand или `useState` запрещено. Инвалидация — через `queryClient.invalidateQueries` по сгенерированным ключам.
 - **zustand** — только клиентский стейт (UI, локальное состояние игры до отправки хода). Стор живёт в `model/` своего слайса, экспортируется хук; селекторы обязательны (`useStore((s) => s.x)`), подписку на весь стор не делаем.
-- **Формы — react-hook-form + Zod 4** через `zodResolver` из `@hookform/resolvers`. Схема запроса берётся из сгенерированных Orval-Zod-схем; если форме нужно больше полей или правил (например, повтор пароля), схема расширяется в `model/` слайса. Поля верстаются компонентами `@qgames/ui`. Ошибки бэкенда показываются по `ApiError.code`; поля из `VALIDATION_ERROR` подсвечиваются `applyFieldErrors` (`@qgames/api`) нейтральным русским текстом — английские тексты сервера не показываем. Сообщения Zod — на русском (`z.config(z.locales.ru())` при старте приложения).
+- **Формы — react-hook-form + Zod 4** через `zodResolver` из `@hookform/resolvers`. Схема запроса берётся из сгенерированных Orval-Zod-схем; если форме нужно больше полей или правил (например, повтор пароля), схема расширяется в `model/` слайса. Поля верстаются компонентами `@qgames/ui`. Ошибки бэкенда показываются по `ApiError.code`; поля из `VALIDATION_ERROR` подсвечиваются `applyFieldErrors` (`@qgames/api`) нейтральным русским текстом — английские тексты сервера не показываем. Сообщения Zod — на русском (`z.config(z.locales.ru())` и `z.config({jitless: true})` — CSP без `unsafe-eval` — в `app/zod-config.ts`, который импортируется первым в `index.tsx`: настройки должны действовать до создания схем).
 - **Комната — SSE + кеш Query:** события потока комнаты пишутся в кеш `GET /api/rooms/{id}` через `setQueryData` по сгенерированному ключу (`entities/room/model/use-room-events.ts`): `snapshot` заменяет данные, `users-changed`/`settings-changed` заменяют свои поля, `session-changed` → `invalidateRoom`, `room-deleted` → закрыть поток и перечитать (покажется `ROOM_NOT_FOUND`). Мутации, которые возвращают комнату (в том числе старт партии), кладут ответ в кеш (`setRoomCache`), а не перезапрашивают.
 - **Партия — SSE + кеш Query:** состояние партии хранится в кеше Query под ключом `['session-stream', sessionId]` (`entities/session`: `useSessionEvents` пишет, `useSession` читает). Это **исключение** из правила «ключи только из Orval»: у потока нет GET-ручки. Опроса нет ни в лобби, ни во время партии. Ответы 4xx запросы не повторяют (настройка `retry` в `app/router.ts`).
 - **TanStack Router** (portal, admin) — file-based роутинг, `autoCodeSplitting` (каждый роут — отдельный чанк). Search params типизируются через `validateSearch` со Zod-схемой. Навигация только через `Link`/`useNavigate`, строковые URL руками не собираем.
-- **Next.js** (landing) — только App Router и статический экспорт (§1).
 - **Стили — Tailwind 4 + shadcn/ui.** Только utility-классы и компоненты `@qgames/ui`; CSS-модулей, CSS-in-JS и inline `style` нет (кроме динамических значений, которые нельзя выразить классом). Классы объединяются через `cn()`. Тема (CSS-переменные, `@theme`) — только в `packages/ui/src/styles/globals.css`. Новые компоненты shadcn добавляются в `packages/ui` (`pnpm --filter @qgames/ui exec shadcn add <component>`), в приложения не копируются. Свои общие компоненты разметки (`PageLayout`) лежат там же, в `packages/ui/src/components/`, рядом с shadcn; их имена не должны совпадать с именами компонентов shadcn.
 - **Курсоры:**
   - у кнопок и интерактивных элементов `pointer`, у заблокированных — `not-allowed`. Общее правило лежит в `globals.css`;
@@ -178,26 +172,26 @@ src/
 - **Подсказки** к заблокированным элементам (причина, почему действие недоступно) делаются через Tooltip из `@qgames/ui`, а не через `title`:
   - в портале — через `WithHint` (`@/shared/ui`), триггером служит обёртка, потому что disabled-кнопка не получает событий;
   - `TooltipProvider` подключён в `app/app.tsx`.
-- **Переменные окружения** читаются в одном месте (`src/shared/config/env.ts`, наружу — через `@/shared/config`) и валидируются Zod-схемой при старте. В Rsbuild — префикс `PUBLIC_`, в Next — `NEXT_PUBLIC_`. Секретов во фронте нет.
+- **Переменные окружения** читаются в одном месте (`src/shared/config/env.ts`, наружу — через `@/shared/config`) и валидируются Zod-схемой при старте. Префикс `PUBLIC_` (Rsbuild). Секретов во фронте нет. Адреса API в env нет (same-origin). У админки переменных пока нет: схема пустая (`z.object({})`), `env.d.ts` и `.env.example` остаются местом для будущих переменных.
 
 ## 5. Взаимодействие с бэкендом
 
-- **Адресаты:** portal → `user-gateway`, admin → `admin-gateway` (REST/JSON). Браузер ходит в свой gateway **напрямую** на api-домен (`PUBLIC_API_URL`; локально user-gateway — `http://localhost:8080`, admin-gateway — `http://localhost:8083`) с `credentials: 'include'`. CORS с `allowCredentials` настраивается на каждом gateway для своего фронта. Same-site (фронт и api на одном регистрируемом домене) обязателен: куки `SameSite=Lax`.
-- **Клиент admin-gateway** — в том же `@qgames/api`: второй снапшот `packages/api/openapi/admin-gateway.json` и вторые цели Orval (`adminGateway`, `adminGatewayZod`), код в `src/generated/admin-gateway/`. Отдельный пакет — только если клиенты разойдутся. Mutator общий: каждое приложение вызывает `configureApi` со своим URL. Это работает, пока у gateway'ев одинаковы пути `/api/auth/*` и 401 `UNAUTHENTICATED`.
-- **Аутентификация:** токены живут только в HttpOnly-куках, которые ставит gateway; фронт их не видит и не хранит. Признак «залогинен» — успешный `GET /api/users/me` (в админке — `GET /api/admins/me`). На 401 с кодом `UNAUTHENTICATED` mutator делает один общий (single-flight) `POST /api/auth/refresh` и повторяет исходный запрос один раз; если refresh вернул 401, пользователь — гость. Другие 401 (например, `INVALID_GOOGLE_TOKEN`) — обычные ошибки, сессию не трогают. Запросы `/api/auth/*` не повторяются.
-- **Контракт** — OpenAPI gateway'ев. Снапшоты `packages/api/openapi/gateway.json` (user-gateway) и `admin-gateway.json` и сгенерированный код `packages/api/src/generated/` коммитятся; руками сгенерированный код и типы API не пишем.
-  - Обновление контракта: запустить бэкенд, `pnpm api:fetch` (снимает `/v3/api-docs` обоих gateway), `pnpm api:generate`, проверить дифф.
-  - Импорты: `@qgames/api` — `configureApi`, `ApiError`, `isApiError`, `refreshSession` (общий single-flight refresh), `resolveUrl`, `errorMessage`, `applyFieldErrors`; `@qgames/api/gateway` — функции, `queryOptions`, хуки и ключи; `@qgames/api/gateway/model` — типы; `@qgames/api/gateway/zod` — Zod-схемы запросов и всех схем components (`generateReusableSchemas`, union — `discriminatedUnion` через `generateDiscriminatedUnion`). Для админки — `@qgames/api/admin-gateway` (`/model`, `/zod`; в `/zod` — схемы ручек, без схем components: `generateReusableSchemas` у цели `adminGatewayZod` не включён).
-  - SSE-ручки (ответ 200 — `text/event-stream`) исключены из генерации react-query/fetch трансформером входа user-gateway в `orval.config.ts`: сгенерированный fetch повис бы на бесконечном потоке. Модели и Zod-схемы их событий генерируются.
-  - Orval работает в режиме `split` (один файл ручек), а не `tags-split`: теги в спецификации на русском и дали бы кириллические имена файлов.
+- **Адресаты:** portal → группа API `portal`, admin → группа `admin` одного приложения бэкенда (REST/JSON). Браузер ходит в API **того же origin**, что и страница (относительные URL: `configureApi({baseUrl: '', authPath})`, `resolveUrl` для SSE), `credentials: 'include'`. CORS нет ни в бэкенде, ни на фронте. Прокси: в `pnpm dev` — `server.proxy` Rsbuild (портал `/api` → `http://localhost:8080`, админка только `/api/admin`), в Docker и проде — nginx (`docker/nginx/web.conf.template`). Куки `SameSite=Lax`, host-only.
+- **Клиенты** обеих групп — в одном `@qgames/api`: снапшоты `packages/api/openapi/portal.json` и `admin.json`, цели Orval `portal`, `portalZod`, `admin`, `adminZod`, код в `src/generated/portal/` и `src/generated/admin/`. Отдельный пакет — только если клиенты разойдутся. Mutator общий: каждое приложение вызывает `configureApi({baseUrl: '', authPath})` со своим префиксом ручек сессии (портал — `/api/auth`, админка — `/api/admin/auth`).
+- **Аутентификация:** токены живут только в HttpOnly-куках, которые ставит бэкенд; фронт их не видит и не хранит. Признак «залогинен» — успешный `GET /api/users/me` (в админке — `GET /api/admin/admins/me`). На 401 с кодом `UNAUTHENTICATED` mutator делает один общий (single-flight) `POST {authPath}/refresh` и повторяет исходный запрос один раз; если refresh вернул 401, пользователь — гость. Другие 401 (например, `INVALID_GOOGLE_TOKEN`) — обычные ошибки, сессию не трогают. Запросы `{authPath}/*` не повторяются.
+- **Контракт** — OpenAPI бэкенда, группы `portal` (`/v3/api-docs/portal`) и `admin` (`/v3/api-docs/admin`). Снапшоты `packages/api/openapi/*.json` — вход Orval, не коммитятся (`.gitignore`); коммитится только сгенерированный код `packages/api/src/generated/`, по его диффу виден контракт. Руками сгенерированный код и типы API не пишем.
+  - Обновление контракта: запустить бэкенд, `pnpm api:fetch` (снимает обе группы с `API_URL`, по умолчанию `http://localhost:8080`), `pnpm api:generate`, проверить дифф `src/generated/`.
+  - Конфликт в `src/generated/**` руками не сливается: взять любую сторону и перегенерировать (`api:fetch` + `api:generate`) по слитому бэкенду.
+  - Orval работает в режиме `tags-split`: файл на тег, теги латиницей (portal — `auth`, `users`, `games`, `rooms`; admin — `auth`, `admins`), раскладка `src/generated/<группа>/{query,zod,model}/`. `@qgames/api/portal/zod` — ручной barrel `src/portal-zod.ts`: схемы ручек из `zod/index.ts` и схемы components из `zod/index.schemas.ts` (Orval в barrel их не включает).
+  - Импорты: `@qgames/api` — `configureApi`, `ApiError`, `isApiError`, `refreshSession` (общий single-flight refresh), `resolveUrl`, `errorMessage`, `applyFieldErrors`; `@qgames/api/portal` — функции, `queryOptions`, хуки и ключи; `@qgames/api/portal/model` — типы; `@qgames/api/portal/zod` — Zod-схемы запросов и всех схем components (`generateReusableSchemas`, union — `discriminatedUnion` через `generateDiscriminatedUnion`). Для админки — `@qgames/api/admin` (`/model`, `/zod`; в `/zod` — схемы ручек, без схем components: `generateReusableSchemas` у цели `adminZod` не включён).
+  - SSE-ручки (ответ 200 — `text/event-stream`) исключены из генерации react-query/fetch трансформером входа группы `portal` в `orval.config.ts`: сгенерированный fetch повис бы на бесконечном потоке. Модели и Zod-схемы их событий генерируются.
   - Если контракт неудобен или неполон — сказать пользователю, а не обходить на фронте (§0).
   - Известные расхождения контракта и генерации (фронт их обходит, обходы помечены комментариями со ссылкой сюда):
-    - Orval переносит `pattern` в `new RegExp(...)` без флага `u`, поэтому шаблоны с `\p{…}` (ник: `\p{Cc}`) в JS работают неверно и отклоняют обычные ники. Ник проверяется своей схемой с флагом `u` (`features/register/model/schema.ts`). Это ограничение генерации, а не бэкенда;
-    - шаблон `VerifyEmailRequest.code` — `[0-9]{6}` без якорей `^…$`: по семантике OpenAPI (поиск подстроки) его проходит и «1234567». Код проверяется своей схемой (`features/verify-email/model/schema.ts`); на бэкенде стоит добавить якоря;
+    - Orval переносит `pattern` в `new RegExp(...)` без флага `u`, поэтому шаблоны с `\p{…}` (ник: `\p{Cc}`) в JS работают неверно и отклоняют обычные ники. Ник проверяется своей схемой с флагом `u` (`entities/user/model/nickname.ts`). Это ограничение генерации, а не бэкенда;
     - тексты в `errors` у `VALIDATION_ERROR` — на английском, поэтому поля подсвечиваются нейтральным русским текстом (`applyFieldErrors`);
     - сгенерированный Zod даёт nullable-полям `.nullish()` (`T | null | undefined`), а модель Orval — `T | null`; с `exactOptionalPropertyTypes` они несовместимы. Данные потока комнаты перед записью в кеш нормализуются (`undefined` → `null`) в `entities/room/lib/stream-data.ts`.
 - **Ошибки:** все 4xx/5xx приходят как `ProblemDetail` с машиночитаемым `code`. Mutator превращает их в `ApiError` (`status`, `code`, `detail`, `reason` у `MOVE_REJECTED`, `fieldErrors` у `VALIDATION_ERROR`); недоступный сервер — `NETWORK_ERROR`. UI ветвится только по `code` (общие тексты — `errorMessage` из `@qgames/api`, тексты по своим кодам — в слайсах, для комнат — `roomErrorMessage`), тексты `detail` пользователю не показываем.
-- **Real-time:** ходы и действия — REST, события — SSE от gateway (gateway проксирует поток из сервиса `game`). WebSocket — только для real-time игр (сейчас таких нет).
+- **Real-time:** ходы и действия — REST, события — SSE модуля `game` бэкенда. WebSocket — только для real-time игр (сейчас таких нет).
   - **Обёртка** — `apps/portal/src/shared/lib/sse` (`createEventStream(url, {schema, types, onEvent, onOpen, onError, onInvalid})`): `EventSource` с `withCredentials: true`, каждое сообщение `{type: e.type, data: JSON.parse(e.data)}` проверяется Zod-схемой union событий из components (§6). Когда поток закрылся (`readyState === CLOSED`, в том числе 401 до старта), — `refreshSession()` и переподключение с backoff 1 → 30 с; если refresh вернул false (гость), переподключения нет. Статус ответа из `EventSource` не узнать, поэтому refresh делается перед каждой попыткой.
   - URL SSE-ручки собирается через `resolveUrl` рядом с хуком (Orval её не генерирует).
   - **Подписки комнаты и партии — разные.** Поток комнаты — `GET /api/rooms/{roomId}/events`: первым сообщением `snapshot`, затем события без seq с полным значением (замена). После реконнекта приходит свежий `snapshot`.
@@ -213,7 +207,7 @@ src/
 
 ## 7. Линтинг и форматирование
 
-- **ESLint** (flat config, фабрика в `@qgames/config/eslint`): база — **gts** (Google TypeScript Style), сверху `typescript-eslint` `strictTypeChecked` + `stylisticTypeChecked`, `eslint-plugin-react-hooks`, `@tanstack/eslint-plugin-query`, `@next/eslint-plugin-next` (landing), `eslint-plugin-boundaries` (FSD).
+- **ESLint** (flat config, фабрика в `@qgames/config/eslint`): база — **gts** (Google TypeScript Style), сверху `typescript-eslint` `strictTypeChecked` + `stylisticTypeChecked`, `eslint-plugin-react-hooks`, `@tanstack/eslint-plugin-query`, `eslint-plugin-boundaries` (FSD).
 - **Prettier** — конфиг gts (`@qgames/config/prettier`), запускается через ESLint (`prettier/prettier`) и отдельно `pnpm format`.
 - **Stylelint** — `stylelint-config-standard` с разрешёнными at-rules Tailwind 4 (`@theme`, `@apply`, `@source`, `@utility`, `@variant`, `@custom-variant`, `@plugin`, `@config`, `@reference`).
 - Отступления от базовых правил:
@@ -228,7 +222,7 @@ src/
 
 ## 9. Стек и версии
 
-Node.js 24 LTS, pnpm 12, Turborepo 2, TypeScript 6.0, React 19, Rsbuild 2 (Rspack 2), Next.js 16 (Turbopack), TanStack Query 5, TanStack Router 1, zustand 5, react-hook-form 7 + Zod 4, Tailwind CSS 4, shadcn/ui, Orval 8, ESLint 9 + gts 7, Stylelint 17, Google Identity Services (скрипт, типы `@types/google.accounts`). Точные версии — только в `catalog` в `pnpm-workspace.yaml`.
+Node.js 24 LTS, pnpm 12, Turborepo 2, TypeScript 6.0, React 19, Rsbuild 2 (Rspack 2), TanStack Query 5, TanStack Router 1, zustand 5, react-hook-form 7 + Zod 4, Tailwind CSS 4, shadcn/ui, Orval 8, ESLint 9 + gts 7, Stylelint 17, Google Identity Services (скрипт, типы `@types/google.accounts`). Точные версии — только в `catalog` в `pnpm-workspace.yaml`.
 
 - TypeScript 6, а не 7: typescript-eslint поддерживает `typescript <6.1`, а TS 7 (нативный) пока не даёт JS API для тулинга. Решить при появлении поддержки TS 7 в typescript-eslint.
 - ESLint 9, а не 10: gts 7 зависит от `eslint ^9`. Решить при выходе gts с поддержкой ESLint 10.
@@ -243,16 +237,16 @@ pnpm build                   # сборка всего
 pnpm typecheck               # проверка типов
 pnpm lint                    # ESLint + Stylelint
 pnpm format                  # Prettier
-pnpm api:fetch               # снять OpenAPI с запущенных gateway в packages/api/openapi/ (GATEWAY_URL, ADMIN_GATEWAY_URL)
+pnpm api:fetch               # снять OpenAPI групп portal и admin с запущенного бэкенда в packages/api/openapi/ (снапшоты не коммитятся; API_URL, по умолчанию http://localhost:8080)
 pnpm api:generate            # сгенерировать клиент API (Orval)
 ```
 
-- Порты: portal — http://localhost:3000, admin — http://localhost:3001, landing — http://localhost:3002.
+- Порты: portal — http://localhost:3000, admin — http://localhost:3001.
 - Вход через Google локально: в Google Cloud Console настроить OAuth consent screen (External, Testing, себя — в Test users), создать OAuth client ID типа Web application с Authorized JavaScript origins `http://localhost:3000` и `http://localhost` (redirect URI не нужны). Client ID прописать в `GOOGLE_CLIENT_IDS` (`.env` бэкенда, затем `docker compose up -d`) и в `PUBLIC_GOOGLE_CLIENT_ID` (`apps/portal/.env`).
-- Прод-сборка в Docker: `docker compose up --build -d --wait` (portal :3000, admin :3001, landing :3002; статику раздаёт nginx не от root — `nginxinc/nginx-unprivileged`, внутри контейнера порт 8080; hot reload нет — для разработки `pnpm dev`). Общий образ — `docker/app.Dockerfile` (аргументы `APP`, `OUT`, `NGINX_CONF`), конфиги nginx — `docker/nginx/` (`spa.conf` — fallback на `index.html`, `landing.conf` — `404.html`); заголовки безопасности (`X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`) задаются на уровне server и через `add_header_inherit merge` приходят на всех ответах. CSP — решить при настройке прод-деплоя. Переменные `PUBLIC_*`/`NEXT_PUBLIC_*` вшиваются при сборке из `apps/<app>/.env` (нет файла — сборка падает): после правки `.env` — `--build`. Бэкенд в этот compose не входит.
-- Бэкенд поднимается в его репозитории: `docker compose up --build -d --wait`. Swagger: user-gateway — http://localhost:8080/swagger-ui.html, admin-gateway — http://localhost:8083/swagger-ui.html. Письма с кодами — Mailpit http://localhost:8025. Вход в админку на стенде — `admin` / `admin`.
+- Прод-сборка в Docker: `docker compose up --build -d --wait` — один сервис `web` на nginx (`nginxinc/nginx-unprivileged:1.30.6-alpine`, не от root): статика обоих приложений, по server-блоку на приложение (portal :3000, admin :3001), и reverse proxy на бэкенд `API_UPSTREAM` (по умолчанию `host.docker.internal:8080`). В upstream попадает только IPv4-адрес `API_UPSTREAM` (`docker/nginx/18-api-upstream-ipv4.envsh`: `host.docker.internal` с `host-gateway` резолвится и в IPv6, а подключение по нему из контейнера падает — 502); upstream из одного сервера nginx не помечает недоступным. Портал проксирует `/api/` кроме `/api/admin/` (404), админка — только `/api/admin/` (прочие `/api/` → 404). Конфиг — шаблон `docker/nginx/web.conf.template` (envsubst при старте контейнера: `PORTAL_LISTEN`/`PORTAL_SERVER_NAME`, `ADMIN_LISTEN`/`ADMIN_SERVER_NAME`, `API_UPSTREAM`; по умолчанию 3000/`_`, 3001/`_`) и сниппеты `api-proxy.conf`, `spa.conf`. Прокси: HTTP/1.1, пустой `Connection`, `proxy_buffering off` (SSE без задержек), `proxy_read_timeout 60s` (ping потоков — 5 с), `Host` и `X-Forwarded-*` клиента. Образ — `docker/app.Dockerfile` (сборка на `node:24.22.1-alpine`, мажор как в `.nvmrc`, обновлять вместе). Заголовки на уровне server с `always` (`add_header_inherit merge` — location их дополняет) на всех ответах, включая ошибки и API: `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options` (дубли от Spring скрываются `proxy_hide_header`) и CSP: `default-src 'self'`, `script-src` строгий; у портала — плюс Google GIS (`script-src https://accounts.google.com/gsi/client`, `frame-src`/`connect-src https://accounts.google.com/gsi/`) и `style-src 'unsafe-inline'` (inline-стили ставят GIS и `react-remove-scroll` Radix Dialog/Select); у админки — без Google и без `unsafe-inline`. `/static/*` — `immutable` (не на 404, несуществующий ассет — 404), страницы — `no-cache`, gzip только у статики. `mem_limit 48m` = `memswap_limit 48m` (без свопа); замер: простой ~14 MiB, 360 SSE 5 мин — пик ~29 MiB, 200 SSE и 600 запросов — ~22 MiB. Переменные `PUBLIC_*` вшиваются при сборке из `apps/<app>/.env` (нет файла при наличии `.env.example` — сборка падает); после правки `.env` — `--build`. Бэкенд в этот compose не входит. TLS — решить при деплое.
+- Бэкенд поднимается в его репозитории: `docker compose up --build -d --wait` (одно приложение, :8080). Swagger UI — http://localhost:8080/swagger-ui.html (выбор группы `portal` / `admin`). Вход в админку на стенде — `admin` / `admin`.
 - Переменные окружения приложений — в `.env` приложения (шаблон — `.env.example`).
-- Статический результат `landing` — `apps/landing/out/`, Rsbuild-приложений — `apps/<app>/dist/`.
+- Статический результат Rsbuild-приложений — `apps/<app>/dist/`.
 
 ## 11. Отклонённые решения
 
@@ -269,12 +263,11 @@ pnpm api:generate            # сгенерировать клиент API (Orva
 
 | Вариант                                     | Почему отклонён                                                                                                                             | Что вместо                                              |
 | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| Весь портал на Next.js (SSR/RSC)            | SEO нужен только публичным страницам; SSR добавляет границы server/client, проброс кук, Node-сервер в проде и другой роутинг, чем в админке | CSR-портал + статический `landing`                      |
-| Лендинг на Rsbuild с самописным пререндером | Пререндер пришлось бы писать и поддерживать самим                                                                                           | Next.js со статическим экспортом                        |
-| `next-rspack` в landing                     | Экспериментальный плагин; пользователь видел проблемы с остановкой dev-сервера                                                              | Turbopack (по умолчанию в Next)                         |
 | Чистый Rspack (`@rspack/cli`) для SPA       | Большой ручной конфиг (loaders, HMR, PostCSS, HTML)                                                                                         | Rsbuild                                                 |
 | Node.js 22                                  | Maintenance LTS, поддержка заканчивается в апреле 2027                                                                                      | Node.js 24 LTS                                          |
 | Dev-режим (`pnpm dev`) в контейнере         | bind-mount на Windows медленный, вотчеры капризны                                                                                           | Прод-сборка + nginx; для разработки `pnpm dev` локально |
+| Caddy (статика, прокси, автоматический TLS) | Решение пользователя; на замере под нагрузкой (360 SSE) ~4 ядра CPU и память у самого `GOMEMLIMIT` | nginx (`nginx-unprivileged`), один образ `web` |
+| Строгий `style-src` у портала (без `'unsafe-inline'`) | Ломает кнопку Google (inline-стили GIS) и блокировку прокрутки модалок Radix; nonce style-атрибуты GIS не покрывает | `'unsafe-inline'` только в `style-src` портала, `script-src` строгий |
 | Build args для `PUBLIC_*` в compose         | Решение пользователя                                                                                                                        | `apps/<app>/.env` в контексте сборки                    |
 
 ### Код и библиотеки
@@ -300,9 +293,11 @@ pnpm api:generate            # сгенерировать клиент API (Orva
 
 | Вариант                                               | Почему отклонён                                                                        | Что вместо                                  |
 | ----------------------------------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------- |
-| Same-origin: прокси `/api` через dev-сервер и ingress | Выбраны прямые запросы на отдельный api-домен                                          | Прямые запросы + CORS на gateway            |
-| Генерация клиента при каждой сборке с живого gateway  | Сборка фронта зависела бы от запущенного бэкенда, изменения контракта не видны в диффе | Закоммиченные снапшот и сгенерированный код |
-| Админка через общий `user-gateway`                    | Решение пользователя: у администраторов отдельный сервис                               | `admin-gateway`                             |
+| Прямые запросы на api-домен (`PUBLIC_API_URL`) + CORS | Сложнее: CORS, адрес в env, CSP `connect-src` на каждое окружение | Same-origin: dev-proxy Rsbuild и nginx |
+| Генерация клиента при каждой сборке с живого бэкенда | Сборка фронта зависела бы от запущенного бэкенда, изменения контракта не видны в диффе | Закоммиченный сгенерированный код           |
+| Админка через ручки портала (общая группа API и куки) | Решение пользователя: у администраторов отдельные ручки, сессия и ключи JWT | Группа API `admin` (`/api/admin/**`) |
+| Коммит снапшота OpenAPI                               | Конфликты при параллельной разработке; контракт виден по диффу сгенерированного кода   | Снапшот в `.gitignore`, коммитится `src/generated/` |
+| Orval в режиме `split`                                | Один большой файл ручек конфликтует при параллельной разработке                        | `tags-split`, теги латиницей                |
 
 ### UI комнаты
 

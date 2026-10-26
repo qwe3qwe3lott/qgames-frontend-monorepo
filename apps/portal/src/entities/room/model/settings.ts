@@ -2,12 +2,12 @@ import type {
   GameRulesDto,
   GameSettingsLimitsDto,
   RoomSettingsDto,
-} from '@qgames/api/gateway/model';
+} from '@qgames/api/portal/model';
 import {
   CheckersSettingsDto,
   NothingSettingsDto,
   UpdateRoomSettingsBody,
-} from '@qgames/api/gateway/zod';
+} from '@qgames/api/portal/zod';
 import type {Path} from 'react-hook-form';
 import {z} from 'zod';
 

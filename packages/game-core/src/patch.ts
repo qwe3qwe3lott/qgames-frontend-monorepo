@@ -1,4 +1,4 @@
-import type {PathSegmentOutput} from '@qgames/api/gateway/zod';
+import type {PathSegmentOutput} from '@qgames/api/portal/zod';
 
 import {isRecord} from './lib/json';
 import type {SessionDocument, SessionLogEvent} from './session';

@@ -1,6 +1,6 @@
 import {errorMessage} from '@qgames/api';
-import {useListGames} from '@qgames/api/gateway';
-import type {GameSummaryDto} from '@qgames/api/gateway/model';
+import {useListGames} from '@qgames/api/portal';
+import type {GameSummaryDto} from '@qgames/api/portal/model';
 import {Button} from '@qgames/ui/components/button';
 import {
   Card,

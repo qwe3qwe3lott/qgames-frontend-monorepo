@@ -3,7 +3,7 @@ import type {
   GameSettingsDto,
   RoomSettingsDto,
   TimeControlDtoMode,
-} from '@qgames/api/gateway/model';
+} from '@qgames/api/portal/model';
 
 export const TIME_CONTROL_MODE_LABELS: Readonly<
   Record<TimeControlDtoMode, string>

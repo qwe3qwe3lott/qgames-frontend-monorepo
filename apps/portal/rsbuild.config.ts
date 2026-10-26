@@ -13,6 +13,9 @@ export default defineConfig({
   server: {
     port: 3000,
     strictPort: true,
+    // Same-origin, как за nginx в Docker: /api/** уходит в бэкенд (CLAUDE.md §5).
+    // Rsbuild не сжимает text/event-stream, поэтому SSE через прокси идёт без буферизации.
+    proxy: {'/api': 'http://localhost:8080'},
   },
   tools: {
     rspack: {

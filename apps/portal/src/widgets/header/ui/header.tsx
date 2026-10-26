@@ -38,18 +38,11 @@ export function Header() {
             </>
           ) : null}
           {viewer.status === 'guest' ? (
-            <>
-              <Button asChild variant="ghost" size="sm">
-                <Link to="/login" search={{redirect: undefined}}>
-                  Войти
-                </Link>
-              </Button>
-              <Button asChild size="sm">
-                <Link to="/register" search={{redirect: undefined}}>
-                  Регистрация
-                </Link>
-              </Button>
-            </>
+            <Button asChild size="sm">
+              <Link to="/login" search={{redirect: undefined}}>
+                Войти
+              </Link>
+            </Button>
           ) : null}
         </div>
       </div>

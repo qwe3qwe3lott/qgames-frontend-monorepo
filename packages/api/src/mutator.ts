@@ -1,24 +1,40 @@
 import {ApiError, NETWORK_ERROR_CODE} from './api-error';
 
-const AUTH_PATH = '/api/auth/';
-const REFRESH_PATH = '/api/auth/refresh';
-/** Код 401 gateway, когда нет access-токена или он истёк. */
+/** Код 401 бэкенда, когда нет access-токена или он истёк. */
 const UNAUTHENTICATED_CODE = 'UNAUTHENTICATED';
 
-let baseUrl: string | undefined;
-let refreshInFlight: Promise<boolean> | undefined;
-
-/** Задаёт адрес gateway. Приложение вызывает один раз при старте. */
-export function configureApi(options: {baseUrl: string}): void {
-  baseUrl = options.baseUrl.replace(/\/+$/, '');
+interface ApiConfig {
+  /** Адрес бэкенда; пустая строка — тот же origin, что и страница (относительные URL). */
+  baseUrl: string;
+  /** Префикс ручек сессии приложения без `/` в конце (`/api/auth`, `/api/admin/auth`). */
+  authPath: string;
 }
 
-/** Полный адрес ручки gateway по пути из сгенерированного клиента (`get…Url`). */
-export function resolveUrl(path: string): string {
-  if (baseUrl === undefined) {
+let config: ApiConfig | undefined;
+let refreshInFlight: Promise<boolean> | undefined;
+
+/**
+ * Задаёт адрес бэкенда и префикс ручек сессии своей группы API
+ * (`{authPath}/refresh` — обновление сессии, запросы `{authPath}/*` не повторяются).
+ * Приложение вызывает один раз при старте.
+ */
+export function configureApi(options: ApiConfig): void {
+  config = {
+    baseUrl: options.baseUrl.replace(/\/+$/, ''),
+    authPath: options.authPath.replace(/\/+$/, ''),
+  };
+}
+
+function requireConfig(): ApiConfig {
+  if (config === undefined) {
     throw new Error('@qgames/api: перед запросами вызовите configureApi()');
   }
-  return `${baseUrl}${path}`;
+  return config;
+}
+
+/** Адрес ручки бэкенда (`baseUrl` + путь из сгенерированного клиента `get…Url`). */
+export function resolveUrl(path: string): string {
+  return `${requireConfig().baseUrl}${path}`;
 }
 
 /**
@@ -26,7 +42,7 @@ export function resolveUrl(path: string): string {
  * Возвращает false, если сессию обновить нельзя (пользователь — гость).
  */
 export function refreshSession(): Promise<boolean> {
-  refreshInFlight ??= fetch(resolveUrl(REFRESH_PATH), {
+  refreshInFlight ??= fetch(resolveUrl(`${requireConfig().authPath}/refresh`), {
     method: 'POST',
     credentials: 'include',
   })
@@ -44,7 +60,7 @@ async function parseBody(response: Response): Promise<unknown> {
 }
 
 /**
- * Mutator для Orval: все запросы к gateway проходят здесь.
+ * Mutator для Orval: все запросы к бэкенду проходят здесь.
  * Куки отправляются всегда; на 401 сессия обновляется и запрос повторяется один раз.
  */
 export async function apiFetch<T>(path: string, init: RequestInit): Promise<T> {
@@ -60,7 +76,10 @@ export async function apiFetch<T>(path: string, init: RequestInit): Promise<T> {
     );
 
   let response = await request();
-  if (response.status === 401 && !path.startsWith(AUTH_PATH)) {
+  if (
+    response.status === 401 &&
+    !path.startsWith(`${requireConfig().authPath}/`)
+  ) {
     // Обновляем сессию только при истёкшем access-токене: другие 401
     // (например, INVALID_GOOGLE_TOKEN при привязке Google) — обычные ошибки.
     const error = await ApiError.fromResponse(response.clone());

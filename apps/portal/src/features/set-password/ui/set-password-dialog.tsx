@@ -3,7 +3,7 @@ import {applyFieldErrors, errorMessage} from '@qgames/api';
 import {
   getGetCurrentUserQueryKey,
   useAddPasswordLogin,
-} from '@qgames/api/gateway';
+} from '@qgames/api/portal';
 import {Button} from '@qgames/ui/components/button';
 import {
   Dialog,

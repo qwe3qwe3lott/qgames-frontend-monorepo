@@ -1,6 +1,6 @@
 import {errorMessage} from '@qgames/api';
-import {useGetAdmins} from '@qgames/api/admin-gateway';
-import type {AdminResponse} from '@qgames/api/admin-gateway/model';
+import {useGetAdmins} from '@qgames/api/admin';
+import type {AdminResponse} from '@qgames/api/admin/model';
 import {Button} from '@qgames/ui/components/button';
 import {PageLayout} from '@qgames/ui/components/page-layout';
 import {
@@ -46,7 +46,7 @@ function AdminRow({admin, isCurrent}: AdminRowProps) {
   );
 }
 
-/** Все администраторы из `GET /api/admins` (по дате создания). */
+/** Все администраторы из `GET /api/admin/admins` (по дате создания). */
 export function AdminsPage() {
   const current = useCurrentAdmin();
   const {data, error, isPending, isFetching, refetch} = useGetAdmins();

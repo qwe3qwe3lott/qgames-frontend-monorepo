@@ -1,5 +1,5 @@
 import {errorMessage} from '@qgames/api';
-import {useGetGame} from '@qgames/api/gateway';
+import {useGetGame} from '@qgames/api/portal';
 import {PageLayout} from '@qgames/ui/components/page-layout';
 
 import {playersLabel, type GameEntry} from '@/entities/game';

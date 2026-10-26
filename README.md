@@ -2,13 +2,12 @@
 
 Фронтенд игрового портала qgames: монорепозиторий на pnpm + Turborepo.
 
-| Приложение     | Что это                                          | Порт |
-| -------------- | ------------------------------------------------ | ---- |
-| `apps/portal`  | Игровой портал (CSR, Rsbuild + TanStack Router)  | 3000 |
-| `apps/admin`   | Админка (CSR, Rsbuild + TanStack Router)         | 3001 |
-| `apps/landing` | Статический лендинг для SEO (Next.js, Turbopack) | 3002 |
+| Приложение    | Что это                                         | Порт |
+| ------------- | ----------------------------------------------- | ---- |
+| `apps/portal` | Игровой портал (CSR, Rsbuild + TanStack Router) | 3000 |
+| `apps/admin`  | Админка (CSR, Rsbuild + TanStack Router)        | 3001 |
 
-Общие пакеты: `packages/ui` (shadcn/ui + Tailwind), `packages/api` (клиенты user-gateway и admin-gateway из OpenAPI, Orval), `packages/config` (TypeScript, ESLint, Stylelint, Prettier), `packages/game-ui` (общий игровой UI), `packages/games/*` (модули игр, каждая — отдельный чанк).
+Общие пакеты: `packages/ui` (shadcn/ui + Tailwind), `packages/api` (клиенты групп API `portal` и `admin` бэкенда из OpenAPI, Orval), `packages/config` (TypeScript, ESLint, Stylelint, Prettier), `packages/game-ui` (общий игровой UI), `packages/games/*` (модули игр, каждая — отдельный чанк).
 
 ## Запуск
 
@@ -16,7 +15,7 @@
 
 ```bash
 pnpm install
-cp apps/portal/.env.example apps/portal/.env   # и так же для admin, landing
+cp apps/portal/.env.example apps/portal/.env   # и так же для admin
 pnpm dev
 ```
 
@@ -24,16 +23,17 @@ pnpm dev
 
 ## Запуск через Docker
 
-Прод-сборка всех приложений, статику раздаёт nginx (без hot reload — для разработки `pnpm dev`). Нужен только Docker.
+Прод-сборка обоих приложений в одном образе `web`: статику и прокси API раздаёт nginx (без hot reload — для разработки `pnpm dev`). Нужен только Docker.
 
 ```bash
-cp apps/portal/.env.example apps/portal/.env   # и так же для admin, landing
-docker compose up --build -d --wait            # portal :3000, admin :3001, landing :3002
+cp apps/portal/.env.example apps/portal/.env   # и так же для admin
+docker compose up --build -d --wait            # portal :3000, admin :3001
 docker compose down                            # остановить
 ```
 
-- Переменные `PUBLIC_*` / `NEXT_PUBLIC_*` берутся из `apps/<app>/.env` и вшиваются в бандл при сборке: после правки `.env` — снова `docker compose up --build -d --wait`. Без `.env` сборка приложения падает с подсказкой.
-- Внутри контейнера nginx работает не от root (`nginxinc/nginx-unprivileged`) и слушает 8080; наружу — порты 3000–3002. На всех ответах — заголовки `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`.
+- API на том же origin, что и страница: portal проксирует `/api/**`, admin — только `/api/admin/**` (прочие `/api/*` на :3001 — 404) на бэкенд `API_UPSTREAM` (по умолчанию `host.docker.internal:8080`). В `pnpm dev` то же делает proxy Rsbuild.
+- Переменные `PUBLIC_*` берутся из `apps/<app>/.env` и вшиваются в бандл при сборке: после правки `.env` — снова `docker compose up --build -d --wait`. Без `.env` сборка падает с подсказкой.
+- nginx работает не от root (`nginxinc/nginx-unprivileged`); конфиг — шаблон `docker/nginx/web.conf.template` (порты и имена хостов — `PORTAL_LISTEN`, `PORTAL_SERVER_NAME`, `ADMIN_LISTEN`, `ADMIN_SERVER_NAME`; бэкенд — `API_UPSTREAM`). На всех ответах — CSP, `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`.
 - Бэкенд в этот compose не входит и поднимается в своём репозитории.
 
 ## Команды
@@ -44,7 +44,7 @@ pnpm build          # сборка
 pnpm typecheck      # проверка типов
 pnpm lint           # ESLint + Stylelint
 pnpm format         # Prettier
-pnpm api:fetch      # снять OpenAPI с запущенных user-gateway и admin-gateway
+pnpm api:fetch      # снять OpenAPI групп portal и admin с запущенного бэкенда (API_URL, по умолчанию http://localhost:8080; снапшоты не коммитятся)
 pnpm api:generate   # сгенерировать клиент API
 ```
 

@@ -1,6 +1,6 @@
 import {z} from 'zod';
 
-/** Тело ошибки gateway: ProblemDetail с машиночитаемым `code`. */
+/** Тело ошибки бэкенда: ProblemDetail с машиночитаемым `code`. */
 const problemDetailSchema = z.object({
   status: z.number().int().optional(),
   title: z.string().optional(),
@@ -12,9 +12,9 @@ const problemDetailSchema = z.object({
   errors: z.record(z.string(), z.string().nullable()).optional(),
 });
 
-/** Код ошибки, если gateway его не прислал (не-JSON ответ, прокси). */
+/** Код ошибки, если бэкенд его не прислал (не-JSON ответ, прокси). */
 export const UNKNOWN_ERROR_CODE = 'UNKNOWN';
-/** Код ошибки, если до gateway не удалось достучаться. */
+/** Код ошибки, если до бэкенда не удалось достучаться. */
 export const NETWORK_ERROR_CODE = 'NETWORK_ERROR';
 
 interface ApiErrorDetails {
@@ -23,7 +23,7 @@ interface ApiErrorDetails {
   fieldErrors?: Readonly<Record<string, string>> | undefined;
 }
 
-/** Ошибка ответа gateway. UI ветвится только по `code` (CLAUDE.md §5). */
+/** Ошибка ответа бэкенда. UI ветвится только по `code` (CLAUDE.md §5). */
 export class ApiError extends Error {
   readonly status: number;
   readonly code: string;

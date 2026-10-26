@@ -2,7 +2,7 @@ import {errorMessage} from '@qgames/api';
 import {
   getGetCurrentUserQueryKey,
   useLoginWithGoogle,
-} from '@qgames/api/gateway';
+} from '@qgames/api/portal';
 import {useQueryClient} from '@tanstack/react-query';
 import {useNavigate} from '@tanstack/react-router';
 
@@ -18,11 +18,12 @@ const GOOGLE_LOGIN_MESSAGES = {
 
 export interface GoogleLoginButtonProps {
   redirect: string | undefined;
-  text: 'signin_with' | 'signup_with';
 }
 
-/** Вход и регистрация через Google; без Client ID в env не показывается. */
-export function GoogleLoginButton({redirect, text}: GoogleLoginButtonProps) {
+/**
+ * Вход через Google (первый вход создаёт аккаунт); без Client ID в env не показывается.
+ */
+export function GoogleLoginButton({redirect}: GoogleLoginButtonProps) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const login = useLoginWithGoogle({
@@ -47,11 +48,15 @@ export function GoogleLoginButton({redirect, text}: GoogleLoginButtonProps) {
       </div>
       <GoogleButton
         clientId={clientId}
-        text={text}
+        text="signin_with"
         onCredential={idToken => {
           login.mutate({data: {idToken}});
         }}
       />
+      <p className="text-sm text-muted-foreground">
+        Нет аккаунта? Войдите через Google — аккаунт создастся автоматически,
+        пароль можно добавить в профиле.
+      </p>
       {login.isError ? (
         <p className="text-sm text-destructive" role="alert">
           {errorMessage(login.error, GOOGLE_LOGIN_MESSAGES)}

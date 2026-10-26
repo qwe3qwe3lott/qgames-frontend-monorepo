@@ -1,5 +1,5 @@
 import {isApiError} from '@qgames/api';
-import {useGetGame, useGetRoom} from '@qgames/api/gateway';
+import {useGetGame, useGetRoom} from '@qgames/api/portal';
 import {PageLayout} from '@qgames/ui/components/page-layout';
 
 import type {GameEntry} from '@/entities/game';

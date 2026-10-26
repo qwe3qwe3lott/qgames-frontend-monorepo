@@ -1,7 +1,7 @@
 import {
   SessionResultDto,
   type SessionResultDtoOutput,
-} from '@qgames/api/gateway/zod';
+} from '@qgames/api/portal/zod';
 
 import type {SessionState} from '../session';
 import type {SessionModule} from './module';

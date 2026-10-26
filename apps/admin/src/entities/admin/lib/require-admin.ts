@@ -1,5 +1,5 @@
-import {getGetCurrentAdminQueryOptions} from '@qgames/api/admin-gateway';
-import type {AdminResponse} from '@qgames/api/admin-gateway/model';
+import {getGetCurrentAdminQueryOptions} from '@qgames/api/admin';
+import type {AdminResponse} from '@qgames/api/admin/model';
 import type {QueryClient} from '@tanstack/react-query';
 import {redirect} from '@tanstack/react-router';
 

@@ -11,7 +11,7 @@ import {
 import {
   NothingSessionStateDto,
   type NothingSessionStateDtoOutput,
-} from '@qgames/api/gateway/zod';
+} from '@qgames/api/portal/zod';
 
 /** Код игры в контракте (`meta.game.code`). */
 export const NOTHING_CODE = 'nothing';

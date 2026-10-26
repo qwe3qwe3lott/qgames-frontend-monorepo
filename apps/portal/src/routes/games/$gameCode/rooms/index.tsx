@@ -1,5 +1,5 @@
 import {isApiError} from '@qgames/api';
-import {getGetGameQueryOptions} from '@qgames/api/gateway';
+import {getGetGameQueryOptions} from '@qgames/api/portal';
 import {createFileRoute, notFound} from '@tanstack/react-router';
 
 import {GameRoomsPage} from '@/pages/game-rooms';

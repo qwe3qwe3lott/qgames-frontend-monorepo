@@ -4,7 +4,7 @@ import {
   CheckersSessionStateDto,
   type CheckersMoveRulesDtoOutput,
   type CheckersSessionStateDtoOutput,
-} from '@qgames/api/gateway/zod';
+} from '@qgames/api/portal/zod';
 import {
   checkSessionState,
   coreModule,

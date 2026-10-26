@@ -1,4 +1,4 @@
-import {LoginBody} from '@qgames/api/admin-gateway/zod';
+import {LoginBody} from '@qgames/api/admin/zod';
 import type {z} from 'zod';
 
 export const loginSchema = LoginBody;

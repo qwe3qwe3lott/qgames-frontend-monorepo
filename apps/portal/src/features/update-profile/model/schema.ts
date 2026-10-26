@@ -1,4 +1,4 @@
-import {RegisterBody, UpdateProfileBody} from '@qgames/api/gateway/zod';
+import {UpdateProfileBody, UserResponse} from '@qgames/api/portal/zod';
 import type {z} from 'zod';
 
 import {nicknameSchema} from '@/entities/user';
@@ -9,6 +9,6 @@ import {nicknameSchema} from '@/entities/user';
  */
 export const updateProfileSchema = UpdateProfileBody.extend({
   nickname: nicknameSchema,
-  avatar: RegisterBody.shape.avatar,
+  avatar: UserResponse.shape.avatar,
 });
 export type UpdateProfileValues = z.infer<typeof updateProfileSchema>;

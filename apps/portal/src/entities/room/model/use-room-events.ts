@@ -1,10 +1,10 @@
 import {resolveUrl} from '@qgames/api';
-import {getGetRoomQueryKey} from '@qgames/api/gateway';
-import type {RoomResponse} from '@qgames/api/gateway/model';
+import {getGetRoomQueryKey} from '@qgames/api/portal';
+import type {RoomResponse} from '@qgames/api/portal/model';
 import {
   RoomStreamEvent,
   type RoomStreamEventOutput,
-} from '@qgames/api/gateway/zod';
+} from '@qgames/api/portal/zod';
 import {useQueryClient, type QueryClient} from '@tanstack/react-query';
 import {useCallback, useEffect, useState} from 'react';
 

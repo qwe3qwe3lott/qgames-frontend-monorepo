@@ -1,5 +1,5 @@
-import {useGetCurrentAdmin} from '@qgames/api/admin-gateway';
-import type {AdminResponse} from '@qgames/api/admin-gateway/model';
+import {useGetCurrentAdmin} from '@qgames/api/admin';
+import type {AdminResponse} from '@qgames/api/admin/model';
 
 import {isGuestError} from './guest';
 

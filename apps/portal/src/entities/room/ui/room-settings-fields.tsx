@@ -2,7 +2,7 @@ import type {
   CheckersSettingsLimitsDto,
   GameRulesDto,
   NothingSettingsLimitsDto,
-} from '@qgames/api/gateway/model';
+} from '@qgames/api/portal/model';
 import {
   Field,
   FieldDescription,

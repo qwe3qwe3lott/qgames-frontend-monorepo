@@ -1,4 +1,4 @@
-import type {UserResponse} from '@qgames/api/gateway/model';
+import type {UserResponse} from '@qgames/api/portal/model';
 
 /** Текущий пользователь — то, что нужно интерфейсу. */
 export interface Viewer {

@@ -6,15 +6,15 @@ import {
 
 const hooks = {afterAllFilesWrite: 'prettier --write'};
 
-/** Общие настройки react-query-клиента: один mutator на оба gateway. */
+/** Общие настройки react-query-клиента: один mutator на обе группы API. */
 const queryOverride = {
   mutator: {path: './src/mutator.ts', name: 'apiFetch'},
   fetch: {includeHttpResponseReturnType: false},
   query: {signal: true, shouldExportKeys: true},
 };
 
-const gatewayInput = {target: './openapi/gateway.json'};
-const adminGatewayInput = {target: './openapi/admin-gateway.json'};
+const portalInput = {target: './openapi/portal.json'};
+const adminInput = {target: './openapi/admin.json'};
 
 const EVENT_STREAM = 'text/event-stream';
 
@@ -58,28 +58,29 @@ const withoutEventStreams = defineTransformer(spec => {
 });
 
 export default defineConfig({
-  // user-gateway — портал.
-  gateway: {
-    input: {...gatewayInput, override: {transformer: withoutEventStreams}},
+  // Группа API `portal` — портал.
+  portal: {
+    input: {...portalInput, override: {transformer: withoutEventStreams}},
     hooks,
     output: {
-      // Теги в спецификации на русском: tags-split дал бы кириллические имена файлов.
-      mode: 'split',
-      target: './src/generated/gateway.ts',
-      schemas: './src/generated/model',
+      // Файл ручек на каждый тег (теги — латиницей), barrel — query/index.ts.
+      mode: 'tags-split',
+      target: './src/generated/portal/query/index.ts',
+      schemas: './src/generated/portal/model',
       client: 'react-query',
       httpClient: 'fetch',
-      clean: ['./src/generated/model'],
+      clean: true,
       override: queryOverride,
     },
   },
-  gatewayZod: {
-    input: gatewayInput,
+  portalZod: {
+    input: portalInput,
     hooks,
     output: {
-      mode: 'single',
-      target: './src/generated/gateway.zod.ts',
+      mode: 'tags-split',
+      target: './src/generated/portal/zod/index.ts',
       client: 'zod',
+      clean: true,
       override: {
         zod: {
           // Схемы всех components: Zod для text/event-stream Orval не строит,
@@ -91,27 +92,28 @@ export default defineConfig({
       },
     },
   },
-  // admin-gateway — админка.
-  adminGateway: {
-    input: adminGatewayInput,
+  // Группа API `admin` — админка.
+  admin: {
+    input: adminInput,
     hooks,
     output: {
-      mode: 'split',
-      target: './src/generated/admin-gateway/admin-gateway.ts',
-      schemas: './src/generated/admin-gateway/model',
+      mode: 'tags-split',
+      target: './src/generated/admin/query/index.ts',
+      schemas: './src/generated/admin/model',
       client: 'react-query',
       httpClient: 'fetch',
-      clean: ['./src/generated/admin-gateway/model'],
+      clean: true,
       override: queryOverride,
     },
   },
-  adminGatewayZod: {
-    input: adminGatewayInput,
+  adminZod: {
+    input: adminInput,
     hooks,
     output: {
-      mode: 'single',
-      target: './src/generated/admin-gateway/admin-gateway.zod.ts',
+      mode: 'tags-split',
+      target: './src/generated/admin/zod/index.ts',
       client: 'zod',
+      clean: true,
     },
   },
 });

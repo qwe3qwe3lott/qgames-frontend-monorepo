@@ -12,8 +12,6 @@ import { Route as rootRouteImport } from './../routes/__root'
 import { Route as IndexRouteImport } from './../routes/index'
 import { Route as LoginRouteImport } from './../routes/login'
 import { Route as ProfileRouteImport } from './../routes/profile'
-import { Route as RegisterRouteImport } from './../routes/register'
-import { Route as VerifyEmailRouteImport } from './../routes/verify-email'
 import { Route as GamesIndexRouteImport } from './../routes/games/index'
 import { Route as GamesGameCodeRouteRouteImport } from './../routes/games/$gameCode/route'
 import { Route as RoomsIndexRouteImport } from './../routes/rooms/index'
@@ -33,16 +31,6 @@ const LoginRoute = LoginRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RegisterRoute = RegisterRouteImport.update({
-  id: '/register',
-  path: '/register',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const VerifyEmailRoute = VerifyEmailRouteImport.update({
-  id: '/verify-email',
-  path: '/verify-email',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GamesIndexRoute = GamesIndexRouteImport.update({
@@ -76,8 +64,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
-  '/register': typeof RegisterRoute
-  '/verify-email': typeof VerifyEmailRoute
   '/games/$gameCode': typeof GamesGameCodeRouteRouteWithChildren
   '/games/': typeof GamesIndexRoute
   '/rooms/': typeof RoomsIndexRoute
@@ -88,8 +74,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
-  '/register': typeof RegisterRoute
-  '/verify-email': typeof VerifyEmailRoute
   '/games/$gameCode': typeof GamesGameCodeRouteRouteWithChildren
   '/games': typeof GamesIndexRoute
   '/rooms': typeof RoomsIndexRoute
@@ -101,8 +85,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
-  '/register': typeof RegisterRoute
-  '/verify-email': typeof VerifyEmailRoute
   '/games/$gameCode': typeof GamesGameCodeRouteRouteWithChildren
   '/games/': typeof GamesIndexRoute
   '/rooms/': typeof RoomsIndexRoute
@@ -115,8 +97,6 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/profile'
-    | '/register'
-    | '/verify-email'
     | '/games/$gameCode'
     | '/games/'
     | '/rooms/'
@@ -127,8 +107,6 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/profile'
-    | '/register'
-    | '/verify-email'
     | '/games/$gameCode'
     | '/games'
     | '/rooms'
@@ -139,8 +117,6 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/profile'
-    | '/register'
-    | '/verify-email'
     | '/games/$gameCode'
     | '/games/'
     | '/rooms/'
@@ -152,8 +128,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
   ProfileRoute: typeof ProfileRoute
-  RegisterRoute: typeof RegisterRoute
-  VerifyEmailRoute: typeof VerifyEmailRoute
   GamesGameCodeRouteRoute: typeof GamesGameCodeRouteRouteWithChildren
   GamesIndexRoute: typeof GamesIndexRoute
   RoomsIndexRoute: typeof RoomsIndexRoute
@@ -180,20 +154,6 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/register': {
-      id: '/register'
-      path: '/register'
-      fullPath: '/register'
-      preLoaderRoute: typeof RegisterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/verify-email': {
-      id: '/verify-email'
-      path: '/verify-email'
-      fullPath: '/verify-email'
-      preLoaderRoute: typeof VerifyEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/games/': {
@@ -251,8 +211,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
   ProfileRoute: ProfileRoute,
-  RegisterRoute: RegisterRoute,
-  VerifyEmailRoute: VerifyEmailRoute,
   GamesGameCodeRouteRoute: GamesGameCodeRouteRouteWithChildren,
   GamesIndexRoute: GamesIndexRoute,
   RoomsIndexRoute: RoomsIndexRoute,

@@ -1,4 +1,4 @@
-import {useChangeRole} from '@qgames/api/gateway';
+import {useChangeRole} from '@qgames/api/portal';
 import {Button} from '@qgames/ui/components/button';
 import {useQueryClient} from '@tanstack/react-query';
 

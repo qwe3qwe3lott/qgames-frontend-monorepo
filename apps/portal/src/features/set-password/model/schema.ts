@@ -1,4 +1,4 @@
-import {AddPasswordLoginBody} from '@qgames/api/gateway/zod';
+import {AddPasswordLoginBody} from '@qgames/api/portal/zod';
 import {z} from 'zod';
 
 const setPasswordFieldsSchema = AddPasswordLoginBody.extend({

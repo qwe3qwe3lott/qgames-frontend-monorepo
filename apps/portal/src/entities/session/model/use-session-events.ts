@@ -1,9 +1,9 @@
 import {resolveUrl} from '@qgames/api';
-import type {RoomResponseGameCode} from '@qgames/api/gateway/model';
+import type {RoomResponseGameCode} from '@qgames/api/portal/model';
 import {
   SessionStreamEvent,
   type SessionStreamEventOutput,
-} from '@qgames/api/gateway/zod';
+} from '@qgames/api/portal/zod';
 import {
   applySessionEvent,
   checkSeq,

@@ -13,6 +13,9 @@ export default defineConfig({
   server: {
     port: 3001,
     strictPort: true,
+    // Same-origin, как за nginx в Docker: админка ходит только в /api/admin/** (CLAUDE.md §1, §5).
+    // Rsbuild не сжимает text/event-stream, поэтому SSE через прокси идёт без буферизации.
+    proxy: {'/api/admin': 'http://localhost:8080'},
   },
   tools: {
     rspack: {

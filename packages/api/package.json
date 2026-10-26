@@ -5,12 +5,12 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./gateway": "./src/generated/gateway.ts",
-    "./gateway/model": "./src/generated/model/index.ts",
-    "./gateway/zod": "./src/generated/gateway.zod.ts",
-    "./admin-gateway": "./src/generated/admin-gateway/admin-gateway.ts",
-    "./admin-gateway/model": "./src/generated/admin-gateway/model/index.ts",
-    "./admin-gateway/zod": "./src/generated/admin-gateway/admin-gateway.zod.ts"
+    "./portal": "./src/generated/portal/query/index.ts",
+    "./portal/model": "./src/generated/portal/model/index.ts",
+    "./portal/zod": "./src/portal-zod.ts",
+    "./admin": "./src/generated/admin/query/index.ts",
+    "./admin/model": "./src/generated/admin/model/index.ts",
+    "./admin/zod": "./src/generated/admin/zod/index.ts"
   },
   "scripts": {
     "api:fetch": "node scripts/fetch-openapi.js",

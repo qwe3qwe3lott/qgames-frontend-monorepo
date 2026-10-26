@@ -1,5 +1,5 @@
-import {useMakeMove} from '@qgames/api/gateway';
-import type {MoveRequest} from '@qgames/api/gateway/model';
+import {useMakeMove} from '@qgames/api/portal';
+import type {MoveRequest} from '@qgames/api/portal/model';
 
 import type {GameMove} from '@/entities/game';
 import {roomErrorMessage, type RoomView} from '@/entities/room';
