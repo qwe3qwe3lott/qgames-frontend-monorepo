@@ -17,6 +17,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@qgames/ui/components/dialog';
+import {toast} from '@qgames/ui/components/sonner';
 import {useQueryClient} from '@tanstack/react-query';
 
 import {
@@ -33,11 +34,16 @@ export interface SessionActionsProps {
   membership: Membership;
 }
 
+function showError(error: unknown) {
+  toast.error(roomErrorMessage(error));
+}
+
 /**
  * Старт, пауза и отмена партии; доступны только владельцу. Старт возвращает
  * комнату (кладём в кеш); пауза, продолжение и отмена отвечают без тела —
  * изменения приходят потоками партии и комнаты. Пауза — действие таймера:
  * у партии без таймера её нет. Отмена необратима — через окно подтверждения.
+ * Ошибки действий показываются снекбаром.
  */
 export function SessionActions({room, membership}: SessionActionsProps) {
   const queryClient = useQueryClient();
@@ -46,6 +52,7 @@ export function SessionActions({room, membership}: SessionActionsProps) {
       onSuccess: (data: RoomResponse) => {
         setRoomCache(queryClient, room.id, data);
       },
+      onError: showError,
     },
   });
   const sessionId = room.session?.id ?? null;
@@ -57,19 +64,19 @@ export function SessionActions({room, membership}: SessionActionsProps) {
       onSuccess: () => {
         advance.arm();
       },
-      onError: () => {
+      onError: (error: unknown) => {
         advance.clear();
+        showError(error);
       },
     },
   };
-  const cancel = useCancelSession();
+  const cancel = useCancelSession({mutation: {onError: showError}});
   const pause = usePauseSession(onTimerAction);
   const resume = useResumeSession(onTimerAction);
   if (!membership.isOwner) {
     return null;
   }
   const timer = session === undefined ? null : activeTimer(session);
-  const error = start.error ?? cancel.error ?? pause.error ?? resume.error;
   const pending =
     start.isPending ||
     cancel.isPending ||
@@ -154,11 +161,6 @@ export function SessionActions({room, membership}: SessionActionsProps) {
             Начать
           </Button>
         </WithHint>
-      )}
-      {error === null ? null : (
-        <p className="w-full text-sm text-destructive" role="alert">
-          {roomErrorMessage(error)}
-        </p>
       )}
     </>
   );

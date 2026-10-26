@@ -22,6 +22,7 @@ import {
   FieldLabel,
 } from '@qgames/ui/components/field';
 import {Input} from '@qgames/ui/components/input';
+import {toast} from '@qgames/ui/components/sonner';
 import {useQueryClient} from '@tanstack/react-query';
 import {useState} from 'react';
 import {useForm} from 'react-hook-form';
@@ -47,6 +48,7 @@ export function SetPasswordDialog() {
       onSuccess: user => {
         queryClient.setQueryData(getGetCurrentUserQueryKey(), user);
         setOpen(false);
+        toast.success('Пароль установлен');
       },
       onError: error => {
         if (!applyFieldErrors(error, form.setError, ['password'])) {

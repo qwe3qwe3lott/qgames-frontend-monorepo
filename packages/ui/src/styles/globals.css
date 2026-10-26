@@ -1,6 +1,9 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
+/* Стили снекбара файлом: CSP админки (без 'unsafe-inline') блокирует <style>, который Sonner вставляет сам. */
+@import 'sonner/dist/styles.css';
+
 /* Классы из компонентов @qgames/ui; исходники приложения Tailwind находит сам. */
 @source "../";
 

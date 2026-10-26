@@ -1,5 +1,6 @@
 import {useChangeRole} from '@qgames/api/portal';
 import {Button} from '@qgames/ui/components/button';
+import {toast} from '@qgames/ui/components/sonner';
 import {useQueryClient} from '@tanstack/react-query';
 
 import {
@@ -44,6 +45,9 @@ export function ChangeRoleButton({
       onSuccess: data => {
         setRoomCache(queryClient, room.id, data);
       },
+      onError: error => {
+        toast.error(roomErrorMessage(error));
+      },
     },
   });
   const {member} = membership;
@@ -53,24 +57,17 @@ export function ChangeRoleButton({
   const reason = blockReason(membership, role);
 
   return (
-    <>
-      <WithHint hint={reason}>
-        <Button
-          size="sm"
-          variant="outline"
-          disabled={reason !== null || changeRole.isPending}
-          onClick={() => {
-            changeRole.mutate({roomId: room.id, data: {role}});
-          }}
-        >
-          Перейти
-        </Button>
-      </WithHint>
-      {changeRole.isError ? (
-        <p className="w-full text-sm text-destructive" role="alert">
-          {roomErrorMessage(changeRole.error)}
-        </p>
-      ) : null}
-    </>
+    <WithHint hint={reason}>
+      <Button
+        size="sm"
+        variant="outline"
+        disabled={reason !== null || changeRole.isPending}
+        onClick={() => {
+          changeRole.mutate({roomId: room.id, data: {role}});
+        }}
+      >
+        Перейти
+      </Button>
+    </WithHint>
   );
 }

@@ -14,6 +14,7 @@ import {
   DialogTrigger,
 } from '@qgames/ui/components/dialog';
 import {FieldError, FieldGroup} from '@qgames/ui/components/field';
+import {toast} from '@qgames/ui/components/sonner';
 import {useQueryClient} from '@tanstack/react-query';
 import {useMemo, useState} from 'react';
 import {useForm} from 'react-hook-form';
@@ -58,6 +59,7 @@ function SettingsForm({room, inGame, rules, onSaved}: SettingsFormProps) {
       onSuccess: data => {
         setRoomCache(queryClient, room.id, data);
         onSaved();
+        toast.success('Настройки комнаты сохранены');
       },
       onError: error => {
         // Поля тела PUT совпадают с полями формы, префикса нет.

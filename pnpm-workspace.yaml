@@ -59,6 +59,8 @@ catalog:
   clsx: 2.1.1
   tailwind-merge: 3.7.0
   lucide-react: 1.59.0
+  sonner: 2.0.8
+  next-themes: 0.4.6
 
 # Install-скрипты зависимостей запрещены; бинарники приходят через optionalDependencies.
 allowBuilds:

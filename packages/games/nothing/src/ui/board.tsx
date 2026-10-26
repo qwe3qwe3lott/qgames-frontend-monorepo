@@ -46,7 +46,6 @@ export function Board({
   viewerId,
   onMove,
   movePending,
-  moveError,
 }: BoardProps) {
   if (!isNothingSession(session)) {
     return (
@@ -156,9 +155,6 @@ export function Board({
           </span>
         )}
       </div>
-      {moveError === null ? null : (
-        <p className="text-sm text-destructive">{moveError}</p>
-      )}
     </div>
   );
 }

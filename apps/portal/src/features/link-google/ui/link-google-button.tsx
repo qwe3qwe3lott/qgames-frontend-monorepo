@@ -1,5 +1,6 @@
 import {errorMessage} from '@qgames/api';
 import {getGetCurrentUserQueryKey, useAddGoogleLogin} from '@qgames/api/portal';
+import {toast} from '@qgames/ui/components/sonner';
 import {useQueryClient} from '@tanstack/react-query';
 
 import {env} from '@/shared/config';
@@ -19,6 +20,10 @@ export function LinkGoogleButton() {
     mutation: {
       onSuccess: user => {
         queryClient.setQueryData(getGetCurrentUserQueryKey(), user);
+        toast.success('Аккаунт Google привязан');
+      },
+      onError: error => {
+        toast.error(errorMessage(error, LINK_GOOGLE_MESSAGES));
       },
     },
   });
@@ -32,19 +37,12 @@ export function LinkGoogleButton() {
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <GoogleButton
-        clientId={clientId}
-        text="continue_with"
-        onCredential={idToken => {
-          link.mutate({data: {idToken}});
-        }}
-      />
-      {link.isError ? (
-        <p className="text-sm text-destructive" role="alert">
-          {errorMessage(link.error, LINK_GOOGLE_MESSAGES)}
-        </p>
-      ) : null}
-    </div>
+    <GoogleButton
+      clientId={clientId}
+      text="continue_with"
+      onCredential={idToken => {
+        link.mutate({data: {idToken}});
+      }}
+    />
   );
 }

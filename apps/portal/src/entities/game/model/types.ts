@@ -28,7 +28,6 @@ export interface GameBoardProps {
   viewerId: string;
   onMove: (move: GameMove) => void;
   movePending: boolean;
-  moveError: string | null;
 }
 
 /**

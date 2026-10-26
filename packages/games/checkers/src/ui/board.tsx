@@ -149,7 +149,6 @@ function CheckersBoard({
   viewerId,
   onMove,
   movePending,
-  moveError,
 }: CheckersBoardProps) {
   const [selection, setSelection] = useState<Selection | null>(null);
   // Предложить ничью вместе со следующим ходом; сбрасывается, когда ход отправлен.
@@ -381,9 +380,6 @@ function CheckersBoard({
           </span>
         ) : null}
       </div>
-      {moveError === null ? null : (
-        <p className="text-sm text-destructive">{moveError}</p>
-      )}
       <PlayerList
         players={playerItems}
         activePlayerId={currentId}

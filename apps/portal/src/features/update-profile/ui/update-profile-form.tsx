@@ -12,8 +12,8 @@ import {
   FieldSet,
 } from '@qgames/ui/components/field';
 import {Input} from '@qgames/ui/components/input';
+import {toast} from '@qgames/ui/components/sonner';
 import {useQueryClient} from '@tanstack/react-query';
-import {useState} from 'react';
 import {Controller, useForm} from 'react-hook-form';
 
 import {AvatarPicker} from '@/entities/user';
@@ -28,7 +28,6 @@ export interface UpdateProfileFormProps {
 /** Смена ника и аватара: на бэкенд уходят только изменённые поля. */
 export function UpdateProfileForm({defaults}: UpdateProfileFormProps) {
   const queryClient = useQueryClient();
-  const [saved, setSaved] = useState(false);
   const form = useForm<UpdateProfileValues>({
     resolver: zodResolver(updateProfileSchema),
     defaultValues: defaults,
@@ -38,7 +37,7 @@ export function UpdateProfileForm({defaults}: UpdateProfileFormProps) {
       onSuccess: user => {
         queryClient.setQueryData(getGetCurrentUserQueryKey(), user);
         form.reset({nickname: user.nickname, avatar: user.avatar});
-        setSaved(true);
+        toast.success('Профиль сохранён');
       },
       onError: error => {
         if (!applyFieldErrors(error, form.setError, ['nickname', 'avatar'])) {
@@ -61,7 +60,6 @@ export function UpdateProfileForm({defaults}: UpdateProfileFormProps) {
           if (dirtyFields.avatar === true) {
             request.avatar = values.avatar;
           }
-          setSaved(false);
           updateProfile.mutate({data: request});
         })(event);
       }}
@@ -92,15 +90,10 @@ export function UpdateProfileForm({defaults}: UpdateProfileFormProps) {
           />
         </FieldSet>
         <FieldError errors={[errors.root]} />
-        <div className="flex items-center gap-3">
+        <div>
           <Button type="submit" disabled={!isDirty || updateProfile.isPending}>
             Сохранить
           </Button>
-          {saved && !isDirty ? (
-            <span className="text-sm text-muted-foreground" aria-live="polite">
-              Профиль сохранён
-            </span>
-          ) : null}
         </div>
       </FieldGroup>
     </form>

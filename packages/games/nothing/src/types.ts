@@ -23,5 +23,4 @@ export interface BoardProps {
   viewerId: string;
   onMove: (move: BoardMove) => void;
   movePending: boolean;
-  moveError: string | null;
 }
