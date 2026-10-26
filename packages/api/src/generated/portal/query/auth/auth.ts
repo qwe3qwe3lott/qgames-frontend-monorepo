@@ -14,6 +14,7 @@ import type {
 
 import type {
   GoogleIdTokenRequest,
+  GoogleRegisterRequest,
   LoginRequest,
   ProblemDetail,
   UserResponse,
@@ -25,11 +26,11 @@ import type {ErrorType} from '../../../../mutator';
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 export const getLoginWithGoogleUrl = () => {
-  return `/api/auth/google`;
+  return `/api/auth/google/login`;
 };
 
 /**
- * Принимает Google ID token из Google Identity Services. Это единственный способ создать аккаунт: новый Google-аккаунт создаёт аккаунт с email из Google (он должен быть подтверждён в Google: это логин для входа по паролю), ником вида player-a1b2c3 и аватаром CAT — их можно сменить в профиле. К существующему аккаунту с тем же email Google автоматически не привязывается.
+ * Принимает Google ID token из Google Identity Services и открывает сессию аккаунта, к которому привязан этот Google-аккаунт. Аккаунт не создаётся: для нового Google-аккаунта — 404 REGISTRATION_REQUIRED, тогда клиент спрашивает логин и вызывает /api/auth/google/register с тем же токеном.
  * @summary Вход через Google
  */
 export const loginWithGoogle = async (
@@ -140,13 +141,133 @@ export const useLoginWithGoogle = <
 > => {
   return useMutation(getLoginWithGoogleMutationOptions(options), queryClient);
 };
+export const getRegisterWithGoogleUrl = () => {
+  return `/api/auth/google/register`;
+};
+
+/**
+ * Создаёт аккаунт, привязанный к Google-аккаунту из ID token, и открывает сессию. Логин задаётся один раз и не меняется; ник сначала равен логину, аватар — CAT, их можно сменить в профиле. Если передан пароль, сразу добавляется вход по логину и паролю.
+ * @summary Регистрация через Google
+ */
+export const registerWithGoogle = async (
+  googleRegisterRequest: GoogleRegisterRequest,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<UserResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit['headers']>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          entry => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<
+      string | readonly string[] | undefined
+    >(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<UserResponse>(getRegisterWithGoogleUrl(), {
+    ...options,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getHeaders(options?.headers),
+    },
+    body: JSON.stringify(googleRegisterRequest),
+  });
+};
+
+export const getRegisterWithGoogleMutationKey = () =>
+  ['registerWithGoogle'] as const;
+
+export const getRegisterWithGoogleMutationOptions = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof registerWithGoogle>>,
+    TError,
+    RegisterWithGoogleMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof registerWithGoogle>>,
+  TError,
+  RegisterWithGoogleMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRegisterWithGoogleMutationKey();
+  const {mutation: mutationOptions, request: requestOptions} = options
+    ? options.mutation &&
+      'mutationKey' in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+    : {mutation: {mutationKey}, request: undefined};
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof registerWithGoogle>>,
+    RegisterWithGoogleMutationVariables
+  > = props => {
+    const {data} = props ?? {};
+
+    return registerWithGoogle(data, requestOptions);
+  };
+
+  return {mutationFn, ...mutationOptions};
+};
+
+export type RegisterWithGoogleMutationResult = NonNullable<
+  Awaited<ReturnType<typeof registerWithGoogle>>
+>;
+export type RegisterWithGoogleMutationBody = GoogleRegisterRequest;
+export type RegisterWithGoogleMutationError = ErrorType<ProblemDetail>;
+export type RegisterWithGoogleMutationVariables = {data: GoogleRegisterRequest};
+
+/**
+ * @summary Регистрация через Google
+ */
+export const useRegisterWithGoogle = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof registerWithGoogle>>,
+      TError,
+      RegisterWithGoogleMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof registerWithGoogle>>,
+  TError,
+  RegisterWithGoogleMutationVariables,
+  TContext
+> => {
+  return useMutation(
+    getRegisterWithGoogleMutationOptions(options),
+    queryClient,
+  );
+};
 export const getLoginUrl = () => {
   return `/api/auth/login`;
 };
 
 /**
- * Открывает сессию: ставит куки access_token (15 минут) и refresh_token (30 дней). Пароль задаётся в профиле аккаунта, созданного через Google, логин — email этого Google-аккаунта. Сброса пароля нет: забывший пароль входит через Google и задаёт новый.
- * @summary Вход по email и паролю
+ * Открывает сессию: ставит куки access_token (15 минут) и refresh_token (30 дней). Логин сравнивается без учёта регистра и пробелов по краям. Пароль задаётся при регистрации или позже в профиле. Сброса пароля нет: забывший пароль входит через Google и задаёт новый.
+ * @summary Вход по логину и паролю
  */
 export const login = async (
   loginRequest: LoginRequest,
@@ -232,7 +353,7 @@ export type LoginMutationError = ErrorType<ProblemDetail>;
 export type LoginMutationVariables = {data: LoginRequest};
 
 /**
- * @summary Вход по email и паролю
+ * @summary Вход по логину и паролю
  */
 export const useLogin = <TError = ErrorType<ProblemDetail>, TContext = unknown>(
   options?: {

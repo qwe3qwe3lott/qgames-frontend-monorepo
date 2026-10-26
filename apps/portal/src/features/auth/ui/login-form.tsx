@@ -1,6 +1,7 @@
 import {zodResolver} from '@hookform/resolvers/zod';
 import {applyFieldErrors, errorMessage} from '@qgames/api';
-import {getGetCurrentUserQueryKey, useLogin} from '@qgames/api/portal';
+import {useLogin} from '@qgames/api/portal';
+import type {UserResponse} from '@qgames/api/portal/model';
 import {Button} from '@qgames/ui/components/button';
 import {
   Field,
@@ -9,36 +10,29 @@ import {
   FieldLabel,
 } from '@qgames/ui/components/field';
 import {Input} from '@qgames/ui/components/input';
-import {useQueryClient} from '@tanstack/react-query';
-import {useNavigate} from '@tanstack/react-router';
 import {useForm} from 'react-hook-form';
 
-import {loginSchema, type LoginValues} from '../model/schema';
+import {loginFormSchema, type LoginFormValues} from '../model/schema';
 
 const LOGIN_MESSAGES = {
-  INVALID_CREDENTIALS: 'Неверный email или пароль.',
+  INVALID_CREDENTIALS: 'Неверный логин или пароль.',
 };
 
 export interface LoginFormProps {
-  /** Куда вернуться после входа. */
-  redirect: string | undefined;
+  onSuccess: (user: UserResponse) => void;
 }
 
-export function LoginForm({redirect}: LoginFormProps) {
-  const queryClient = useQueryClient();
-  const navigate = useNavigate();
-  const form = useForm<LoginValues>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {email: '', password: ''},
+/** Вход по логину и паролю. */
+export function LoginForm({onSuccess}: LoginFormProps) {
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginFormSchema),
+    defaultValues: {login: '', password: ''},
   });
   const login = useLogin({
     mutation: {
-      onSuccess: user => {
-        queryClient.setQueryData(getGetCurrentUserQueryKey(), user);
-        void navigate({href: redirect ?? '/'});
-      },
+      onSuccess,
       onError: error => {
-        if (!applyFieldErrors(error, form.setError, ['email', 'password'])) {
+        if (!applyFieldErrors(error, form.setError, ['login', 'password'])) {
           form.setError('root', {message: errorMessage(error, LOGIN_MESSAGES)});
         }
       },
@@ -56,21 +50,22 @@ export function LoginForm({redirect}: LoginFormProps) {
       }}
     >
       <FieldGroup>
-        <Field data-invalid={errors.email !== undefined}>
-          <FieldLabel htmlFor="login-email">Email</FieldLabel>
+        <Field data-invalid={errors.login !== undefined}>
+          <FieldLabel htmlFor="auth-login">Логин</FieldLabel>
           <Input
-            id="login-email"
-            type="email"
-            autoComplete="email"
-            aria-invalid={errors.email !== undefined}
-            {...form.register('email')}
+            id="auth-login"
+            autoComplete="username"
+            autoCapitalize="none"
+            spellCheck={false}
+            aria-invalid={errors.login !== undefined}
+            {...form.register('login')}
           />
-          <FieldError errors={[errors.email]} />
+          <FieldError errors={[errors.login]} />
         </Field>
         <Field data-invalid={errors.password !== undefined}>
-          <FieldLabel htmlFor="login-password">Пароль</FieldLabel>
+          <FieldLabel htmlFor="auth-password">Пароль</FieldLabel>
           <Input
-            id="login-password"
+            id="auth-password"
             type="password"
             autoComplete="current-password"
             aria-invalid={errors.password !== undefined}

@@ -12,7 +12,7 @@ const LINK_GOOGLE_MESSAGES = {
   INVALID_GOOGLE_TOKEN: 'Не удалось привязать Google, попробуйте ещё раз.',
 };
 
-/** Привязка Google к текущему аккаунту (после ACCOUNT_LINK_REQUIRED при входе). */
+/** Привязка Google к текущему аккаунту: после неё можно входить через этот Google-аккаунт. */
 export function LinkGoogleButton() {
   const queryClient = useQueryClient();
   const link = useAddGoogleLogin({

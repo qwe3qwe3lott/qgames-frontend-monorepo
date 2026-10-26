@@ -1,7 +1,9 @@
 import {Button} from '@qgames/ui/components/button';
 import {Link} from '@tanstack/react-router';
+import {useState} from 'react';
 
 import {CurrentUser, useViewer} from '@/entities/user';
+import {AuthDialog} from '@/features/auth';
 import {LogoutButton} from '@/features/logout';
 
 const NAV_LINK_CLASS =
@@ -9,6 +11,7 @@ const NAV_LINK_CLASS =
 
 export function Header() {
   const viewer = useViewer();
+  const [authOpen, setAuthOpen] = useState(false);
 
   return (
     <header className="border-b">
@@ -38,11 +41,17 @@ export function Header() {
             </>
           ) : null}
           {viewer.status === 'guest' ? (
-            <Button asChild size="sm">
-              <Link to="/login" search={{redirect: undefined}}>
+            <>
+              <Button
+                size="sm"
+                onClick={() => {
+                  setAuthOpen(true);
+                }}
+              >
                 Войти
-              </Link>
-            </Button>
+              </Button>
+              <AuthDialog open={authOpen} onOpenChange={setAuthOpen} />
+            </>
           ) : null}
         </div>
       </div>

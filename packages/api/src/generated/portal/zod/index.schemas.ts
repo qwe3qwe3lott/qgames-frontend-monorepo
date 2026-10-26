@@ -323,6 +323,32 @@ export type GoogleIdTokenRequestOutput = zod.output<
   typeof GoogleIdTokenRequest
 >;
 
+export const googleRegisterRequestLoginMin = 3;
+export const googleRegisterRequestLoginMax = 32;
+
+export const googleRegisterRequestLoginRegExp = new RegExp('^[a-z0-9_-]+$');
+export const googleRegisterRequestPasswordMin = 8;
+export const googleRegisterRequestPasswordMax = 128;
+
+export const GoogleRegisterRequest = zod.object({
+  idToken: zod.string().min(1),
+  login: zod
+    .string()
+    .min(googleRegisterRequestLoginMin)
+    .max(googleRegisterRequestLoginMax)
+    .regex(googleRegisterRequestLoginRegExp),
+  password: zod
+    .string()
+    .min(googleRegisterRequestPasswordMin)
+    .max(googleRegisterRequestPasswordMax)
+    .nullish(),
+});
+
+export type GoogleRegisterRequest = zod.input<typeof GoogleRegisterRequest>;
+export type GoogleRegisterRequestOutput = zod.output<
+  typeof GoogleRegisterRequest
+>;
+
 export const InfoData = zod
   .record(zod.string(), zod.unknown())
   .describe(
@@ -333,7 +359,7 @@ export type InfoData = zod.input<typeof InfoData>;
 export type InfoDataOutput = zod.output<typeof InfoData>;
 
 export const LoginRequest = zod.object({
-  email: zod.email().min(1),
+  login: zod.string().min(1),
   password: zod.string().min(1),
 });
 
@@ -781,8 +807,8 @@ export type UpdateProfileRequestOutput = zod.output<
 
 export const UserResponse = zod.object({
   avatar: zod.enum(['CAT', 'DOG']),
-  email: zod.string(),
   id: zod.uuid(),
+  login: zod.string(),
   loginMethods: zod.array(zod.enum(['PASSWORD', 'GOOGLE'])),
   nickname: zod.string(),
 });

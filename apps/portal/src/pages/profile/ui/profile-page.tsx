@@ -36,18 +36,20 @@ export function ProfilePage() {
   const hasGoogle = user.loginMethods.includes('GOOGLE');
 
   return (
-    <PageLayout title="Профиль" description={user.email}>
+    <PageLayout
+      title="Профиль"
+      description={`Логин: ${user.login} — не меняется`}
+    >
       <div className="grid max-w-2xl gap-6">
         <Card>
           <CardHeader>
             <CardTitle>Ник и аватар</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
-            {hasPassword ? null : (
-              <p className="text-sm text-muted-foreground">
-                Ник при входе через Google выбран случайно — его можно поменять.
-              </p>
-            )}
+            <p className="text-sm text-muted-foreground">
+              Ник видят другие игроки, он не обязан быть уникальным и меняется в
+              любой момент. Логин для входа остаётся прежним.
+            </p>
             <UpdateProfileForm
               defaults={{nickname: user.nickname, avatar: user.avatar}}
             />

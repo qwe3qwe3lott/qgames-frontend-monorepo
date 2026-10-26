@@ -26,7 +26,8 @@ export function loadGoogleIdentity(): Promise<void> {
 
 /**
  * Настраивает вход через Google: `onCredential` получает ID token, который
- * бэкенд проверяет по JWKS Google (`POST /api/auth/google`).
+ * бэкенд проверяет по JWKS Google (`POST /api/auth/google/login`,
+ * `/google/register`, привязка в профиле).
  */
 export function initGoogleIdentity(
   clientId: string,

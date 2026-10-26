@@ -8,12 +8,13 @@ import * as zod from 'zod';
 
 import {
   GoogleIdTokenRequest,
+  GoogleRegisterRequest,
   LoginRequest,
   UserResponse,
 } from '../index.schemas';
 
 /**
- * Принимает Google ID token из Google Identity Services. Это единственный способ создать аккаунт: новый Google-аккаунт создаёт аккаунт с email из Google (он должен быть подтверждён в Google: это логин для входа по паролю), ником вида player-a1b2c3 и аватаром CAT — их можно сменить в профиле. К существующему аккаунту с тем же email Google автоматически не привязывается.
+ * Принимает Google ID token из Google Identity Services и открывает сессию аккаунта, к которому привязан этот Google-аккаунт. Аккаунт не создаётся: для нового Google-аккаунта — 404 REGISTRATION_REQUIRED, тогда клиент спрашивает логин и вызывает /api/auth/google/register с тем же токеном.
  * @summary Вход через Google
  */
 export const LoginWithGoogleBody = GoogleIdTokenRequest;
@@ -21,8 +22,16 @@ export const LoginWithGoogleBody = GoogleIdTokenRequest;
 export const LoginWithGoogleResponse = UserResponse;
 
 /**
- * Открывает сессию: ставит куки access_token (15 минут) и refresh_token (30 дней). Пароль задаётся в профиле аккаунта, созданного через Google, логин — email этого Google-аккаунта. Сброса пароля нет: забывший пароль входит через Google и задаёт новый.
- * @summary Вход по email и паролю
+ * Создаёт аккаунт, привязанный к Google-аккаунту из ID token, и открывает сессию. Логин задаётся один раз и не меняется; ник сначала равен логину, аватар — CAT, их можно сменить в профиле. Если передан пароль, сразу добавляется вход по логину и паролю.
+ * @summary Регистрация через Google
+ */
+export const RegisterWithGoogleBody = GoogleRegisterRequest;
+
+export const RegisterWithGoogleResponse = UserResponse;
+
+/**
+ * Открывает сессию: ставит куки access_token (15 минут) и refresh_token (30 дней). Логин сравнивается без учёта регистра и пробелов по краям. Пароль задаётся при регистрации или позже в профиле. Сброса пароля нет: забывший пароль входит через Google и задаёт новый.
+ * @summary Вход по логину и паролю
  */
 export const LoginBody = LoginRequest;
 

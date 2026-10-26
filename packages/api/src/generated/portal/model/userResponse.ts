@@ -9,8 +9,8 @@ import type {UserResponseLoginMethodsItem} from './userResponseLoginMethodsItem'
 
 export interface UserResponse {
   avatar: UserResponseAvatar;
-  email: string;
   id: string;
+  login: string;
   loginMethods: UserResponseLoginMethodsItem[];
   nickname: string;
 }

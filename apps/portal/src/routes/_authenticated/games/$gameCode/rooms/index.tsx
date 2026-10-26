@@ -4,7 +4,7 @@ import {createFileRoute, notFound} from '@tanstack/react-router';
 
 import {GameRoomsPage} from '@/pages/game-rooms';
 
-export const Route = createFileRoute('/games/$gameCode/rooms/')({
+export const Route = createFileRoute('/_authenticated/games/$gameCode/rooms/')({
   loader: async ({context}) => {
     try {
       // Из кеша, если игра уже загружена; страница перечитает её при открытии.

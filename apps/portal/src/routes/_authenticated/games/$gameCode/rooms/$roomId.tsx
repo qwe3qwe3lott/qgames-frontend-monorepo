@@ -10,7 +10,9 @@ import {RoomPage} from '@/pages/room';
 
 const roomIdSchema = z.uuid();
 
-export const Route = createFileRoute('/games/$gameCode/rooms/$roomId')({
+export const Route = createFileRoute(
+  '/_authenticated/games/$gameCode/rooms/$roomId',
+)({
   beforeLoad: ({params}) => {
     if (!roomIdSchema.safeParse(params.roomId).success) {
       throw notFound();

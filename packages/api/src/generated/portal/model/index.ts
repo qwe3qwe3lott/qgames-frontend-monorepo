@@ -36,6 +36,7 @@ export * from './gameSettingsLimitsDto';
 export * from './gameSummaryDto';
 export * from './gameSummaryDtoCode';
 export * from './googleIdTokenRequest';
+export * from './googleRegisterRequest';
 export * from './infoData';
 export * from './intRangeDto';
 export * from './loginRequest';

@@ -13,13 +13,13 @@ import {
 } from '../index.schemas';
 
 /**
- * Email, ник, аватар и привязанные способы входа. Подходит, чтобы проверить, залогинен ли пользователь.
+ * Логин, ник, аватар и привязанные способы входа. Подходит, чтобы проверить, залогинен ли пользователь.
  * @summary Данные текущего пользователя
  */
 export const GetCurrentUserResponse = UserResponse;
 
 /**
- * Явная привязка Google к текущему аккаунту. Email Google-аккаунта может отличаться от email аккаунта.
+ * Явная привязка Google к текущему аккаунту: после неё можно входить через этот Google-аккаунт.
  * @summary Привязать Google-аккаунт
  */
 export const AddGoogleLoginBody = GoogleIdTokenRequest;
@@ -27,7 +27,7 @@ export const AddGoogleLoginBody = GoogleIdTokenRequest;
 export const AddGoogleLoginResponse = UserResponse;
 
 /**
- * Для аккаунта без пароля. После этого можно входить по email аккаунта и паролю.
+ * Для аккаунта без пароля. После этого можно входить по логину аккаунта и паролю.
  * @summary Добавить вход по паролю
  */
 export const AddPasswordLoginBody = SetPasswordRequest;
