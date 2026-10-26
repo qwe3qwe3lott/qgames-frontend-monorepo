@@ -3,3 +3,7 @@ export {
   ChangeRoleButton,
   type ChangeRoleButtonProps,
 } from './ui/change-role-button';
+export {
+  TransferOwnershipButton,
+  type TransferOwnershipButtonProps,
+} from './ui/transfer-ownership-button';

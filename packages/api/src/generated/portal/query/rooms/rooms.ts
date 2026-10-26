@@ -27,6 +27,7 @@ import type {
   ProblemDetail,
   RoomResponse,
   RoomSettingsDto,
+  TransferOwnershipRequest,
 } from '../../model';
 
 import {apiFetch} from '../../../../mutator';
@@ -59,7 +60,7 @@ export const getCreateRoomUrl = (
 };
 
 /**
- * Создаёт комнату под игру из пути с заданными настройками: правила времени и настройки игры. Ссылку на комнату (её id) можно отправить другим игрокам. В ответе комната ещё пустая (members пустой, ownerId = null): создатель входит в неё игроком и становится владельцем, подключившись к потоку событий комнаты в течение 15 с; позже владельцем станет первый вошедший. Игра должна быть доступна (опубликована или скрыта из каталога): это проверяется до настроек. Границы настроек и значения по умолчанию — в параметрах игры (GET /api/games/{gameCode}). Ошибки настроек отдаются по полям тела (например, settings.gameSettings.rounds), как у валидации запроса.
+ * Создаёт комнату под игру из пути с заданными настройками: правила времени и настройки игры. Ссылку на комнату (её id) можно отправить другим игрокам. В ответе комната ещё пустая (members пустой, ownerId = null): владельцем становится первый подключившийся к потоку событий комнаты — обычно сам создатель, он входит игроком. Игра должна быть доступна (опубликована или скрыта из каталога): это проверяется до настроек. Границы настроек и значения по умолчанию — в параметрах игры (GET /api/games/{gameCode}). Ошибки настроек отдаются по полям тела (например, settings.gameSettings.rounds), как у валидации запроса.
  * @summary Создать комнату
  */
 export const createRoom = async (
@@ -571,6 +572,127 @@ export function useGetRoom<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getTransferOwnershipUrl = (roomId: string) => {
+  return `/api/rooms/${roomId}/owner`;
+};
+
+/**
+ * Владелец назначает владельцем другого присутствующего участника комнаты. Работает в любой момент, в том числе во время партии и на паузе. Отсутствующий игрок партии (leaving = true) владельцем не становится. Передача самому себе ничего не меняет. В ответе комната, участники получают users-changed.
+ * @summary Передать владение
+ */
+export const transferOwnership = async (
+  roomId: string,
+  transferOwnershipRequest: TransferOwnershipRequest,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<RoomResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit['headers']>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          entry => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<
+      string | readonly string[] | undefined
+    >(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<RoomResponse>(getTransferOwnershipUrl(roomId), {
+    ...options,
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getHeaders(options?.headers),
+    },
+    body: JSON.stringify(transferOwnershipRequest),
+  });
+};
+
+export const getTransferOwnershipMutationKey = () =>
+  ['transferOwnership'] as const;
+
+export const getTransferOwnershipMutationOptions = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof transferOwnership>>,
+    TError,
+    TransferOwnershipMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof transferOwnership>>,
+  TError,
+  TransferOwnershipMutationVariables,
+  TContext
+> => {
+  const mutationKey = getTransferOwnershipMutationKey();
+  const {mutation: mutationOptions, request: requestOptions} = options
+    ? options.mutation &&
+      'mutationKey' in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+    : {mutation: {mutationKey}, request: undefined};
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof transferOwnership>>,
+    TransferOwnershipMutationVariables
+  > = props => {
+    const {roomId, data} = props ?? {};
+
+    return transferOwnership(roomId, data, requestOptions);
+  };
+
+  return {mutationFn, ...mutationOptions};
+};
+
+export type TransferOwnershipMutationResult = NonNullable<
+  Awaited<ReturnType<typeof transferOwnership>>
+>;
+export type TransferOwnershipMutationBody = TransferOwnershipRequest;
+export type TransferOwnershipMutationError = ErrorType<ProblemDetail>;
+export type TransferOwnershipMutationVariables = {
+  roomId: string;
+  data: TransferOwnershipRequest;
+};
+
+/**
+ * @summary Передать владение
+ */
+export const useTransferOwnership = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof transferOwnership>>,
+      TError,
+      TransferOwnershipMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof transferOwnership>>,
+  TError,
+  TransferOwnershipMutationVariables,
+  TContext
+> => {
+  return useMutation(getTransferOwnershipMutationOptions(options), queryClient);
+};
 export const getChangeRoleUrl = (roomId: string) => {
   return `/api/rooms/${roomId}/role`;
 };

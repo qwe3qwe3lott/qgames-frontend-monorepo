@@ -113,6 +113,7 @@ export * from './sessionTurnsDto';
 export * from './setPasswordRequest';
 export * from './timeControlDto';
 export * from './timeControlLimitsDto';
+export * from './transferOwnershipRequest';
 export * from './updateProfileRequest';
 export * from './updateProfileRequestAvatar';
 export * from './userResponse';

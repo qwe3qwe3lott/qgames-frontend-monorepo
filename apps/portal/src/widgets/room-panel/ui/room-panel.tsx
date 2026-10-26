@@ -13,7 +13,10 @@ import {
   type RoomView,
 } from '@/entities/room';
 import {RoomSettingsDialog} from '@/features/edit-room-settings';
-import {ChangeRoleButton} from '@/features/room-membership';
+import {
+  ChangeRoleButton,
+  TransferOwnershipButton,
+} from '@/features/room-membership';
 import {SessionActions} from '@/features/room-session';
 
 export interface RoomPanelProps {
@@ -24,7 +27,12 @@ export interface RoomPanelProps {
   viewerId: string;
 }
 
-function toListItem(member: RoomMemberView, viewerId: string): PlayerListItem {
+function toListItem(
+  member: RoomMemberView,
+  viewerId: string,
+  room: RoomView,
+  membership: Membership,
+): PlayerListItem {
   const badges: string[] = [];
   if (member.userId === viewerId) {
     badges.push('Вы');
@@ -40,6 +48,13 @@ function toListItem(member: RoomMemberView, viewerId: string): PlayerListItem {
     name: memberName(member),
     avatar: member.avatar,
     badges,
+    extra: (
+      <TransferOwnershipButton
+        room={room}
+        membership={membership}
+        member={member}
+      />
+    ),
   };
 }
 
@@ -70,14 +85,14 @@ export function RoomPanel({
         }
       />
       <PlayerList
-        players={players.map(m => toListItem(m, viewerId))}
+        players={players.map(m => toListItem(m, viewerId, room, membership))}
         title={`Игроки (${String(players.length)}/${String(room.maxPlayers)})`}
         action={
           <ChangeRoleButton room={room} membership={membership} role="PLAYER" />
         }
       />
       <PlayerList
-        players={spectators.map(m => toListItem(m, viewerId))}
+        players={spectators.map(m => toListItem(m, viewerId, room, membership))}
         title="Наблюдатели"
         action={
           <ChangeRoleButton

@@ -807,6 +807,17 @@ export const SetPasswordRequest = zod.object({
 export type SetPasswordRequest = zod.input<typeof SetPasswordRequest>;
 export type SetPasswordRequestOutput = zod.output<typeof SetPasswordRequest>;
 
+export const TransferOwnershipRequest = zod.object({
+  userId: zod.uuid(),
+});
+
+export type TransferOwnershipRequest = zod.input<
+  typeof TransferOwnershipRequest
+>;
+export type TransferOwnershipRequestOutput = zod.output<
+  typeof TransferOwnershipRequest
+>;
+
 export const updateProfileRequestNicknameMin = 3;
 export const updateProfileRequestNicknameMax = 32;
 
