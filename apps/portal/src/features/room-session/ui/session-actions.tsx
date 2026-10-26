@@ -7,6 +7,16 @@ import {
 import type {RoomResponse} from '@qgames/api/portal/model';
 import {activeTimer} from '@qgames/game-core';
 import {Button} from '@qgames/ui/components/button';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@qgames/ui/components/dialog';
 import {useQueryClient} from '@tanstack/react-query';
 
 import {
@@ -27,7 +37,7 @@ export interface SessionActionsProps {
  * Старт, пауза и отмена партии; доступны только владельцу. Старт возвращает
  * комнату (кладём в кеш); пауза, продолжение и отмена отвечают без тела —
  * изменения приходят потоками партии и комнаты. Пауза — действие таймера:
- * у партии без таймера её нет.
+ * у партии без таймера её нет. Отмена необратима — через окно подтверждения.
  */
 export function SessionActions({room, membership}: SessionActionsProps) {
   const queryClient = useQueryClient();
@@ -93,15 +103,39 @@ export function SessionActions({room, membership}: SessionActionsProps) {
               Пауза
             </Button>
           )}
-          <Button
-            variant="destructive"
-            disabled={pending}
-            onClick={() => {
-              cancel.mutate({roomId: room.id});
-            }}
-          >
-            Отменить партию
-          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="destructive" disabled={pending}>
+                Отменить партию
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Отменить партию?</DialogTitle>
+                <DialogDescription>
+                  Партия закончится без результата, вернуть её будет нельзя.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button type="button" variant="outline">
+                    Продолжить игру
+                  </Button>
+                </DialogClose>
+                <DialogClose asChild>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={() => {
+                      cancel.mutate({roomId: room.id});
+                    }}
+                  >
+                    Отменить партию
+                  </Button>
+                </DialogClose>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </>
       ) : (
         <WithHint

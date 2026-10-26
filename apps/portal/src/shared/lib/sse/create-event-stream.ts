@@ -5,6 +5,22 @@ import type {z} from 'zod';
 const RECONNECT_BASE_MS = 1000;
 const RECONNECT_MAX_MS = 30_000;
 
+/**
+ * Страница уходит (переход по адресу, перезагрузка, закрытие вкладки): браузер
+ * сам закрывает потоки, и `onerror` видит CLOSED. Refresh из выгружаемой
+ * страницы нельзя: сервер успевает ротировать токен, а ответ с новой кукой
+ * браузер отбрасывает — следующий refresh старой кукой сервер примет за кражу
+ * и отзовёт сессию.
+ */
+let pageLeaving = false;
+window.addEventListener('beforeunload', () => {
+  pageLeaving = true;
+});
+// Возврат из bfcache: страница снова жива.
+window.addEventListener('pageshow', () => {
+  pageLeaving = false;
+});
+
 export interface EventStreamError {
   /**
    * Поток закрыт (ответ не 200, например 401 или 404, или сервер закрыл его
@@ -72,6 +88,14 @@ export function createEventStream<T>(
   };
 
   const reconnect = async () => {
+    if (pageLeaving) {
+      // Выгруженная страница таймер не выполнит. Сработал — уход отменён, страница жива.
+      reconnectTimer = setTimeout(() => {
+        pageLeaving = false;
+        void reconnect();
+      }, RECONNECT_BASE_MS);
+      return;
+    }
     const refreshed = await refreshSession();
     if (stopped) {
       return;
