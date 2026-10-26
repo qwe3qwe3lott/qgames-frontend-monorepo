@@ -7,7 +7,7 @@ import type {SessionDocument, SessionLogEvent} from './session';
  * Итог применения события: новый документ или причина, по которой событие не
  * применилось (путь не найден, неподходящий тип узла). При ошибке клиент
  * переподключается за свежим снапшотом. Документ — JSON без типа: его форму
- * проверяет `parseSessionDocument` (guard'ы модулей и игры).
+ * проверяет `parseSessionDocument` (guard'ы core и игры).
  */
 export type ApplySessionEventResult =
   {ok: true; document: unknown} | {ok: false; error: string};

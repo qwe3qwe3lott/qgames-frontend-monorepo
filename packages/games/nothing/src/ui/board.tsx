@@ -1,6 +1,5 @@
 import {
   activeTimer,
-  currentPlayerId,
   isSessionOver,
   moveOptionsOf,
   playerClock,
@@ -60,7 +59,7 @@ export function Board({
   const sessionPlayers: BoardPlayer[] = state.players.map(
     ({id}) => byId.get(id) ?? {id, name: UNKNOWN_PLAYER_NAME, avatar: null},
   );
-  const currentId = currentPlayerId(state.turns);
+  const currentId = state.turns.currentPlayerId ?? null;
   const current = currentId === null ? undefined : byId.get(currentId);
 
   if (isSessionOver(session)) {

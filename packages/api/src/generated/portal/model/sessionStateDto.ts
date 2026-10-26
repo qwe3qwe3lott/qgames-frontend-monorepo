@@ -8,6 +8,6 @@ import type {CheckersSessionStateDto} from './checkersSessionStateDto';
 import type {NothingSessionStateDto} from './nothingSessionStateDto';
 
 /**
- * Состояние партии конкретной игры: блоки модулей (players, timer, turns, result) и поля игры. Игра — meta.game.code снапшота; этой схемой клиент проверяет состояние после каждого события
+ * Состояние партии конкретной игры: блоки core (players, timer, turns, result) и поля игры. Игра — meta.game.code снапшота; этой схемой клиент проверяет состояние после каждого события
  */
 export type SessionStateDto = NothingSessionStateDto | CheckersSessionStateDto;

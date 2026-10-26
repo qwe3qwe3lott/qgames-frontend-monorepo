@@ -1,10 +1,8 @@
 import {
   activeTimer,
-  currentPlayerId,
   isSessionOver,
   moveOptionsOf,
   playerClock,
-  sessionResult,
 } from '@qgames/game-core';
 import {
   ChessClock,
@@ -163,7 +161,7 @@ function CheckersBoard({
     byId.get(id)?.name ?? UNKNOWN_PLAYER_NAME;
   const timer = activeTimer(session);
   const paused = timer?.paused ?? false;
-  const turnPlayerId = currentPlayerId(state.turns);
+  const turnPlayerId = state.turns.currentPlayerId ?? null;
   const playerItems: PlayerListItem[] = state.players.map(({id, color}) => {
     const player: BoardPlayer = byId.get(id) ?? {
       id,
@@ -267,7 +265,7 @@ function CheckersBoard({
 
   if (over) {
     const cancelled = session.status === 'CANCELLED';
-    const result = sessionResult(state);
+    const result = state.result ?? null;
     const gameResult: GameOverResult | undefined =
       result === null
         ? undefined

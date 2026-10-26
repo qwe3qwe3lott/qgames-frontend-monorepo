@@ -754,7 +754,7 @@ export type SessionPatchStreamEventOutput = zod.output<
 export const SessionStateDto = zod
   .union([NothingSessionStateDto, CheckersSessionStateDto])
   .describe(
-    'Состояние партии конкретной игры: блоки модулей (players, timer, turns, result) и поля игры. Игра — meta.game.code снапшота; этой схемой клиент проверяет состояние после каждого события',
+    'Состояние партии конкретной игры: блоки core (players, timer, turns, result) и поля игры. Игра — meta.game.code снапшота; этой схемой клиент проверяет состояние после каждого события',
   );
 
 export type SessionStateDto = zod.input<typeof SessionStateDto>;

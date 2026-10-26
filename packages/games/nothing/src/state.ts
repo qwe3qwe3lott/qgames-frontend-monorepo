@@ -1,9 +1,5 @@
 import {
   checkSessionState,
-  coreModule,
-  resultModule,
-  timerModule,
-  turnsModule,
   type GameStateRules,
   type SessionData,
   type SessionState,
@@ -19,14 +15,14 @@ export const NOTHING_CODE = 'nothing';
 /** Единственный вид хода: «Завершить ход». */
 export const PASS = 'PASS';
 
-/** Состояние партии «ничто» для зрителя: модули core, turns, timer, result и число ходов. */
+/** Состояние партии «ничто» для зрителя: блоки core и число ходов. */
 export type NothingState = NothingSessionStateDtoOutput;
 
 export interface NothingSession extends SessionData {
   state: NothingState;
 }
 
-/** Игровые поля «ничто» (без блоков модулей) по схеме контракта. */
+/** Игровые поля «ничто» (без блоков core) по схеме контракта. */
 const NothingFieldsSchema = NothingSessionStateDto.pick({moves: true});
 
 /** Guard только игровых полей «ничто»: `moves`. */
@@ -35,18 +31,15 @@ function isNothingFields(state: SessionState): boolean {
 }
 
 /**
- * Состояние «ничто» (как `GameRules` на бэкенде): модули core, turns, timer,
- * result (таймер может быть null — партия без времени на ход, итог у «ничто»
- * всегда null) и игровые поля.
+ * Состояние «ничто» (как `GameRules` на бэкенде): блоки core проверяются
+ * общим guard'ом (таймер может быть null — партия без времени на ход, итог
+ * у «ничто» всегда null), игра объявляет только guard своих полей.
  */
-export const nothingRules: GameStateRules = {
-  modules: [coreModule, turnsModule, timerModule, resultModule],
-  isGameState: isNothingFields,
-};
+export const nothingRules: GameStateRules = {isGameState: isNothingFields};
 
 /**
  * Партия «ничто»: игра определяется по `meta.game.code`, состояние сверяется
- * теми же guard'ами модулей и игры, что поток партии в портале.
+ * теми же guard'ами core и игры, что поток партии в портале.
  */
 export function isNothingSession(
   session: SessionData,

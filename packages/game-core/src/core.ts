@@ -1,33 +1,71 @@
 import {
+  SessionPlayerDto,
+  SessionResultDto,
   SessionTimerDto,
+  SessionTurnsDto,
+  type MoveOptionDtoOutput,
+  type SessionPlayerDtoOutput,
+  type SessionResultDtoOutput,
   type SessionTimerDtoOutput,
+  type SessionTurnsDtoOutput,
 } from '@qgames/api/portal/zod';
 
-import type {SessionData, SessionState} from '../session';
-import type {SessionModule} from './module';
+import type {SessionData, SessionState} from './session';
 
-/** Шахматные часы партии (модуль timer); пауза — их состояние. */
+/** Вариант хода — тот же конверт `{type, data?}`, что тело хода. */
+export type MoveOption = MoveOptionDtoOutput;
+
+/** Игрок партии: id и допустимые сейчас ходы (поля игры у игрока проверяет игра). */
+export type SessionPlayer = SessionPlayerDtoOutput;
+
+/** Очерёдность: чей ход, раунд, число раундов. */
+export type SessionTurns = SessionTurnsDtoOutput;
+
+/** Шахматные часы партии; пауза — их состояние. */
 export type SessionTimer = SessionTimerDtoOutput;
 
-/** Блок модуля timer в состоянии игры; null — партия без таймера. */
-export interface TimerBlock {
+/** Итог партии: победа или ничья, победители, причина игры. */
+export type SessionResult = SessionResultDtoOutput;
+
+/**
+ * Блоки core в состоянии любой игры (как на бэкенде): игроки, очерёдность,
+ * часы (null — партия без таймера) и итог (null — итога нет: партия идёт или
+ * отменена). Игра — надстройка над core: механику, которая ей не нужна, она
+ * просто не использует.
+ */
+export interface CoreState {
+  players: readonly SessionPlayer[];
+  turns: SessionTurns;
   timer?: SessionTimer | null | undefined;
+  result?: SessionResult | null | undefined;
 }
 
+const PlayersSchema = SessionPlayerDto.array();
 const TimerSchema = SessionTimerDto.nullish();
+const ResultSchema = SessionResultDto.nullish();
 
-/** Блок timer по схеме контракта; нет блока или null — партия без таймера. */
-export function isTimerBlock(
+/**
+ * Блоки core по сгенерированным схемам контракта; поля игры (в том числе
+ * поля игры в объектах игроков) не проверяет.
+ */
+export function isCoreState(
   state: SessionState,
-): state is SessionState & TimerBlock {
-  return TimerSchema.safeParse(state['timer']).success;
+): state is SessionState & CoreState {
+  return (
+    PlayersSchema.safeParse(state['players']).success &&
+    SessionTurnsDto.safeParse(state['turns']).success &&
+    TimerSchema.safeParse(state['timer']).success &&
+    ResultSchema.safeParse(state['result']).success
+  );
 }
 
-/** Модуль timer: шахматные часы и пауза. Игра без таймера его не объявляет. */
-export const timerModule: SessionModule = {
-  name: 'timer',
-  isBlock: isTimerBlock,
-};
+/** Допустимые ходы игрока; у чужого игрока (маска) и у не-игрока — пусто. */
+export function moveOptionsOf(
+  state: CoreState,
+  playerId: string,
+): readonly MoveOption[] {
+  return state.players.find(p => p.id === playerId)?.moveOptions ?? [];
+}
 
 /** Часы идущей партии в виде для UI. */
 export interface ActiveTimer {
@@ -63,7 +101,7 @@ export function activeTimer(session: SessionData): ActiveTimer | null {
     return null;
   }
   const {state} = session;
-  const timer = isTimerBlock(state) ? state.timer : null;
+  const timer = isCoreState(state) ? state.timer : null;
   if (timer === undefined || timer === null || timer.status === 'STOPPED') {
     return null;
   }

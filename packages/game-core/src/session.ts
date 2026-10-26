@@ -27,8 +27,8 @@ export type SessionMeta = Omit<SessionMetaDtoOutput, 'moveRules'> & {
 };
 
 /**
- * Состояние партии любой игры: объект из блоков модулей-механик (`players`,
- * `turns`, `timer`, `result`) и полей игры. Блоки проверяют guard'ы модулей
+ * Состояние партии любой игры: объект из блоков core (`players`, `turns`,
+ * `timer`, `result`) и полей игры. Блоки проверяет `isCoreState`
  * (`checkSessionState`), поля игры — guard пакета игры; конкретный тип сужает
  * guard игры по `meta.game.code` (например, `isNothingSession`).
  */

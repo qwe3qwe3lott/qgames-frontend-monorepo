@@ -1,41 +1,22 @@
 // Ядро партии: конверт событий потока, общий применитель событий журнала
-// (патчей документа), модули-механики (guard'ы блоков состояния и помощники)
-// и проверка состояния по модулям игры.
+// (патчей документа), блоки core (игроки, очерёдность, часы, итог: guard и
+// помощники) и проверка состояния: core + поля игры.
 // Только чистые функции, без React и запросов.
 
 export {
-  coreModule,
-  isCoreBlock,
-  moveOptionsOf,
-  type CoreBlock,
-  type MoveOption,
-  type SessionPlayer,
-} from './modules/core';
-export type {SessionModule, SessionModuleName} from './modules/module';
-export {
-  isResultBlock,
-  resultModule,
-  sessionResult,
-  type ResultBlock,
-  type SessionResult,
-} from './modules/result';
-export {
   activeTimer,
-  isTimerBlock,
+  isCoreState,
+  moveOptionsOf,
   playerClock,
-  timerModule,
   type ActiveTimer,
+  type CoreState,
+  type MoveOption,
   type PlayerClock,
+  type SessionPlayer,
+  type SessionResult,
   type SessionTimer,
-  type TimerBlock,
-} from './modules/timer';
-export {
-  currentPlayerId,
-  isTurnsBlock,
-  turnsModule,
   type SessionTurns,
-  type TurnsBlock,
-} from './modules/turns';
+} from './core';
 export {applySessionEvent, type ApplySessionEventResult} from './patch';
 export {
   checkSeq,

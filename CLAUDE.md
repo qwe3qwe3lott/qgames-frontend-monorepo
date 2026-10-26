@@ -50,7 +50,7 @@ packages/
   ui/            @qgames/ui: компоненты shadcn/ui, общая разметка страниц PageLayout, cn(), globals.css (Tailwind 4, тема)
   api/           @qgames/api: Orval-клиенты групп API `portal` и `admin` (типы, queryOptions, хуки, Zod; снапшоты OpenAPI — вход генерации, не коммитятся), fetch-mutator, errorMessage и applyFieldErrors
   game-ui/       @qgames/game-ui: общий игровой UI (аватар, список игроков, описание комнаты, ход, конец партии)
-  game-core/     @qgames/game-core: чистые функции партии — применитель патчей applySessionEvent, сверка seq, guard'ы модулей (core, turns, timer, result), checkSessionState, activeTimer, sessionResult
+  game-core/     @qgames/game-core: чистые функции партии — применитель патчей applySessionEvent, сверка seq, блоки core (игроки, очерёдность, часы, итог: guard isCoreState и помощники moveOptionsOf, activeTimer, playerClock), checkSessionState
   games/
     <код>/       @qgames/game-<код>: модуль конкретной игры (сейчас nothing, checkers)
 ```

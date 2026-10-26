@@ -7,10 +7,6 @@ import {
 } from '@qgames/api/portal/zod';
 import {
   checkSessionState,
-  coreModule,
-  resultModule,
-  timerModule,
-  turnsModule,
   type GameStateRules,
   type SessionData,
   type SessionMeta,
@@ -32,7 +28,7 @@ export const ACCEPT_DRAW = 'ACCEPT_DRAW';
 /** Сдача: доступна обоим игрокам, вне очереди. */
 export const RESIGN = 'RESIGN';
 
-/** Состояние партии шашек для зрителя: модули core, turns, timer, result и поля игры. */
+/** Состояние партии шашек для зрителя: блоки core и поля игры. */
 export type CheckersState = CheckersSessionStateDtoOutput;
 
 /** Правила хода партии (`meta.moveRules`): флаги для подсказок ввода пути. */
@@ -45,7 +41,7 @@ export interface CheckersSession extends SessionData {
   state: CheckersState;
 }
 
-/** Игровые поля шашек (без блоков модулей) по схеме контракта. */
+/** Игровые поля шашек (без блоков core) по схеме контракта. */
 const CheckersFieldsSchema = CheckersSessionStateDto.pick({
   pieces: true,
   lastMove: true,
@@ -55,7 +51,7 @@ const CheckersFieldsSchema = CheckersSessionStateDto.pick({
   drawOfferedBy: true,
 });
 
-/** Игроки с полем игры `color` (блок core проверяет модуль core). */
+/** Игроки с полем игры `color` (поля core игрока проверяет guard core). */
 const CheckersPlayersSchema = CheckersPlayerDto.array();
 
 /**
@@ -70,17 +66,15 @@ function isCheckersFields(state: SessionState): boolean {
 }
 
 /**
- * Состояние шашек (как `GameRules` на бэкенде): модули core, turns, timer
- * (null — партия без часов), result и игровые поля.
+ * Состояние шашек (как `GameRules` на бэкенде): блоки core проверяются общим
+ * guard'ом (таймер может быть null — партия без часов), игра объявляет только
+ * guard своих полей.
  */
-export const checkersRules: GameStateRules = {
-  modules: [coreModule, turnsModule, timerModule, resultModule],
-  isGameState: isCheckersFields,
-};
+export const checkersRules: GameStateRules = {isGameState: isCheckersFields};
 
 /**
  * Партия шашек: игра определяется по `meta.game.code`, состояние сверяется
- * теми же guard'ами модулей и игры, что поток партии в портале, правила хода
+ * теми же guard'ами core и игры, что поток партии в портале, правила хода
  * `meta.moveRules` — схемой `CheckersMoveRulesDto`.
  */
 export function isCheckersSession(

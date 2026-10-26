@@ -90,8 +90,8 @@ function logSessionEvent(event: SessionLogEvent, error?: string): void {
 }
 
 /**
- * Партия игры этой комнаты: проверяется по модулям, которые объявила игра
- * (`GameStateRules`).
+ * Партия игры этой комнаты: проверяется guard'ом core и guard'ом игровых
+ * полей (`GameStateRules`).
  */
 interface SessionGame {
   gameCode: RoomResponseGameCode;
@@ -102,8 +102,8 @@ interface SessionGame {
  * Применяет сообщение потока к партии в кеше Query: снапшот заменяет партию,
  * событие журнала применяется общим `applySessionEvent` (по `method`).
  * Снапшот и документ после каждого события проверяются: `status` и `meta` —
- * общей схемой контракта, код игры — по комнате, состояние — guard'ами core,
- * объявленных игрой модулей и игровых полей. Событие, которое не применилось
+ * общей схемой контракта, код игры — по комнате, состояние — guard'ами core
+ * и игровых полей. Событие, которое не применилось
  * или дало документ не по контракту, — рассинхронизация.
  */
 function applyStreamMessage(
@@ -158,7 +158,7 @@ export interface SessionEventsParams {
   gameCode: RoomResponseGameCode;
   roomId: string;
   sessionId: string;
-  /** Что игра объявляет о состоянии: модули и guard игровых полей. */
+  /** Что игра объявляет о состоянии: guard игровых полей. */
   rules: GameStateRules;
 }
 

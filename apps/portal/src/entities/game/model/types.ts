@@ -32,10 +32,10 @@ export interface GameBoardProps {
 }
 
 /**
- * Модуль игры: доска и то, что игра объявляет о своём состоянии (как
- * `GameRules` на бэкенде) — модули-механики (`modules`: core, turns, timer) и
- * guard своих игровых полей (`isGameState`). События журнала применяет общий
- * `applySessionEvent`, своего редьюсера у игры нет; по `modules` и
+ * Модуль игры: доска и guard своих игровых полей (`isGameState`, как
+ * `GameRules` на бэкенде). Блоки core (игроки, очерёдность, часы, итог) есть у
+ * каждой игры и проверяются общим guard'ом. События журнала применяет общий
+ * `applySessionEvent`, своего редьюсера у игры нет; guard'ом core и
  * `isGameState` поток партии проверяет состояние после каждого события.
  */
 export interface GameModule extends GameStateRules {

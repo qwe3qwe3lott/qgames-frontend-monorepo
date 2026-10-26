@@ -1,35 +1,28 @@
 import {SessionMetaDto, SessionSnapshotDto} from '@qgames/api/portal/zod';
 
 import {isRecord} from './lib/json';
-import {isCoreBlock} from './modules/core';
-import type {SessionModule} from './modules/module';
+import {isCoreState} from './core';
 import type {SessionDocument, SessionMeta, SessionState} from './session';
 
 /**
- * Что игра объявляет о своём состоянии (как `GameRules` на бэкенде): какие
- * модули-механики она использует и guard своих игровых полей. Модуль core
- * проверяется у каждой игры.
+ * Что игра объявляет о своём состоянии (как `GameRules` на бэкенде): guard
+ * своих игровых полей. Блоки core есть у каждой игры и проверяются общим
+ * guard'ом.
  */
 export interface GameStateRules {
-  /** Модули-механики игры (core, turns, timer, result); игра без таймера — без timer. */
-  modules: readonly SessionModule[];
-  /** Guard только игровых полей состояния (не блоков модулей). */
+  /** Guard только игровых полей состояния (не блоков core). */
   isGameState: (state: SessionState) => boolean;
 }
 
 /**
- * Состояние партии по схемам контракта: блок core, блоки объявленных модулей
- * и игровые поля. Каждый guard проверяет только свой блок.
+ * Состояние партии по схемам контракта: блоки core и игровые поля. Каждый
+ * guard проверяет только свою часть.
  */
 export function checkSessionState(
   state: SessionState,
   rules: GameStateRules,
 ): boolean {
-  return (
-    isCoreBlock(state) &&
-    rules.modules.every(module => module.isBlock(state)) &&
-    rules.isGameState(state)
-  );
+  return isCoreState(state) && rules.isGameState(state);
 }
 
 /**
@@ -44,7 +37,7 @@ const DocumentHeadSchema = SessionSnapshotDto.pick({status: true}).extend({
 /**
  * Документ партии после применения события (`applySessionEvent` возвращает
  * JSON без типа): `status` и `meta` (кроме `moveRules`) — общей схемой,
- * состояние — guard'ами модулей и игры (`checkSessionState`). null — документ
+ * состояние — guard'ами core и игры (`checkSessionState`). null — документ
  * не по контракту (рассинхронизация, нужен свежий снапшот).
  */
 export function parseSessionDocument(
