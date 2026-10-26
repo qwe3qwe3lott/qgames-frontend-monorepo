@@ -1,16 +1,16 @@
 import type {
   CheckersSettingsDtoVariant,
+  CheckersTimePresetDtoPreset,
   GameSettingsDto,
   RoomSettingsDto,
-  TimeControlDtoMode,
+  TimeControlDto,
 } from '@qgames/api/portal/model';
 
-export const TIME_CONTROL_MODE_LABELS: Readonly<
-  Record<TimeControlDtoMode, string>
-> = {
-  NONE: 'Без таймера',
-  PER_MOVE: 'Время на ход',
-};
+/** Есть ли у партии таймер: таймер один — шахматные часы. */
+export const TIME_CONTROL_LABELS = {
+  none: 'Без таймера',
+  clock: 'Шахматные часы',
+} as const;
 
 /** Варианты правил шашек (`CheckersVariant`). */
 export const CHECKERS_VARIANT_LABELS: Readonly<
@@ -21,16 +21,36 @@ export const CHECKERS_VARIANT_LABELS: Readonly<
   ENGLISH: 'Английские',
 };
 
-/** «30 с», «2 мин», «1 мин 30 с». */
+/** Официальные контроли времени шашек (`CheckersTimePreset`). */
+export const CHECKERS_TIME_PRESET_LABELS: Readonly<
+  Record<CheckersTimePresetDtoPreset, string>
+> = {
+  CLASSIC: 'Классика',
+  RAPID: 'Быстрые',
+  BLITZ: 'Блиц',
+};
+
+/** «30 с», «2 мин», «1 мин 30 с», «1 ч 20 мин». */
 export function formatSeconds(totalSeconds: number): string {
-  const minutes = Math.floor(totalSeconds / 60);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
-  if (minutes === 0) {
-    return `${String(seconds)} с`;
-  }
-  return seconds === 0
-    ? `${String(minutes)} мин`
-    : `${String(minutes)} мин ${String(seconds)} с`;
+  const parts = [
+    hours > 0 ? `${String(hours)} ч` : null,
+    minutes > 0 ? `${String(minutes)} мин` : null,
+    seconds > 0 || totalSeconds === 0 ? `${String(seconds)} с` : null,
+  ];
+  return parts.filter(part => part !== null).join(' ');
+}
+
+/** Шахматные часы: «10 мин + 5 с»; без добавки — только запас («30 мин»). */
+export function formatClock({
+  baseSeconds,
+  incrementSeconds,
+}: TimeControlDto): string {
+  return incrementSeconds > 0
+    ? `${formatSeconds(baseSeconds)} + ${String(incrementSeconds)} с`
+    : formatSeconds(baseSeconds);
 }
 
 export interface SettingsRow {
@@ -51,17 +71,17 @@ function gameSettingsRow(settings: GameSettingsDto): SettingsRow {
   }
 }
 
-/** Строки описания настроек комнаты: настройки игры и правила времени. */
+/** Строки описания настроек комнаты: настройки игры и часы. */
 export function roomSettingsRows(settings: RoomSettingsDto): SettingsRow[] {
-  const {mode, moveSeconds} = settings.timeControl;
+  const {timeControl} = settings;
   return [
     gameSettingsRow(settings.gameSettings),
     {
-      label: TIME_CONTROL_MODE_LABELS.PER_MOVE,
+      label: 'Время',
       value:
-        mode === 'PER_MOVE' && moveSeconds !== undefined && moveSeconds !== null
-          ? formatSeconds(moveSeconds)
-          : TIME_CONTROL_MODE_LABELS.NONE,
+        timeControl === undefined || timeControl === null
+          ? TIME_CONTROL_LABELS.none
+          : formatClock(timeControl),
     },
   ];
 }

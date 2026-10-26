@@ -4,9 +4,11 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
+import type {PlayerClockDto} from './playerClockDto';
 import type {SessionTimerDtoStatus} from './sessionTimerDtoStatus';
 
 export interface SessionTimerDto {
+  clocks: PlayerClockDto[];
   /** @nullable */
   deadline?: string | null;
   /** @nullable */

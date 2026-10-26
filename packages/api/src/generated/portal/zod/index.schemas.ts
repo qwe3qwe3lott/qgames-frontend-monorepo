@@ -39,6 +39,7 @@ export type CheckersLastMoveDto = zod.input<typeof CheckersLastMoveDto>;
 export type CheckersLastMoveDtoOutput = zod.output<typeof CheckersLastMoveDto>;
 
 export const CheckersMoveDataDto = zod.object({
+  offerDraw: zod.boolean().nullish(),
   path: zod.array(zod.array(zod.int())),
 });
 
@@ -104,7 +105,16 @@ export const SessionResultDto = zod.object({
 export type SessionResultDto = zod.input<typeof SessionResultDto>;
 export type SessionResultDtoOutput = zod.output<typeof SessionResultDto>;
 
+export const PlayerClockDto = zod.object({
+  playerId: zod.uuid(),
+  remainingMs: zod.int(),
+});
+
+export type PlayerClockDto = zod.input<typeof PlayerClockDto>;
+export type PlayerClockDtoOutput = zod.output<typeof PlayerClockDto>;
+
 export const SessionTimerDto = zod.object({
+  clocks: zod.array(PlayerClockDto),
   deadline: zod.iso.datetime({offset: true}).nullish(),
   pausedAt: zod.iso.datetime({offset: true}).nullish(),
   status: zod.enum(['RUNNING', 'PAUSED', 'STOPPED']),
@@ -123,13 +133,16 @@ export type SessionTurnsDto = zod.input<typeof SessionTurnsDto>;
 export type SessionTurnsDtoOutput = zod.output<typeof SessionTurnsDto>;
 
 export const CheckersSessionStateDto = zod.object({
+  drawOfferedBy: zod.uuid().nullish(),
   lastMove: zod.union([CheckersLastMoveDto, zod.null()]).optional(),
+  materialMoves: zod.int(),
   pieces: zod.array(CheckersPieceDto),
   players: zod.array(CheckersPlayerDto),
+  positionHistory: zod.array(zod.string()),
   quietMoves: zod
     .int()
     .describe(
-      'Сколько ходов подряд (обеих сторон в сумме) сделано только дамками без взятий; на 30 (по 15 у каждой стороны) партия заканчивается ничьей (DRAW_RULE)',
+      'Сколько ходов подряд (обеих сторон в сумме) сделано только дамками без взятий; на пороге варианта (русские 30, международные 50, английские 80) партия заканчивается ничьей (DRAW_RULE)',
     ),
   result: zod.union([SessionResultDto, zod.null()]).optional(),
   timer: zod.union([SessionTimerDto, zod.null()]).optional(),
@@ -149,8 +162,21 @@ export const CheckersSettingsDto = zod.object({
 export type CheckersSettingsDto = zod.input<typeof CheckersSettingsDto>;
 export type CheckersSettingsDtoOutput = zod.output<typeof CheckersSettingsDto>;
 
+export const CheckersTimePresetDto = zod.object({
+  baseSeconds: zod.int(),
+  incrementSeconds: zod.int(),
+  preset: zod.enum(['CLASSIC', 'RAPID', 'BLITZ']),
+  variant: zod.enum(['RUSSIAN', 'INTERNATIONAL', 'ENGLISH']),
+});
+
+export type CheckersTimePresetDto = zod.input<typeof CheckersTimePresetDto>;
+export type CheckersTimePresetDtoOutput = zod.output<
+  typeof CheckersTimePresetDto
+>;
+
 export const CheckersSettingsLimitsDto = zod.object({
   gameCode: zod.enum(['checkers']),
+  timePresets: zod.array(CheckersTimePresetDto),
   variants: zod.array(zod.enum(['RUSSIAN', 'INTERNATIONAL', 'ENGLISH'])),
 });
 
@@ -177,8 +203,8 @@ export type GameSettingsDto = zod.input<typeof GameSettingsDto>;
 export type GameSettingsDtoOutput = zod.output<typeof GameSettingsDto>;
 
 export const TimeControlDto = zod.object({
-  mode: zod.enum(['NONE', 'PER_MOVE']),
-  moveSeconds: zod.int().nullish(),
+  baseSeconds: zod.int(),
+  incrementSeconds: zod.int(),
 });
 
 export type TimeControlDto = zod.input<typeof TimeControlDto>;
@@ -186,7 +212,7 @@ export type TimeControlDtoOutput = zod.output<typeof TimeControlDto>;
 
 export const RoomSettingsDto = zod.object({
   gameSettings: GameSettingsDto,
-  timeControl: TimeControlDto,
+  timeControl: zod.union([TimeControlDto, zod.null()]).optional(),
 });
 
 export type RoomSettingsDto = zod.input<typeof RoomSettingsDto>;
@@ -268,8 +294,9 @@ export type GameSettingsLimitsDtoOutput = zod.output<
 >;
 
 export const TimeControlLimitsDto = zod.object({
-  modes: zod.array(zod.enum(['NONE', 'PER_MOVE'])),
-  moveSeconds: IntRangeDto,
+  baseSeconds: IntRangeDto,
+  incrementSeconds: IntRangeDto,
+  optional: zod.boolean(),
 });
 
 export type TimeControlLimitsDto = zod.input<typeof TimeControlLimitsDto>;
@@ -704,7 +731,7 @@ export const SessionPatchEvent = zod
     SessionEventInfo,
   ])
   .describe(
-    'Событие журнала партии {seq, at, method, code, data}: одна операция над документом партии {status, meta, state}. Состояние меняется только по method (PUT, PATCH, DELETE; INFO не меняет), code — что произошло, для журнала и логов. Несуществующий путь у PATCH/DELETE или неподходящий тип — рассинхронизация, клиент переподключается за свежим снапшотом.\n\nИзвестные коды (code):\n- session-started — PUT [] {status, meta, state}: первое событие журнала (обычно уже в снапшоте);\n- session-finished — PATCH [] {status: FINISHED}: партия закончилась, последнее событие, поток закрывается;\n- session-cancelled — PATCH [] {status: CANCELLED}: партию отменил владелец, последнее событие, поток закрывается;\n- move-options-changed — PUT ["state", "players", {id}, "moveOptions"]: варианты ходов игрока (чужим зрителям — пустой список);\n- turn-changed — PUT ["state", "turns"]: сменился текущий игрок или раунд;\n- timer-started — PUT ["state", "timer"]: таймер следующего хода;\n- game-paused — PATCH ["state", "timer"] {status: PAUSED, pausedAt}: пауза;\n- game-resumed — PATCH ["state", "timer"] {status: RUNNING, deadline, pausedAt: null}: продолжение;\n- timer-stopped — PUT ["state", "timer"]: таймер остановлен перед концом или отменой партии;\n- result-set — PUT ["state", "result"] {outcome, winnerIds, reason}: итог партии, только перед session-finished;\n- player-passed («игра в ничто») — PATCH ["state"] {moves}: игрок пропустил ход; по истечении времени — INFO {playerId, timeout: true};\n- piece-moved (шашки) — PATCH ["state", "pieces", {id}] {square}: шашка встала на последнюю клетку пути;\n- piece-captured (шашки) — DELETE ["state", "pieces", {id}]: шашка сбита (на каждую сбитую);\n- piece-crowned (шашки) — PATCH ["state", "pieces", {id}] {kind: KING}: шашка стала дамкой;\n- last-move-changed (шашки) — PUT ["state", "lastMove"] {pieceId, path, captured}: последний ход;\n- counters-changed (шашки) — PATCH ["state"] {quietMoves}: счётчик ходов дамками без взятий;\n- player-resigned (шашки) — INFO {playerId}: игрок сдался;\n- move-timed-out (шашки) — INFO {playerId}: время хода игрока вышло (поражение).',
+    'Событие журнала партии {seq, at, method, code, data}: одна операция над документом партии {status, meta, state}. Состояние меняется только по method (PUT, PATCH, DELETE; INFO не меняет), code — что произошло, для журнала и логов. Несуществующий путь у PATCH/DELETE или неподходящий тип — рассинхронизация, клиент переподключается за свежим снапшотом.\n\nИзвестные коды (code):\n- session-started — PUT [] {status, meta, state}: первое событие журнала (обычно уже в снапшоте);\n- session-finished — PATCH [] {status: FINISHED}: партия закончилась, последнее событие, поток закрывается;\n- session-cancelled — PATCH [] {status: CANCELLED}: партию отменил владелец, последнее событие, поток закрывается;\n- move-options-changed — PUT ["state", "players", {id}, "moveOptions"]: варианты ходов игрока (чужим зрителям — пустой список);\n- turn-changed — PUT ["state", "turns"]: сменился текущий игрок или раунд;\n- clock-switched — PUT ["state", "timer"]: шахматные часы после смены очереди (запас ходившего с добавкой, дедлайн следующего);\n- game-paused — PATCH ["state", "timer"] {status: PAUSED, pausedAt}: пауза;\n- game-resumed — PATCH ["state", "timer"] {status: RUNNING, deadline, pausedAt: null}: продолжение;\n- timer-stopped — PUT ["state", "timer"]: часы остановлены перед концом или отменой партии (итоговые остатки);\n- result-set — PUT ["state", "result"] {outcome, winnerIds, reason}: итог партии, только перед session-finished;\n- player-passed («игра в ничто») — PATCH ["state"] {moves}: игрок пропустил ход; по истечении времени — INFO {playerId, timeout: true};\n- piece-moved (шашки) — PATCH ["state", "pieces", {id}] {square}: шашка встала на последнюю клетку пути;\n- piece-captured (шашки) — DELETE ["state", "pieces", {id}]: шашка сбита (на каждую сбитую);\n- piece-crowned (шашки) — PATCH ["state", "pieces", {id}] {kind: KING}: шашка стала дамкой;\n- last-move-changed (шашки) — PUT ["state", "lastMove"] {pieceId, path, captured}: последний ход;\n- counters-changed (шашки) — PATCH ["state"] {quietMoves, materialMoves}: счётчики ходов дамками без взятий и ходов с последнего взятия или превращения;\n- position-recorded (шашки) — PUT ["state", "positionHistory"]: история позиций для повторения;\n- draw-offer-changed (шашки) — PATCH ["state"] {drawOfferedBy}: ничья предложена ходом или снята ходом соперника;\n- draw-accepted (шашки) — INFO {playerId}: игрок принял ничью;\n- player-resigned (шашки) — INFO {playerId}: игрок сдался;\n- move-timed-out (шашки) — INFO {playerId}: время хода игрока вышло (поражение).',
   );
 
 export type SessionPatchEvent = zod.input<typeof SessionPatchEvent>;

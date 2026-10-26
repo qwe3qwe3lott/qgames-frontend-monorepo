@@ -3,8 +3,13 @@ import {
   currentPlayerId,
   isSessionOver,
   moveOptionsOf,
+  playerClock,
   sessionResult,
 } from '@qgames/game-core';
+import {
+  ChessClock,
+  ClockIncrement,
+} from '@qgames/game-ui/components/chess-clock';
 import {
   GameOver,
   type GameOverResult,
@@ -14,7 +19,6 @@ import {
   type PlayerListItem,
 } from '@qgames/game-ui/components/player-list';
 import {TurnIndicator} from '@qgames/game-ui/components/turn-indicator';
-import {TurnTimer} from '@qgames/game-ui/components/turn-timer';
 import {Button} from '@qgames/ui/components/button';
 import {
   Dialog,
@@ -41,7 +45,13 @@ import {
   sameSquare,
   type Square,
 } from '../lib/path';
-import {isCheckersSession, MOVE, RESIGN, type CheckersSession} from '../state';
+import {
+  ACCEPT_DRAW,
+  isCheckersSession,
+  MOVE,
+  RESIGN,
+  type CheckersSession,
+} from '../state';
 import type {BoardPlayer, BoardProps} from '../types';
 import {CheckersGrid} from './checkers-grid';
 
@@ -144,26 +154,41 @@ function CheckersBoard({
   moveError,
 }: CheckersBoardProps) {
   const [selection, setSelection] = useState<Selection | null>(null);
+  // Предложить ничью вместе со следующим ходом; сбрасывается, когда ход отправлен.
+  const [offerDraw, setOfferDraw] = useState(false);
   const {state} = session;
   const rules = session.meta.moveRules;
   const byId = new Map(players.map(player => [player.id, player]));
   const nameOf = (id: string): string =>
     byId.get(id)?.name ?? UNKNOWN_PLAYER_NAME;
+  const timer = activeTimer(session);
+  const paused = timer?.paused ?? false;
+  const turnPlayerId = currentPlayerId(state.turns);
   const playerItems: PlayerListItem[] = state.players.map(({id, color}) => {
     const player: BoardPlayer = byId.get(id) ?? {
       id,
       name: UNKNOWN_PLAYER_NAME,
       avatar: null,
     };
-    return {...player, badges: [COLOR_LABELS[color]]};
+    // Часы — в строке игрока: идут только у ходящего.
+    const clock = timer === null ? null : playerClock(timer, id, turnPlayerId);
+    return {
+      ...player,
+      badges: [COLOR_LABELS[color]],
+      ...(clock === null
+        ? {}
+        : {
+            extra: (
+              <ChessClock clock={clock} clockOffsetMs={session.clockOffsetMs} />
+            ),
+          }),
+    };
   });
   const viewerColor =
     state.players.find(player => player.id === viewerId)?.color ?? null;
   const lastMovePath = (state.lastMove?.path ?? []).map(toSquare);
   const over = isSessionOver(session);
 
-  const timer = activeTimer(session);
-  const paused = timer?.paused ?? false;
   const options = moveOptionsOf(state, viewerId);
   const canMove =
     !over &&
@@ -205,7 +230,12 @@ function CheckersBoard({
       const done = after.complete && after.next.length === 0;
       setSelection({...current, path, sent: done});
       if (done) {
-        onMove({type: MOVE, data: {path: path.map(([x, y]) => [x, y])}});
+        const data = {path: path.map(([x, y]) => [x, y])};
+        onMove({
+          type: MOVE,
+          data: offerDraw ? {...data, offerDraw: true} : data,
+        });
+        setOfferDraw(false);
       }
       return;
     }
@@ -261,9 +291,12 @@ function CheckersBoard({
     );
   }
 
-  const currentId = currentPlayerId(state.turns);
+  const currentId = turnPlayerId;
   const canResign = options.some(option => option.type === RESIGN);
   const myTurn = options.some(option => option.type === MOVE);
+  const canAcceptDraw = options.some(option => option.type === ACCEPT_DRAW);
+  const drawOffered =
+    state.drawOfferedBy !== undefined && state.drawOfferedBy !== null;
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -282,12 +315,48 @@ function CheckersBoard({
             </span>
           ) : null}
           {timer === null ? null : (
-            <TurnTimer timer={timer} clockOffsetMs={session.clockOffsetMs} />
+            <ClockIncrement seconds={timer.incrementSeconds} />
           )}
         </div>
       </div>
+      {canAcceptDraw ? (
+        <div
+          role="status"
+          className="flex flex-wrap items-center gap-3 rounded-md border px-3 py-2"
+        >
+          <span className="text-sm font-medium">Соперник предлагает ничью</span>
+          <Button
+            size="sm"
+            disabled={paused || movePending}
+            onClick={() => {
+              onMove({type: ACCEPT_DRAW});
+            }}
+          >
+            Принять ничью
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            Сделайте ход, чтобы отказаться
+          </span>
+        </div>
+      ) : drawOffered && state.drawOfferedBy === viewerId ? (
+        <p role="status" className="text-sm text-muted-foreground">
+          Вы предложили ничью
+        </p>
+      ) : null}
       {grid}
       <div className="flex flex-wrap items-center gap-3">
+        {myTurn ? (
+          <Button
+            variant={offerDraw ? 'secondary' : 'outline'}
+            aria-pressed={offerDraw}
+            disabled={paused || movePending}
+            onClick={() => {
+              setOfferDraw(!offerDraw);
+            }}
+          >
+            Предложить ничью
+          </Button>
+        ) : null}
         {canResign ? (
           <ResignButton
             disabled={paused || movePending}
@@ -308,6 +377,11 @@ function CheckersBoard({
                 : 'Ждём хода соперника'}
           </span>
         )}
+        {myTurn && offerDraw ? (
+          <span className="text-sm text-muted-foreground">
+            Ничья будет предложена вместе с ходом
+          </span>
+        ) : null}
       </div>
       {moveError === null ? null : (
         <p className="text-sm text-destructive">{moveError}</p>
@@ -324,7 +398,8 @@ function CheckersBoard({
 /**
  * Доска шашек. Правила знает сервер: варианты действий — из `moveOptions`
  * игрока, путь собирается по подсказкам из флагов `meta.moveRules` и
- * отправляется целиком (`{type: MOVE, data: {path}}`).
+ * отправляется целиком (`{type: MOVE, data: {path, offerDraw?}}`); ничья
+ * предлагается вместе с ходом и принимается ходом `ACCEPT_DRAW`.
  */
 export function Board({session, ...props}: BoardProps) {
   if (!isCheckersSession(session)) {

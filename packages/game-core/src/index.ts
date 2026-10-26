@@ -22,8 +22,10 @@ export {
 export {
   activeTimer,
   isTimerBlock,
+  playerClock,
   timerModule,
   type ActiveTimer,
+  type PlayerClock,
   type SessionTimer,
   type TimerBlock,
 } from './modules/timer';

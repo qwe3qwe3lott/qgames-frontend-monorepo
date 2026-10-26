@@ -20,6 +20,6 @@
 - Форма модуля игры (`GameModule = {Board, modules, isGameState}`: доска, модули-механики, которые использует игра (как в `GameRules` бэкенда), и guard игровых полей; пропсы доски) описана в портале — `entities/game/model/types.ts`; пакет игры описывает те же пропсы у себя, совместимость проверяет TypeScript в реестре.
 - **Время в доске:**
   - `clockOffsetMs` = `serverTime` снапшота партии минус момент его получения, чтобы обратный отсчёт не зависел от часов клиента;
-  - обратный отсчёт рисует `TurnTimer` из `@qgames/game-ui` по блоку таймера состояния (`{paused, deadline, pausedAt}`). Показывать ли таймер, решает только `activeTimer` (`@qgames/game-core`): нет таймера, `STOPPED` или партия не `IN_PROGRESS` — не показывать.
+  - таймер один — шахматные часы (`{status, deadline, pausedAt, clocks}`). Показывать ли часы, решает только `activeTimer` (`@qgames/game-core`): нет таймера, `STOPPED` или партия не `IN_PROGRESS` — не показывать. Часы игрока — `playerClock(timer, playerId, currentPlayerId)`: идут только у ходящего (обратный отсчёт до `deadline`), у остальных — застывший `remainingMs`; рисует `ChessClock` из `@qgames/game-ui` (в строке игрока `PlayerList`, поле `extra`). Добавку за ход показывает `ClockIncrement` — только если она больше нуля.
 - Игра, у которой ещё нет пакета на фронте (сейчас `carcassonne`), — только запись в реестре без `load`: создание комнаты недоступно, пакет не заводится.
 - `@qgames/game-ui` — только презентационные компоненты: данные через props, без запросов и сторов.

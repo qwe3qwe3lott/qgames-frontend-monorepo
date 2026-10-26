@@ -10,7 +10,8 @@ export {
 export {
   formatSeconds,
   roomSettingsRows,
-  TIME_CONTROL_MODE_LABELS,
+  formatClock,
+  TIME_CONTROL_LABELS,
   type SettingsRow,
 } from './lib/settings-labels';
 export {

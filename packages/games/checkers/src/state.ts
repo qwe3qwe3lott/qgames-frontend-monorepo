@@ -20,8 +20,14 @@ import {
 /** Код игры в контракте (`meta.game.code`). */
 export const CHECKERS_CODE = 'checkers';
 
-/** Ход шашкой: `data` — полный путь `{path: [[x, y], …]}` с начальной клеткой. */
+/**
+ * Ход шашкой: `data` — полный путь `{path: [[x, y], …]}` с начальной клеткой;
+ * `offerDraw: true` — предложить ничью вместе с ходом.
+ */
 export const MOVE = 'MOVE';
+
+/** Принять ничью, предложенную соперником (в свой ход, без `data`). */
+export const ACCEPT_DRAW = 'ACCEPT_DRAW';
 
 /** Сдача: доступна обоим игрокам, вне очереди. */
 export const RESIGN = 'RESIGN';
@@ -44,14 +50,17 @@ const CheckersFieldsSchema = CheckersSessionStateDto.pick({
   pieces: true,
   lastMove: true,
   quietMoves: true,
+  materialMoves: true,
+  positionHistory: true,
+  drawOfferedBy: true,
 });
 
 /** Игроки с полем игры `color` (блок core проверяет модуль core). */
 const CheckersPlayersSchema = CheckersPlayerDto.array();
 
 /**
- * Guard только игровых полей шашек: `pieces`, `lastMove`, `quietMoves` и цвет
- * в объектах игроков `players[].color`.
+ * Guard только игровых полей шашек: `pieces`, `lastMove`, счётчики,
+ * `positionHistory`, `drawOfferedBy` и цвет в объектах игроков `players[].color`.
  */
 function isCheckersFields(state: SessionState): boolean {
   return (
@@ -62,7 +71,7 @@ function isCheckersFields(state: SessionState): boolean {
 
 /**
  * Состояние шашек (как `GameRules` на бэкенде): модули core, turns, timer
- * (null — партия без времени на ход), result и игровые поля.
+ * (null — партия без часов), result и игровые поля.
  */
 export const checkersRules: GameStateRules = {
   modules: [coreModule, turnsModule, timerModule, resultModule],

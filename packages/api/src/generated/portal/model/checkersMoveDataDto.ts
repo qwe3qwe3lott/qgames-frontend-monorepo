@@ -6,5 +6,7 @@
  */
 
 export interface CheckersMoveDataDto {
+  /** @nullable */
+  offerDraw?: boolean | null;
   path: number[][];
 }

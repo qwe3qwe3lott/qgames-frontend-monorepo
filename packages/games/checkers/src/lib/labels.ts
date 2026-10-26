@@ -13,8 +13,12 @@ const REASON_LABELS: Readonly<Record<string, string>> = {
   NO_PIECES: 'Все шашки проигравшего сбиты.',
   NO_MOVES: 'Проигравшему некуда ходить.',
   RESIGN: 'Проигравший сдался.',
-  TIMEOUT: 'У проигравшего вышло время на ход.',
+  TIMEOUT: 'У проигравшего вышло время.',
   DRAW_RULE: 'Много ходов подряд только дамками и без взятий.',
+  DRAW_AGREED: 'Игроки согласились на ничью.',
+  REPETITION: 'Позиция повторилась трижды.',
+  ENDGAME_RULE:
+    'Ничья по правилу окончаний: сильнейшая сторона не выиграла за отведённые ходы.',
 };
 
 export function reasonLabel(reason: string): string | undefined {

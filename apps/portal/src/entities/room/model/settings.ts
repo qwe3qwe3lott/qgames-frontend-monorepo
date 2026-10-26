@@ -1,18 +1,17 @@
 import type {
   GameRulesDto,
   GameSettingsLimitsDto,
+  IntRangeDto,
   RoomSettingsDto,
 } from '@qgames/api/portal/model';
-import {
-  CheckersSettingsDto,
-  NothingSettingsDto,
-  UpdateRoomSettingsBody,
-} from '@qgames/api/portal/zod';
+import {CheckersSettingsDto, NothingSettingsDto} from '@qgames/api/portal/zod';
 import type {Path} from 'react-hook-form';
 import {z} from 'zod';
 
-/** Время на ход, которое форма предлагает при включении таймера. */
-const DEFAULT_MOVE_SECONDS = 30;
+import {formatSeconds} from '../lib/settings-labels';
+
+/** Запас часов, который форма предлагает, если у игры нет часов по умолчанию. */
+const FALLBACK_BASE_SECONDS = 300;
 
 /**
  * Схема настроек игры: union по `gameCode` из сгенерированных схем, вариант
@@ -40,36 +39,43 @@ function gameSettingsSchema(limits: GameSettingsLimitsDto) {
   return z.discriminatedUnion('gameCode', [nothing, checkers]);
 }
 
+function inRange(value: number, range: IntRangeDto): boolean {
+  return Number.isInteger(value) && value >= range.min && value <= range.max;
+}
+
 /**
- * Схема формы настроек комнаты: сгенерированная схема `RoomSettingsDto`,
- * дополненная границами игры из `rules` ответа `GET /api/games/{gameCode}`.
+ * Схема формы настроек комнаты: шахматные часы (включены или нет, запас и
+ * добавка в секундах) и настройки игры, с границами из `rules` ответа
+ * `GET /api/games/{gameCode}`. Без часов их поля не проверяются: они скрыты, а
+ * значения остаются для повторного включения.
  */
 export function roomSettingsSchema(rules: GameRulesDto) {
-  const {modes, moveSeconds} = rules.timeControl;
-  const body = UpdateRoomSettingsBody.shape;
+  const {optional, baseSeconds, incrementSeconds} = rules.timeControl;
   return z.object({
     timeControl: z
       .object({
-        mode: body.timeControl.shape.mode.refine(
-          mode => modes.includes(mode),
-          'Этот режим игра не поддерживает',
-        ),
-        // Поле видно только при PER_MOVE, поэтому проверяется ниже по режиму:
-        // пустое значение (NaN из valueAsNumber) при NONE не мешает отправке.
-        moveSeconds: z.number().or(z.nan()),
+        enabled: z
+          .boolean()
+          .refine(enabled => optional || enabled, 'Игра идёт только с часами'),
+        baseSeconds: z.number().or(z.nan()),
+        incrementSeconds: z.number().or(z.nan()),
       })
       .superRefine((value, ctx) => {
-        const seconds = value.moveSeconds;
-        if (
-          value.mode === 'PER_MOVE' &&
-          (!Number.isInteger(seconds) ||
-            seconds < moveSeconds.min ||
-            seconds > moveSeconds.max)
-        ) {
+        if (!value.enabled) {
+          return;
+        }
+        if (!inRange(value.baseSeconds, baseSeconds)) {
           ctx.addIssue({
             code: 'custom',
-            path: ['moveSeconds'],
-            message: `Введите целое число от ${String(moveSeconds.min)} до ${String(moveSeconds.max)}`,
+            path: ['baseSeconds'],
+            message: `Запас — от ${formatSeconds(baseSeconds.min)} до ${formatSeconds(baseSeconds.max)}`,
+          });
+        }
+        if (!inRange(value.incrementSeconds, incrementSeconds)) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['incrementSeconds'],
+            message: `Введите целое число от ${String(incrementSeconds.min)} до ${String(incrementSeconds.max)}`,
           });
         }
       }),
@@ -84,37 +90,45 @@ export type RoomSettingsValues = z.infer<ReturnType<typeof roomSettingsSchema>>;
  * полями тела `PUT …/settings`; у создания комнаты они идут с префиксом `settings.`.
  */
 export const ROOM_SETTINGS_FIELDS = [
-  'timeControl.mode',
-  'timeControl.moveSeconds',
+  'timeControl.baseSeconds',
+  'timeControl.incrementSeconds',
   'gameSettings.rounds',
   'gameSettings.variant',
 ] as const satisfies readonly Path<RoomSettingsValues>[];
 
-/** Значения формы из настроек комнаты (или настроек игры по умолчанию). */
+/**
+ * Значения формы из настроек комнаты (или настроек игры по умолчанию). Без
+ * часов поля часов заполняются часами игры по умолчанию — на случай включения.
+ */
 export function toRoomSettingsValues(
   settings: RoomSettingsDto,
   rules: GameRulesDto,
 ): RoomSettingsValues {
-  const {min, max} = rules.timeControl.moveSeconds;
+  const {baseSeconds, incrementSeconds} = rules.timeControl;
+  const clock = settings.timeControl ??
+    rules.defaultSettings.timeControl ?? {
+      baseSeconds: Math.min(
+        Math.max(FALLBACK_BASE_SECONDS, baseSeconds.min),
+        baseSeconds.max,
+      ),
+      incrementSeconds: incrementSeconds.min,
+    };
   return {
     timeControl: {
-      mode: settings.timeControl.mode,
-      moveSeconds:
-        settings.timeControl.moveSeconds ??
-        Math.min(Math.max(DEFAULT_MOVE_SECONDS, min), max),
+      enabled:
+        settings.timeControl !== undefined && settings.timeControl !== null,
+      baseSeconds: clock.baseSeconds,
+      incrementSeconds: clock.incrementSeconds,
     },
     gameSettings: settings.gameSettings,
   };
 }
 
-/** Тело запроса из значений формы: `moveSeconds` только при PER_MOVE. */
+/** Тело запроса из значений формы: без часов — `timeControl: null`. */
 export function toRoomSettings(values: RoomSettingsValues): RoomSettingsDto {
-  const {mode, moveSeconds} = values.timeControl;
+  const {enabled, baseSeconds, incrementSeconds} = values.timeControl;
   return {
-    timeControl: {
-      mode,
-      moveSeconds: mode === 'PER_MOVE' ? moveSeconds : null,
-    },
+    timeControl: enabled ? {baseSeconds, incrementSeconds} : null,
     gameSettings: values.gameSettings,
   };
 }

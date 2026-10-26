@@ -9,6 +9,8 @@ export interface PlayerListItem {
   avatar: PlayerAvatarKind | null;
   /** Пометки рядом с именем: «Владелец», «Вы», «Наблюдатель». */
   badges?: readonly string[];
+  /** Содержимое справа в строке игрока, например его часы. */
+  extra?: ReactNode;
 }
 
 export interface PlayerListProps {
@@ -58,6 +60,9 @@ export function PlayerList({
                     {badge}
                   </span>
                 ))}
+                {player.extra === undefined ? null : (
+                  <span className="ml-auto">{player.extra}</span>
+                )}
               </li>
             );
           })}

@@ -6,8 +6,10 @@
  */
 import type {CheckersSettingsLimitsDtoGameCode} from './checkersSettingsLimitsDtoGameCode';
 import type {CheckersSettingsLimitsDtoVariantsItem} from './checkersSettingsLimitsDtoVariantsItem';
+import type {CheckersTimePresetDto} from './checkersTimePresetDto';
 
 export interface CheckersSettingsLimitsDto {
   gameCode: CheckersSettingsLimitsDtoGameCode;
+  timePresets: CheckersTimePresetDto[];
   variants: CheckersSettingsLimitsDtoVariantsItem[];
 }

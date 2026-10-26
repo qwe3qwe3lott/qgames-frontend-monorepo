@@ -3,12 +3,19 @@ import {
   currentPlayerId,
   isSessionOver,
   moveOptionsOf,
+  playerClock,
   type MoveOption,
 } from '@qgames/game-core';
+import {
+  ChessClock,
+  ClockIncrement,
+} from '@qgames/game-ui/components/chess-clock';
 import {GameOver} from '@qgames/game-ui/components/game-over';
-import {PlayerList} from '@qgames/game-ui/components/player-list';
+import {
+  PlayerList,
+  type PlayerListItem,
+} from '@qgames/game-ui/components/player-list';
 import {TurnIndicator} from '@qgames/game-ui/components/turn-indicator';
-import {TurnTimer} from '@qgames/game-ui/components/turn-timer';
 import {Button} from '@qgames/ui/components/button';
 import {
   Tooltip,
@@ -31,7 +38,7 @@ function toMove(option: MoveOption): BoardMove {
 
 /**
  * Доска «Игры в ничто»: игроки по очереди завершают ход, N раундов; при
- * таймере — обратный отсчёт хода. Правила не знает: доступность хода — из
+ * таймере — шахматные часы игроков. Правила не знает: доступность хода — из
  * `moveOptions` игрока в состоянии.
  */
 export function Board({
@@ -75,6 +82,19 @@ export function Board({
 
   const timer = activeTimer(session);
   const paused = timer?.paused ?? false;
+  // Часы — в строке каждого игрока: идут только у ходящего.
+  const playerItems: PlayerListItem[] = sessionPlayers.map(player => {
+    const clock =
+      timer === null ? null : playerClock(timer, player.id, currentId);
+    return clock === null
+      ? player
+      : {
+          ...player,
+          extra: (
+            <ChessClock clock={clock} clockOffsetMs={session.clockOffsetMs} />
+          ),
+        };
+  });
   const pass = moveOptionsOf(state, viewerId).find(
     option => option.type === PASS,
   );
@@ -108,12 +128,12 @@ export function Board({
             </span>
           ) : null}
           {timer === null ? null : (
-            <TurnTimer timer={timer} clockOffsetMs={session.clockOffsetMs} />
+            <ClockIncrement seconds={timer.incrementSeconds} />
           )}
         </div>
       </div>
       <PlayerList
-        players={sessionPlayers}
+        players={playerItems}
         activePlayerId={currentId}
         title="Порядок ходов"
       />

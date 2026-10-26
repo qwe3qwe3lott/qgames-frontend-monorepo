@@ -4,10 +4,8 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
-import type {TimeControlDtoMode} from './timeControlDtoMode';
 
 export interface TimeControlDto {
-  mode: TimeControlDtoMode;
-  /** @nullable */
-  moveSeconds?: number | null;
+  baseSeconds: number;
+  incrementSeconds: number;
 }

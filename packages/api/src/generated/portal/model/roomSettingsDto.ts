@@ -9,5 +9,5 @@ import type {TimeControlDto} from './timeControlDto';
 
 export interface RoomSettingsDto {
   gameSettings: GameSettingsDto;
-  timeControl: TimeControlDto;
+  timeControl?: TimeControlDto | null;
 }

@@ -32,10 +32,7 @@ export function settingsFromStream(
 ): RoomSettingsDto {
   return {
     ...settings,
-    timeControl: {
-      ...settings.timeControl,
-      moveSeconds: settings.timeControl.moveSeconds ?? null,
-    },
+    timeControl: settings.timeControl ?? null,
   };
 }
 

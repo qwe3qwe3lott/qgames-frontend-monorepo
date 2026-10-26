@@ -5,9 +5,9 @@
  * OpenAPI spec version: v0
  */
 import type {IntRangeDto} from './intRangeDto';
-import type {TimeControlLimitsDtoModesItem} from './timeControlLimitsDtoModesItem';
 
 export interface TimeControlLimitsDto {
-  modes: TimeControlLimitsDtoModesItem[];
-  moveSeconds: IntRangeDto;
+  baseSeconds: IntRangeDto;
+  incrementSeconds: IntRangeDto;
+  optional: boolean;
 }
