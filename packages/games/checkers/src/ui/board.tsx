@@ -154,7 +154,7 @@ function CheckersBoard({
   // Предложить ничью вместе со следующим ходом; сбрасывается, когда ход отправлен.
   const [offerDraw, setOfferDraw] = useState(false);
   const {state} = session;
-  const rules = session.meta.moveRules;
+  const rules = session.meta.advancedRules;
   const byId = new Map(players.map(player => [player.id, player]));
   const nameOf = (id: string): string =>
     byId.get(id)?.name ?? UNKNOWN_PLAYER_NAME;
@@ -391,7 +391,7 @@ function CheckersBoard({
 
 /**
  * Доска шашек. Правила знает сервер: варианты действий — из `moveOptions`
- * игрока, путь собирается по подсказкам из флагов `meta.moveRules` и
+ * игрока, путь собирается по подсказкам из флагов `meta.advancedRules` и
  * отправляется целиком (`{type: MOVE, data: {path, offerDraw?}}`); ничья
  * предлагается вместе с ходом и принимается ходом `ACCEPT_DRAW`.
  */

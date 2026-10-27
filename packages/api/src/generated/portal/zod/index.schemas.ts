@@ -29,6 +29,54 @@ export const ChangeRoleRequest = zod.object({
 export type ChangeRoleRequest = zod.input<typeof ChangeRoleRequest>;
 export type ChangeRoleRequestOutput = zod.output<typeof ChangeRoleRequest>;
 
+export const CheckersAdvancedRulesDto = zod.object({
+  boardSize: zod.int(),
+  captureRequired: zod.boolean(),
+  firstColor: zod.enum(['WHITE', 'BLACK']),
+  flyingKings: zod.boolean(),
+  maxCaptureRequired: zod.boolean(),
+  menCaptureBackward: zod.boolean(),
+  menMoveBackward: zod.boolean(),
+  promoteMidCapture: zod.boolean(),
+  removeCapturedAfterMove: zod.boolean(),
+});
+
+export type CheckersAdvancedRulesDto = zod.input<
+  typeof CheckersAdvancedRulesDto
+>;
+export type CheckersAdvancedRulesDtoOutput = zod.output<
+  typeof CheckersAdvancedRulesDto
+>;
+
+export const TimeControlDto = zod.object({
+  baseSeconds: zod.int(),
+  enabled: zod.boolean(),
+  incrementSeconds: zod.int(),
+});
+
+export type TimeControlDto = zod.input<typeof TimeControlDto>;
+export type TimeControlDtoOutput = zod.output<typeof TimeControlDto>;
+
+export const CheckersAdvancedSettingsDto = zod.object({
+  captureRequired: zod.boolean(),
+  flyingKings: zod.boolean(),
+  gameCode: zod.enum(['checkers']),
+  maxCaptureRequired: zod.boolean(),
+  menCaptureBackward: zod.boolean(),
+  menMoveBackward: zod.boolean(),
+  promoteMidCapture: zod.boolean(),
+  removeCapturedAfterMove: zod.boolean(),
+  timeControl: TimeControlDto,
+  variant: zod.enum(['RUSSIAN', 'INTERNATIONAL', 'ENGLISH']),
+});
+
+export type CheckersAdvancedSettingsDto = zod.input<
+  typeof CheckersAdvancedSettingsDto
+>;
+export type CheckersAdvancedSettingsDtoOutput = zod.output<
+  typeof CheckersAdvancedSettingsDto
+>;
+
 export const CheckersLastMoveDto = zod.object({
   captured: zod.array(zod.array(zod.int())),
   path: zod.array(zod.array(zod.int())),
@@ -45,23 +93,6 @@ export const CheckersMoveDataDto = zod.object({
 
 export type CheckersMoveDataDto = zod.input<typeof CheckersMoveDataDto>;
 export type CheckersMoveDataDtoOutput = zod.output<typeof CheckersMoveDataDto>;
-
-export const CheckersMoveRulesDto = zod.object({
-  boardSize: zod.int(),
-  captureRequired: zod.boolean(),
-  firstColor: zod.enum(['WHITE', 'BLACK']),
-  flyingKings: zod.boolean(),
-  maxCaptureRequired: zod.boolean(),
-  menCaptureBackward: zod.boolean(),
-  menMoveBackward: zod.boolean(),
-  promoteMidCapture: zod.boolean(),
-  removeCapturedAfterMove: zod.boolean(),
-});
-
-export type CheckersMoveRulesDto = zod.input<typeof CheckersMoveRulesDto>;
-export type CheckersMoveRulesDtoOutput = zod.output<
-  typeof CheckersMoveRulesDto
->;
 
 export const checkersPieceDtoSquareMin = 2;
 export const checkersPieceDtoSquareMax = 2;
@@ -154,18 +185,10 @@ export type CheckersSessionStateDtoOutput = zod.output<
   typeof CheckersSessionStateDto
 >;
 
-export const CheckersSettingsDto = zod.object({
-  gameCode: zod.enum(['checkers']),
-  variant: zod.enum(['RUSSIAN', 'INTERNATIONAL', 'ENGLISH']),
-});
-
-export type CheckersSettingsDto = zod.input<typeof CheckersSettingsDto>;
-export type CheckersSettingsDtoOutput = zod.output<typeof CheckersSettingsDto>;
-
 export const CheckersTimePresetDto = zod.object({
   baseSeconds: zod.int(),
   incrementSeconds: zod.int(),
-  preset: zod.enum(['CLASSIC', 'RAPID', 'BLITZ']),
+  time: zod.enum(['NONE', 'CLASSIC', 'RAPID', 'BLITZ']),
   variant: zod.enum(['RUSSIAN', 'INTERNATIONAL', 'ENGLISH']),
 });
 
@@ -187,43 +210,18 @@ export type CheckersSettingsLimitsDtoOutput = zod.output<
   typeof CheckersSettingsLimitsDto
 >;
 
-export const NothingSettingsDto = zod.object({
-  gameCode: zod.enum(['nothing']),
-  rounds: zod.int(),
+export const CheckersSimpleSettingsDto = zod.object({
+  gameCode: zod.enum(['checkers']),
+  time: zod.enum(['NONE', 'CLASSIC', 'RAPID', 'BLITZ']),
+  variant: zod.enum(['RUSSIAN', 'INTERNATIONAL', 'ENGLISH']),
 });
 
-export type NothingSettingsDto = zod.input<typeof NothingSettingsDto>;
-export type NothingSettingsDtoOutput = zod.output<typeof NothingSettingsDto>;
-
-export const GameSettingsDto = zod
-  .discriminatedUnion('gameCode', [NothingSettingsDto, CheckersSettingsDto])
-  .describe('Настройки конкретной игры, вид — по полю gameCode');
-
-export type GameSettingsDto = zod.input<typeof GameSettingsDto>;
-export type GameSettingsDtoOutput = zod.output<typeof GameSettingsDto>;
-
-export const TimeControlDto = zod.object({
-  baseSeconds: zod.int(),
-  incrementSeconds: zod.int(),
-});
-
-export type TimeControlDto = zod.input<typeof TimeControlDto>;
-export type TimeControlDtoOutput = zod.output<typeof TimeControlDto>;
-
-export const RoomSettingsDto = zod.object({
-  gameSettings: GameSettingsDto,
-  timeControl: zod.union([TimeControlDto, zod.null()]).optional(),
-});
-
-export type RoomSettingsDto = zod.input<typeof RoomSettingsDto>;
-export type RoomSettingsDtoOutput = zod.output<typeof RoomSettingsDto>;
-
-export const CreateRoomRequest = zod.object({
-  settings: RoomSettingsDto,
-});
-
-export type CreateRoomRequest = zod.input<typeof CreateRoomRequest>;
-export type CreateRoomRequestOutput = zod.output<typeof CreateRoomRequest>;
+export type CheckersSimpleSettingsDto = zod.input<
+  typeof CheckersSimpleSettingsDto
+>;
+export type CheckersSimpleSettingsDtoOutput = zod.output<
+  typeof CheckersSimpleSettingsDto
+>;
 
 export const PathSegmentId = zod.object({
   id: zod.string(),
@@ -261,6 +259,72 @@ export const EmptyEventDataDto = zod
 export type EmptyEventDataDto = zod.input<typeof EmptyEventDataDto>;
 export type EmptyEventDataDtoOutput = zod.output<typeof EmptyEventDataDto>;
 
+export const NothingAdvancedSettingsDto = zod.object({
+  gameCode: zod.enum(['nothing']),
+  rounds: zod.int(),
+  timeControl: TimeControlDto,
+});
+
+export type NothingAdvancedSettingsDto = zod.input<
+  typeof NothingAdvancedSettingsDto
+>;
+export type NothingAdvancedSettingsDtoOutput = zod.output<
+  typeof NothingAdvancedSettingsDto
+>;
+
+export const GameAdvancedSettingsDto = zod
+  .discriminatedUnion('gameCode', [
+    NothingAdvancedSettingsDto,
+    CheckersAdvancedSettingsDto,
+  ])
+  .describe('Advanced-настройки конкретной игры, вид — по полю gameCode');
+
+export type GameAdvancedSettingsDto = zod.input<typeof GameAdvancedSettingsDto>;
+export type GameAdvancedSettingsDtoOutput = zod.output<
+  typeof GameAdvancedSettingsDto
+>;
+
+export const RoomOptionsDto = zod.object({
+  maxSpectators: zod.int(),
+});
+
+export type RoomOptionsDto = zod.input<typeof RoomOptionsDto>;
+export type RoomOptionsDtoOutput = zod.output<typeof RoomOptionsDto>;
+
+export const NothingSimpleSettingsDto = zod.object({
+  gameCode: zod.enum(['nothing']),
+  rounds: zod.int(),
+  time: zod.enum(['NONE', 'CLASSIC']),
+});
+
+export type NothingSimpleSettingsDto = zod.input<
+  typeof NothingSimpleSettingsDto
+>;
+export type NothingSimpleSettingsDtoOutput = zod.output<
+  typeof NothingSimpleSettingsDto
+>;
+
+export const GameSimpleSettingsDto = zod
+  .discriminatedUnion('gameCode', [
+    NothingSimpleSettingsDto,
+    CheckersSimpleSettingsDto,
+  ])
+  .describe('Simple-настройки конкретной игры, вид — по полю gameCode');
+
+export type GameSimpleSettingsDto = zod.input<typeof GameSimpleSettingsDto>;
+export type GameSimpleSettingsDtoOutput = zod.output<
+  typeof GameSimpleSettingsDto
+>;
+
+export const RoomSettingsDto = zod.object({
+  advanced: GameAdvancedSettingsDto,
+  room: RoomOptionsDto,
+  simple: zod.union([GameSimpleSettingsDto, zod.null()]).optional(),
+});
+
+export type RoomSettingsDto = zod.input<typeof RoomSettingsDto>;
+export type RoomSettingsDtoOutput = zod.output<typeof RoomSettingsDto>;
+
 export const IntRangeDto = zod.object({
   max: zod.int(),
   min: zod.int(),
@@ -269,9 +333,21 @@ export const IntRangeDto = zod.object({
 export type IntRangeDto = zod.input<typeof IntRangeDto>;
 export type IntRangeDtoOutput = zod.output<typeof IntRangeDto>;
 
+export const NothingTimePresetDto = zod.object({
+  baseSeconds: zod.int(),
+  incrementSeconds: zod.int(),
+  time: zod.enum(['NONE', 'CLASSIC']),
+});
+
+export type NothingTimePresetDto = zod.input<typeof NothingTimePresetDto>;
+export type NothingTimePresetDtoOutput = zod.output<
+  typeof NothingTimePresetDto
+>;
+
 export const NothingSettingsLimitsDto = zod.object({
   gameCode: zod.enum(['nothing']),
   rounds: IntRangeDto,
+  timePresets: zod.array(NothingTimePresetDto),
 });
 
 export type NothingSettingsLimitsDto = zod.input<
@@ -309,6 +385,7 @@ export const GameRulesDto = zod.object({
   gameSettingsLimits: GameSettingsLimitsDto,
   maxPlayers: zod.int(),
   minPlayers: zod.int(),
+  spectators: IntRangeDto,
   timeControl: TimeControlLimitsDto,
 });
 
@@ -624,6 +701,15 @@ export const RoomStreamEvent = zod
 export type RoomStreamEvent = zod.input<typeof RoomStreamEvent>;
 export type RoomStreamEventOutput = zod.output<typeof RoomStreamEvent>;
 
+export const SessionAdvancedRulesDto = CheckersAdvancedRulesDto.describe(
+  'Итоговые правила конкретной игры для подсказок ввода (игра — meta.game.code); ход окончательно проверяет сервер',
+);
+
+export type SessionAdvancedRulesDto = zod.input<typeof SessionAdvancedRulesDto>;
+export type SessionAdvancedRulesDtoOutput = zod.output<
+  typeof SessionAdvancedRulesDto
+>;
+
 export const SessionEventDelete = zod
   .object({
     at: zod.iso.datetime({offset: true}),
@@ -702,22 +788,15 @@ export type SessionEventPutOutput = zod.output<typeof SessionEventPut>;
 
 export const SessionGameDto = zod.object({
   code: zod.enum(['nothing', 'carcassonne', 'checkers']),
-  rules: RoomSettingsDto,
+  settings: GameAdvancedSettingsDto,
 });
 
 export type SessionGameDto = zod.input<typeof SessionGameDto>;
 export type SessionGameDtoOutput = zod.output<typeof SessionGameDto>;
 
-export const SessionMoveRulesDto = CheckersMoveRulesDto.describe(
-  'Правила хода конкретной игры для подсказок ввода (игра — meta.game.code); ход окончательно проверяет сервер',
-);
-
-export type SessionMoveRulesDto = zod.input<typeof SessionMoveRulesDto>;
-export type SessionMoveRulesDtoOutput = zod.output<typeof SessionMoveRulesDto>;
-
 export const SessionMetaDto = zod.object({
+  advancedRules: zod.union([SessionAdvancedRulesDto, zod.null()]).optional(),
   game: SessionGameDto,
-  moveRules: zod.union([SessionMoveRulesDto, zod.null()]).optional(),
 });
 
 export type SessionMetaDto = zod.input<typeof SessionMetaDto>;
@@ -841,6 +920,19 @@ export const UpdateProfileRequest = zod.object({
 export type UpdateProfileRequest = zod.input<typeof UpdateProfileRequest>;
 export type UpdateProfileRequestOutput = zod.output<
   typeof UpdateProfileRequest
+>;
+
+export const UpdateRoomSettingsRequest = zod.object({
+  advanced: zod.union([GameAdvancedSettingsDto, zod.null()]).optional(),
+  room: zod.union([RoomOptionsDto, zod.null()]).optional(),
+  simple: zod.union([GameSimpleSettingsDto, zod.null()]).optional(),
+});
+
+export type UpdateRoomSettingsRequest = zod.input<
+  typeof UpdateRoomSettingsRequest
+>;
+export type UpdateRoomSettingsRequestOutput = zod.output<
+  typeof UpdateRoomSettingsRequest
 >;
 
 export const UserResponse = zod.object({

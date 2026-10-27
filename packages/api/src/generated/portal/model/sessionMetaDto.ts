@@ -4,10 +4,10 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
+import type {SessionAdvancedRulesDto} from './sessionAdvancedRulesDto';
 import type {SessionGameDto} from './sessionGameDto';
-import type {SessionMoveRulesDto} from './sessionMoveRulesDto';
 
 export interface SessionMetaDto {
+  advancedRules?: SessionAdvancedRulesDto | null;
   game: SessionGameDto;
-  moveRules?: SessionMoveRulesDto | null;
 }

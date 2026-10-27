@@ -110,8 +110,7 @@ export function activeTimer(session: SessionData): ActiveTimer | null {
     deadline: timer.deadline ?? null,
     pausedAt: timer.pausedAt ?? null,
     clocks: timer.clocks,
-    incrementSeconds:
-      session.meta.game.rules.timeControl?.incrementSeconds ?? 0,
+    incrementSeconds: session.meta.game.settings.timeControl.incrementSeconds,
   };
 }
 

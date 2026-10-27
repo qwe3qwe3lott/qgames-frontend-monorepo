@@ -1,8 +1,8 @@
 import {
-  CheckersMoveRulesDto,
+  CheckersAdvancedRulesDto,
   CheckersPlayerDto,
   CheckersSessionStateDto,
-  type CheckersMoveRulesDtoOutput,
+  type CheckersAdvancedRulesDtoOutput,
   type CheckersSessionStateDtoOutput,
 } from '@qgames/api/portal/zod';
 import {
@@ -31,13 +31,13 @@ export const RESIGN = 'RESIGN';
 /** Состояние партии шашек для зрителя: блоки core и поля игры. */
 export type CheckersState = CheckersSessionStateDtoOutput;
 
-/** Правила хода партии (`meta.moveRules`): флаги для подсказок ввода пути. */
-export type CheckersMoveRules = CheckersMoveRulesDtoOutput;
+/** Итоговые правила партии (`meta.advancedRules`): флаги для подсказок ввода пути. */
+export type CheckersAdvancedRules = CheckersAdvancedRulesDtoOutput;
 
-export type CheckersColor = CheckersMoveRules['firstColor'];
+export type CheckersColor = CheckersAdvancedRules['firstColor'];
 
 export interface CheckersSession extends SessionData {
-  meta: SessionMeta & {moveRules: CheckersMoveRules};
+  meta: SessionMeta & {advancedRules: CheckersAdvancedRules};
   state: CheckersState;
 }
 
@@ -75,14 +75,14 @@ export const checkersRules: GameStateRules = {isGameState: isCheckersFields};
 /**
  * Партия шашек: игра определяется по `meta.game.code`, состояние сверяется
  * теми же guard'ами core и игры, что поток партии в портале, правила хода
- * `meta.moveRules` — схемой `CheckersMoveRulesDto`.
+ * `meta.advancedRules` — схемой `CheckersAdvancedRulesDto`.
  */
 export function isCheckersSession(
   session: SessionData,
 ): session is CheckersSession {
   return (
     session.meta.game.code === CHECKERS_CODE &&
-    CheckersMoveRulesDto.safeParse(session.meta.moveRules).success &&
+    CheckersAdvancedRulesDto.safeParse(session.meta.advancedRules).success &&
     checkSessionState(session.state, checkersRules)
   );
 }

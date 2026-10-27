@@ -4,22 +4,27 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
-import {useQuery} from '@tanstack/react-query';
+import {useMutation, useQuery} from '@tanstack/react-query';
 import type {
   DataTag,
   DefinedInitialDataOptions,
   DefinedUseQueryResult,
+  MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
   UndefinedInitialDataOptions,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult,
 } from '@tanstack/react-query';
 
 import type {
+  GameAdvancedSettingsDto,
   GameDetailsResponse,
   GameListResponse,
+  GameSimpleSettingsDto,
   ProblemDetail,
 } from '../../model';
 
@@ -185,7 +190,7 @@ export const getGetGameUrl = (
 };
 
 /**
- * Название, описание и статус публикации игры, а также параметры правил (rules): число игроков, режимы времени и границы времени на ход, границы настроек игры и настройки по умолчанию. По ним строятся карточка игры и форма создания комнаты и смены настроек. Скрытая игра доступна по прямой ссылке. Доступна без аутентификации.
+ * Название, описание и статус публикации игры, а также параметры правил (rules): число игроков, границы лимита наблюдателей, границы часов, границы настроек игры и пресеты времени, настройки по умолчанию. По ним строятся карточка игры и форма настроек комнаты. Скрытая игра доступна по прямой ссылке. Доступна без аутентификации.
  * @summary Игра
  */
 export const getGame = async (
@@ -324,3 +329,130 @@ export function useGetGame<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export const getToAdvancedSettingsUrl = (
+  gameCode: 'nothing' | 'carcassonne' | 'checkers',
+) => {
+  return `/api/games/${gameCode}/advanced-settings`;
+};
+
+/**
+ * Выводит advanced-настройки игры из simple-настроек: правила варианта и часы пресета (у пресета без таймера часы выключены, но заполнены). Ничего не сохраняет. Нужна форме настроек: при включении продвинутых правил она заполняет advanced-поля ответом. Ошибки отдаются по полям тела (например, variant), как у валидации запроса; gameCode тела должен совпадать с кодом игры в пути.
+ * @summary Перевести simple-настройки в advanced
+ */
+export const toAdvancedSettings = async (
+  gameCode: 'nothing' | 'carcassonne' | 'checkers',
+  gameSimpleSettingsDto: GameSimpleSettingsDto,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<GameAdvancedSettingsDto> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit['headers']>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          entry => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<
+      string | readonly string[] | undefined
+    >(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<GameAdvancedSettingsDto>(getToAdvancedSettingsUrl(gameCode), {
+    ...options,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getHeaders(options?.headers),
+    },
+    body: JSON.stringify(gameSimpleSettingsDto),
+  });
+};
+
+export const getToAdvancedSettingsMutationKey = () =>
+  ['toAdvancedSettings'] as const;
+
+export const getToAdvancedSettingsMutationOptions = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof toAdvancedSettings>>,
+    TError,
+    ToAdvancedSettingsMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof toAdvancedSettings>>,
+  TError,
+  ToAdvancedSettingsMutationVariables,
+  TContext
+> => {
+  const mutationKey = getToAdvancedSettingsMutationKey();
+  const {mutation: mutationOptions, request: requestOptions} = options
+    ? options.mutation &&
+      'mutationKey' in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+    : {mutation: {mutationKey}, request: undefined};
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof toAdvancedSettings>>,
+    ToAdvancedSettingsMutationVariables
+  > = props => {
+    const {gameCode, data} = props ?? {};
+
+    return toAdvancedSettings(gameCode, data, requestOptions);
+  };
+
+  return {mutationFn, ...mutationOptions};
+};
+
+export type ToAdvancedSettingsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof toAdvancedSettings>>
+>;
+export type ToAdvancedSettingsMutationBody = GameSimpleSettingsDto;
+export type ToAdvancedSettingsMutationError = ErrorType<ProblemDetail>;
+export type ToAdvancedSettingsMutationVariables = {
+  gameCode: 'nothing' | 'carcassonne' | 'checkers';
+  data: GameSimpleSettingsDto;
+};
+
+/**
+ * @summary Перевести simple-настройки в advanced
+ */
+export const useToAdvancedSettings = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof toAdvancedSettings>>,
+      TError,
+      ToAdvancedSettingsMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof toAdvancedSettings>>,
+  TError,
+  ToAdvancedSettingsMutationVariables,
+  TContext
+> => {
+  return useMutation(
+    getToAdvancedSettingsMutationOptions(options),
+    queryClient,
+  );
+};

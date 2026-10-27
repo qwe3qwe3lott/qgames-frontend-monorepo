@@ -5,6 +5,7 @@
  * OpenAPI spec version: v0
  */
 import type {GameSettingsLimitsDto} from './gameSettingsLimitsDto';
+import type {IntRangeDto} from './intRangeDto';
 import type {RoomSettingsDto} from './roomSettingsDto';
 import type {TimeControlLimitsDto} from './timeControlLimitsDto';
 
@@ -13,5 +14,6 @@ export interface GameRulesDto {
   gameSettingsLimits: GameSettingsLimitsDto;
   maxPlayers: number;
   minPlayers: number;
+  spectators: IntRangeDto;
   timeControl: TimeControlLimitsDto;
 }

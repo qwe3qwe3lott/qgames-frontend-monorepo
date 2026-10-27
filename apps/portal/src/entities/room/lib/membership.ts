@@ -8,6 +8,16 @@ export interface Membership {
   inGame: boolean;
   playersCount: number;
   hasFreeSeat: boolean;
+  /** Наблюдателей сейчас; после понижения лимита их может быть больше него. */
+  spectatorsCount: number;
+  /** Лимит наблюдателей комнаты. */
+  maxSpectators: number;
+  hasSpectatorSeat: boolean;
+  /**
+   * Новичку найдётся место: игрока (партия не идёт и есть место) или
+   * наблюдателя. Как решает сервер при входе в комнату.
+   */
+  canJoin: boolean;
   /** Хватает ли игроков, чтобы владелец начал партию. */
   enoughPlayers: boolean;
 }
@@ -16,13 +26,24 @@ export interface Membership {
 export function membership(room: RoomView, userId: string): Membership {
   const member = room.members.find(m => m.userId === userId) ?? null;
   const playersCount = room.members.filter(m => m.role === 'PLAYER').length;
+  const spectatorsCount = room.members.filter(
+    m => m.role === 'SPECTATOR',
+  ).length;
+  const {maxSpectators} = room.settings.room;
+  const inGame = room.status === 'IN_GAME';
+  const hasFreeSeat = playersCount < room.maxPlayers;
+  const hasSpectatorSeat = spectatorsCount < maxSpectators;
   return {
     member,
     isOwner: member?.owner ?? false,
     isPlayer: member?.role === 'PLAYER',
-    inGame: room.status === 'IN_GAME',
+    inGame,
     playersCount,
-    hasFreeSeat: playersCount < room.maxPlayers,
+    hasFreeSeat,
+    spectatorsCount,
+    maxSpectators,
+    hasSpectatorSeat,
+    canJoin: (!inGame && hasFreeSeat) || hasSpectatorSeat,
     enoughPlayers:
       playersCount >= room.minPlayers && playersCount <= room.maxPlayers,
   };

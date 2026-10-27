@@ -4,10 +4,10 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
-import type {RoomSettingsDto} from './roomSettingsDto';
+import type {GameAdvancedSettingsDto} from './gameAdvancedSettingsDto';
 import type {SessionGameDtoCode} from './sessionGameDtoCode';
 
 export interface SessionGameDto {
   code: SessionGameDtoCode;
-  rules: RoomSettingsDto;
+  settings: GameAdvancedSettingsDto;
 }

@@ -93,7 +93,7 @@ export function RoomPanel({
       />
       <PlayerList
         players={spectators.map(m => toListItem(m, viewerId, room, membership))}
-        title="Наблюдатели"
+        title={`Наблюдатели (${String(membership.spectatorsCount)}/${String(membership.maxSpectators)})`}
         action={
           <ChangeRoleButton
             room={room}

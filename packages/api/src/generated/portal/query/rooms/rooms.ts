@@ -22,12 +22,11 @@ import type {
 
 import type {
   ChangeRoleRequest,
-  CreateRoomRequest,
   MoveRequest,
   ProblemDetail,
   RoomResponse,
-  RoomSettingsDto,
   TransferOwnershipRequest,
+  UpdateRoomSettingsRequest,
 } from '../../model';
 
 import {apiFetch} from '../../../../mutator';
@@ -60,43 +59,16 @@ export const getCreateRoomUrl = (
 };
 
 /**
- * Создаёт комнату под игру из пути с заданными настройками: правила времени и настройки игры. Ссылку на комнату (её id) можно отправить другим игрокам. В ответе комната ещё пустая (members пустой, ownerId = null): владельцем становится первый подключившийся к потоку событий комнаты — обычно сам создатель, он входит игроком. Игра должна быть доступна (опубликована или скрыта из каталога): это проверяется до настроек. Границы настроек и значения по умолчанию — в параметрах игры (GET /api/games/{gameCode}). Ошибки настроек отдаются по полям тела (например, settings.gameSettings.rounds), как у валидации запроса.
+ * Создаёт комнату под игру из пути с настройками игры по умолчанию (rules.defaultSettings в GET /api/games/{gameCode}); владелец меняет их потом ручкой настроек. Тела у запроса нет. Ссылку на комнату (её id) можно отправить другим игрокам. В ответе комната ещё пустая (members пустой, ownerId = null): владельцем становится первый подключившийся к потоку событий комнаты — обычно сам создатель, он входит игроком. Игра должна быть доступна (опубликована или скрыта из каталога).
  * @summary Создать комнату
  */
 export const createRoom = async (
   gameCode: 'nothing' | 'carcassonne' | 'checkers',
-  createRoomRequest: CreateRoomRequest,
   options?: Parameters<typeof apiFetch>[1],
 ): Promise<RoomResponse> => {
-  const getHeaders = (
-    h?: NonNullable<RequestInit['headers']>,
-  ): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(
-          h as Iterable<Iterable<string>>,
-          entry => Array.from(entry) as [string, string],
-        ),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<
-      string | readonly string[] | undefined
-    >(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
   return apiFetch<RoomResponse>(getCreateRoomUrl(gameCode), {
     ...options,
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...getHeaders(options?.headers),
-    },
-    body: JSON.stringify(createRoomRequest),
   });
 };
 
@@ -132,9 +104,9 @@ export const getCreateRoomMutationOptions = <
     Awaited<ReturnType<typeof createRoom>>,
     CreateRoomMutationVariables
   > = props => {
-    const {gameCode, data} = props ?? {};
+    const {gameCode} = props ?? {};
 
-    return createRoom(gameCode, data, requestOptions);
+    return createRoom(gameCode, requestOptions);
   };
 
   return {mutationFn, ...mutationOptions};
@@ -143,11 +115,10 @@ export const getCreateRoomMutationOptions = <
 export type CreateRoomMutationResult = NonNullable<
   Awaited<ReturnType<typeof createRoom>>
 >;
-export type CreateRoomMutationBody = CreateRoomRequest;
+
 export type CreateRoomMutationError = ErrorType<ProblemDetail>;
 export type CreateRoomMutationVariables = {
   gameCode: 'nothing' | 'carcassonne' | 'checkers';
-  data: CreateRoomRequest;
 };
 
 /**
@@ -308,13 +279,13 @@ export const getUpdateRoomSettingsUrl = (
 };
 
 /**
- * Заменяет настройки комнаты целиком. Только владелец и только между партиями; следующая партия стартует с новыми настройками. Код игры в пути должен совпадать с игрой комнаты. Ошибки настроек отдаются по полям тела (например, gameSettings.rounds).
+ * Только владелец. Заменяет переданные группы настроек целиком, непереданные (null) не меняет; нужна хотя бы одна группа. room (лимит наблюдателей) меняется в любой момент: понижение лимита вошедших наблюдателей не выводит. simple и advanced взаимоисключающие и меняются только между партиями: simple переводит комнату в simple-режим (advanced выводится из simple), advanced — в advanced-режим. Идущую партию настройки не меняют — у неё свой снимок advanced. Код игры в пути должен совпадать с игрой комнаты. Ошибки настроек отдаются по полям тела (например, room.maxSpectators, simple.rounds, advanced.timeControl.baseSeconds).
  * @summary Изменить настройки комнаты
  */
 export const updateRoomSettings = async (
   gameCode: 'nothing' | 'carcassonne' | 'checkers',
   roomId: string,
-  roomSettingsDto: RoomSettingsDto,
+  updateRoomSettingsRequest: UpdateRoomSettingsRequest,
   options?: Parameters<typeof apiFetch>[1],
 ): Promise<RoomResponse> => {
   const getHeaders = (
@@ -345,7 +316,7 @@ export const updateRoomSettings = async (
       'Content-Type': 'application/json',
       ...getHeaders(options?.headers),
     },
-    body: JSON.stringify(roomSettingsDto),
+    body: JSON.stringify(updateRoomSettingsRequest),
   });
 };
 
@@ -393,12 +364,12 @@ export const getUpdateRoomSettingsMutationOptions = <
 export type UpdateRoomSettingsMutationResult = NonNullable<
   Awaited<ReturnType<typeof updateRoomSettings>>
 >;
-export type UpdateRoomSettingsMutationBody = RoomSettingsDto;
+export type UpdateRoomSettingsMutationBody = UpdateRoomSettingsRequest;
 export type UpdateRoomSettingsMutationError = ErrorType<ProblemDetail>;
 export type UpdateRoomSettingsMutationVariables = {
   gameCode: 'nothing' | 'carcassonne' | 'checkers';
   roomId: string;
-  data: RoomSettingsDto;
+  data: UpdateRoomSettingsRequest;
 };
 
 /**
@@ -698,7 +669,7 @@ export const getChangeRoleUrl = (roomId: string) => {
 };
 
 /**
- * Стать игроком или наблюдателем. Только между партиями; игроком — если есть свободное место. Владелец тоже может стать наблюдателем, владение при этом сохраняется.
+ * Стать игроком или наблюдателем. Только между партиями; игроком — если есть свободное место, наблюдателем — если наблюдателей меньше лимита комнаты (settings.room.maxSpectators). Владелец тоже может стать наблюдателем, владение при этом сохраняется.
  * @summary Сменить роль
  */
 export const changeRole = async (

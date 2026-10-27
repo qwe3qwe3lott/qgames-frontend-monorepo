@@ -4,12 +4,12 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
-import type {CheckersMoveRulesDtoFirstColor} from './checkersMoveRulesDtoFirstColor';
+import type {CheckersAdvancedRulesDtoFirstColor} from './checkersAdvancedRulesDtoFirstColor';
 
-export interface CheckersMoveRulesDto {
+export interface CheckersAdvancedRulesDto {
   boardSize: number;
   captureRequired: boolean;
-  firstColor: CheckersMoveRulesDtoFirstColor;
+  firstColor: CheckersAdvancedRulesDtoFirstColor;
   flyingKings: boolean;
   maxCaptureRequired: boolean;
   menCaptureBackward: boolean;

@@ -27,6 +27,9 @@ function blockReason(membership: Membership, role: RoomRole): string | null {
   if (role === 'PLAYER' && !membership.hasFreeSeat) {
     return 'Свободных мест игрока нет';
   }
+  if (role === 'SPECTATOR' && !membership.hasSpectatorSeat) {
+    return 'Свободных мест наблюдателя нет';
+  }
   return null;
 }
 

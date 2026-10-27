@@ -3,7 +3,7 @@ import {useGetGame} from '@qgames/api/portal';
 import {PageLayout} from '@qgames/ui/components/page-layout';
 
 import {playersLabel, type GameEntry} from '@/entities/game';
-import {CreateRoomDialog} from '@/features/create-room';
+import {CreateRoomButton} from '@/features/create-room';
 
 export interface GameRoomsPageProps {
   game: GameEntry;
@@ -36,7 +36,7 @@ export function GameRoomsPage({game}: GameRoomsPageProps) {
     <PageLayout
       title={data.title}
       description={data.description}
-      actions={<CreateRoomDialog game={game} details={data} />}
+      actions={<CreateRoomButton game={game} />}
     >
       <p className="text-sm">
         {playersLabel(rules.minPlayers, rules.maxPlayers)}

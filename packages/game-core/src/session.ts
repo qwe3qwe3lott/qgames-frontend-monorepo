@@ -18,12 +18,12 @@ export type SessionLogEvent = SessionPatchEventOutput;
 export type SessionStatus = SessionSnapshotDtoOutput['status'];
 
 /**
- * Описание партии, закреплённое при старте: код игры и правила. `moveRules` —
- * правила хода конкретной игры (у игры без них — null): общая проверка
+ * Описание партии, закреплённое при старте: код игры и advanced-настройки. `advancedRules` —
+ * итоговые правила конкретной игры (у игры без них — null): общая проверка
  * документа их не разбирает, форму проверяет guard игры по `meta.game.code`.
  */
-export type SessionMeta = Omit<SessionMetaDtoOutput, 'moveRules'> & {
-  moveRules?: unknown;
+export type SessionMeta = Omit<SessionMetaDtoOutput, 'advancedRules'> & {
+  advancedRules?: unknown;
 };
 
 /**

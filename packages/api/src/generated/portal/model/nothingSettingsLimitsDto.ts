@@ -6,8 +6,10 @@
  */
 import type {IntRangeDto} from './intRangeDto';
 import type {NothingSettingsLimitsDtoGameCode} from './nothingSettingsLimitsDtoGameCode';
+import type {NothingTimePresetDto} from './nothingTimePresetDto';
 
 export interface NothingSettingsLimitsDto {
   gameCode: NothingSettingsLimitsDtoGameCode;
   rounds: IntRangeDto;
+  timePresets: NothingTimePresetDto[];
 }

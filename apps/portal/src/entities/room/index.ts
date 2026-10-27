@@ -15,9 +15,10 @@ export {
   type SettingsRow,
 } from './lib/settings-labels';
 export {
+  defaultSimple,
   ROOM_SETTINGS_FIELDS,
   roomSettingsSchema,
-  toRoomSettings,
+  toRoomSettingsRequest,
   toRoomSettingsValues,
   type RoomSettingsValues,
 } from './model/settings';

@@ -5,10 +5,10 @@
  * OpenAPI spec version: v0
  */
 
-export type CheckersSettingsDtoVariant =
-  (typeof CheckersSettingsDtoVariant)[keyof typeof CheckersSettingsDtoVariant];
+export type CheckersSimpleSettingsDtoVariant =
+  (typeof CheckersSimpleSettingsDtoVariant)[keyof typeof CheckersSimpleSettingsDtoVariant];
 
-export const CheckersSettingsDtoVariant = {
+export const CheckersSimpleSettingsDtoVariant = {
   RUSSIAN: 'RUSSIAN',
   INTERNATIONAL: 'INTERNATIONAL',
   ENGLISH: 'ENGLISH',

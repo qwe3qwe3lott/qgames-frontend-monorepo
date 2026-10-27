@@ -5,10 +5,11 @@
  * OpenAPI spec version: v0
  */
 
-export type CheckersTimePresetDtoPreset =
-  (typeof CheckersTimePresetDtoPreset)[keyof typeof CheckersTimePresetDtoPreset];
+export type CheckersTimePresetDtoTime =
+  (typeof CheckersTimePresetDtoTime)[keyof typeof CheckersTimePresetDtoTime];
 
-export const CheckersTimePresetDtoPreset = {
+export const CheckersTimePresetDtoTime = {
+  NONE: 'NONE',
   CLASSIC: 'CLASSIC',
   RAPID: 'RAPID',
   BLITZ: 'BLITZ',

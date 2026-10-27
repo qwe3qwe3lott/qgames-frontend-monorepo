@@ -7,5 +7,6 @@
 
 export interface TimeControlDto {
   baseSeconds: number;
+  enabled: boolean;
   incrementSeconds: number;
 }

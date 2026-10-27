@@ -32,7 +32,7 @@ export function settingsFromStream(
 ): RoomSettingsDto {
   return {
     ...settings,
-    timeControl: settings.timeControl ?? null,
+    simple: settings.simple ?? null,
   };
 }
 

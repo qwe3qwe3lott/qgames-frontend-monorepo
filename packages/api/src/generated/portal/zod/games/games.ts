@@ -6,7 +6,12 @@
  */
 import * as zod from 'zod';
 
-import {GameDetailsResponse, GameListResponse} from '../index.schemas';
+import {
+  GameAdvancedSettingsDto,
+  GameDetailsResponse,
+  GameListResponse,
+  GameSimpleSettingsDto,
+} from '../index.schemas';
 
 /**
  * Игры в порядке показа: код, название и описание. Скрытые и неопубликованные игры в список не попадают. Доступна без аутентификации.
@@ -15,7 +20,7 @@ import {GameDetailsResponse, GameListResponse} from '../index.schemas';
 export const ListGamesResponse = GameListResponse;
 
 /**
- * Название, описание и статус публикации игры, а также параметры правил (rules): число игроков, режимы времени и границы времени на ход, границы настроек игры и настройки по умолчанию. По ним строятся карточка игры и форма создания комнаты и смены настроек. Скрытая игра доступна по прямой ссылке. Доступна без аутентификации.
+ * Название, описание и статус публикации игры, а также параметры правил (rules): число игроков, границы лимита наблюдателей, границы часов, границы настроек игры и пресеты времени, настройки по умолчанию. По ним строятся карточка игры и форма настроек комнаты. Скрытая игра доступна по прямой ссылке. Доступна без аутентификации.
  * @summary Игра
  */
 export const GetGameParams = zod.object({
@@ -25,3 +30,17 @@ export const GetGameParams = zod.object({
 });
 
 export const GetGameResponse = GameDetailsResponse;
+
+/**
+ * Выводит advanced-настройки игры из simple-настроек: правила варианта и часы пресета (у пресета без таймера часы выключены, но заполнены). Ничего не сохраняет. Нужна форме настроек: при включении продвинутых правил она заполняет advanced-поля ответом. Ошибки отдаются по полям тела (например, variant), как у валидации запроса; gameCode тела должен совпадать с кодом игры в пути.
+ * @summary Перевести simple-настройки в advanced
+ */
+export const ToAdvancedSettingsParams = zod.object({
+  gameCode: zod
+    .enum(['nothing', 'carcassonne', 'checkers'])
+    .describe('Код игры'),
+});
+
+export const ToAdvancedSettingsBody = GameSimpleSettingsDto;
+
+export const ToAdvancedSettingsResponse = GameAdvancedSettingsDto;

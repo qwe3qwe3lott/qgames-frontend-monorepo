@@ -1,1 +1,1 @@
-export {CreateRoomDialog} from './ui/create-room-dialog';
+export {CreateRoomButton} from './ui/create-room-button';

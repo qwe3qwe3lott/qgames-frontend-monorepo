@@ -4,10 +4,12 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
-import type {GameSettingsDto} from './gameSettingsDto';
-import type {TimeControlDto} from './timeControlDto';
+import type {GameAdvancedSettingsDto} from './gameAdvancedSettingsDto';
+import type {GameSimpleSettingsDto} from './gameSimpleSettingsDto';
+import type {RoomOptionsDto} from './roomOptionsDto';
 
 export interface RoomSettingsDto {
-  gameSettings: GameSettingsDto;
-  timeControl?: TimeControlDto | null;
+  advanced: GameAdvancedSettingsDto;
+  room: RoomOptionsDto;
+  simple?: GameSimpleSettingsDto | null;
 }

@@ -1,6 +1,7 @@
 import {isApiError} from '@qgames/api';
 import {useGetGame, useGetRoom} from '@qgames/api/portal';
 import {PageLayout} from '@qgames/ui/components/page-layout';
+import {useState} from 'react';
 
 import type {GameEntry} from '@/entities/game';
 import {membership, roomErrorMessage, toRoomView} from '@/entities/room';
@@ -27,8 +28,11 @@ export function RoomPage({game, roomId, viewerId}: RoomPageProps) {
   const {data, error, isPending} = useGetRoom(roomId);
   // Название игры приходит с бэкенда; маршрут комнаты загружает его заранее.
   const title = useGetGame(game.code).data?.title ?? FALLBACK_TITLE;
+  // Сервер не впустил: мест нет (NO_SPECTATOR_SEAT). Отказ окончательный —
+  // поток больше не открывается, войти можно перезагрузкой страницы.
+  const [refused, setRefused] = useState(false);
   // Пока страница открыта и комната доступна, пользователь в ней.
-  const presence = useRoomPresence(roomId, !isFinalError(error));
+  const presence = useRoomPresence(roomId, !isFinalError(error) && !refused);
 
   if (isPending) {
     return (
@@ -48,6 +52,22 @@ export function RoomPage({game, roomId, viewerId}: RoomPageProps) {
   }
   const room = toRoomView(data);
   const viewerMembership = membership(room, viewerId);
+  // EventSource не видит кода ответа: отказ во входе узнаётся по перечитанной
+  // комнате — пользователь не вошёл, а места для него нет.
+  const full = viewerMembership.member === null && !viewerMembership.canJoin;
+  if (!refused && full && presence.status === 'reconnecting') {
+    setRefused(true);
+  }
+  if (refused) {
+    return (
+      <PageLayout title={title}>
+        <p className="text-destructive" role="alert">
+          В комнате нет свободных мест: игроки и наблюдатели заняли все места.
+          Обновите страницу, чтобы попробовать войти снова.
+        </p>
+      </PageLayout>
+    );
+  }
 
   return (
     <PageLayout

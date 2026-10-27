@@ -1,6 +1,10 @@
 import {zodResolver} from '@hookform/resolvers/zod';
 import {applyFieldErrors} from '@qgames/api';
-import {useGetGame, useUpdateRoomSettings} from '@qgames/api/portal';
+import {
+  useGetGame,
+  useToAdvancedSettings,
+  useUpdateRoomSettings,
+} from '@qgames/api/portal';
 import type {GameRulesDto} from '@qgames/api/portal/model';
 import {Button} from '@qgames/ui/components/button';
 import {
@@ -20,20 +24,20 @@ import {useMemo, useState} from 'react';
 import {useForm} from 'react-hook-form';
 
 import {
+  defaultSimple,
   ROOM_SETTINGS_FIELDS,
   roomErrorMessage,
   RoomSettingsFields,
   roomSettingsSchema,
   setRoomCache,
-  toRoomSettings,
+  toRoomSettingsRequest,
   toRoomSettingsValues,
   type Membership,
   type RoomSettingsValues,
   type RoomView,
 } from '@/entities/room';
-import {WithHint} from '@/shared/ui';
 
-const IN_GAME_HINT = 'Настройки меняются только между партиями';
+const IN_GAME_HINT = 'Правила игры меняются только между партиями';
 
 export interface RoomSettingsDialogProps {
   room: RoomView;
@@ -69,6 +73,40 @@ function SettingsForm({room, inGame, rules, onSaved}: SettingsFormProps) {
       },
     },
   });
+  // Включение продвинутых правил: сервер выводит advanced из текущих simple.
+  const toAdvanced = useToAdvancedSettings({
+    mutation: {
+      onSuccess: advanced => {
+        form.setValue('advanced', advanced, {shouldDirty: true});
+      },
+      // Simple-поля проверены формой до запроса: ошибка тут — общая.
+      onError: error => {
+        form.setError('root', {message: roomErrorMessage(error)});
+      },
+    },
+  });
+
+  const onAdvancedChange = (enabled: boolean) => {
+    form.clearErrors('root');
+    if (!enabled) {
+      // Выключение: правила снова задаются simple (прежние или по умолчанию).
+      form.setValue(
+        'simple',
+        form.getValues('simple') ?? defaultSimple(rules),
+        {
+          shouldDirty: true,
+        },
+      );
+      form.setValue('advanced', null, {shouldDirty: true});
+      return;
+    }
+    void form.trigger('simple').then(valid => {
+      const simple = form.getValues('simple');
+      if (valid && simple !== null) {
+        toAdvanced.mutate({gameCode: room.gameCode, data: simple});
+      }
+    });
+  };
 
   return (
     <form
@@ -78,7 +116,7 @@ function SettingsForm({room, inGame, rules, onSaved}: SettingsFormProps) {
           updateSettings.mutate({
             gameCode: room.gameCode,
             roomId: room.id,
-            data: toRoomSettings(values),
+            data: toRoomSettingsRequest(values, inGame),
           });
         })(event);
       }}
@@ -88,10 +126,10 @@ function SettingsForm({room, inGame, rules, onSaved}: SettingsFormProps) {
           form={form}
           rules={rules}
           idPrefix="room-settings"
+          gameLockReason={inGame ? IN_GAME_HINT : null}
+          onAdvancedChange={onAdvancedChange}
+          advancedPending={toAdvanced.isPending}
         />
-        {inGame ? (
-          <p className="text-sm text-muted-foreground">{IN_GAME_HINT}.</p>
-        ) : null}
         <FieldError errors={[form.formState.errors.root]} />
         <DialogFooter>
           <DialogClose asChild>
@@ -99,11 +137,12 @@ function SettingsForm({room, inGame, rules, onSaved}: SettingsFormProps) {
               Отмена
             </Button>
           </DialogClose>
-          <WithHint hint={inGame ? IN_GAME_HINT : null}>
-            <Button type="submit" disabled={inGame || updateSettings.isPending}>
-              Сохранить
-            </Button>
-          </WithHint>
+          <Button
+            type="submit"
+            disabled={updateSettings.isPending || toAdvanced.isPending}
+          >
+            Сохранить
+          </Button>
         </DialogFooter>
       </FieldGroup>
     </form>
@@ -127,7 +166,10 @@ function SettingsContent(props: Omit<SettingsFormProps, 'rules'>) {
   return <SettingsForm {...props} rules={info.data.rules} />;
 }
 
-/** Смена настроек комнаты владельцем между партиями. */
+/**
+ * Настройки комнаты у владельца: места наблюдателей — в любой момент, правила
+ * игры — между партиями.
+ */
 export function RoomSettingsDialog({
   room,
   membership,
@@ -139,18 +181,15 @@ export function RoomSettingsDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <WithHint hint={membership.inGame ? IN_GAME_HINT : null}>
-        <DialogTrigger asChild>
-          <Button variant="outline" disabled={membership.inGame}>
-            Настройки
-          </Button>
-        </DialogTrigger>
-      </WithHint>
-      <DialogContent>
+      <DialogTrigger asChild>
+        <Button variant="outline">Настройки</Button>
+      </DialogTrigger>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Настройки комнаты</DialogTitle>
           <DialogDescription>
-            Новые настройки действуют со следующей партии.
+            Правила игры действуют со следующей партии, места наблюдателей —
+            сразу.
           </DialogDescription>
         </DialogHeader>
         <SettingsContent

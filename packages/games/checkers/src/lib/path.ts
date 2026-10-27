@@ -1,4 +1,4 @@
-// Подсказки ввода хода по флагам `meta.moveRules`. Варианты правил (RUSSIAN…)
+// Подсказки ввода хода по флагам `meta.advancedRules`. Варианты правил (RUSSIAN…)
 // фронт не знает — только флаги с бэкенда. Состояние не симулируется: функции
 // лишь перечисляют пути, которые сервер должен принять; последнее слово за ним
 // (422 MOVE_REJECTED, ILLEGAL_MOVE). Логика повторяет генератор ходов бэкенда
@@ -6,7 +6,7 @@
 
 import type {CheckersPieceDtoOutput} from '@qgames/api/portal/zod';
 
-import type {CheckersColor, CheckersMoveRules} from '../state';
+import type {CheckersColor, CheckersAdvancedRules} from '../state';
 
 /** Клетка `[x, y]`, отсчёт с 1; `[1, 1]` — тёмная клетка в углу белых. */
 export type Square = readonly [x: number, y: number];
@@ -75,11 +75,11 @@ function step([x, y]: Square, {dx, dy}: Direction): Square {
 
 /** Генератор ходов по флагам правил для одной позиции. */
 class MoveGenerator {
-  private readonly rules: CheckersMoveRules;
+  private readonly rules: CheckersAdvancedRules;
   private readonly pieces: readonly CheckersPiece[];
   private readonly bySquare: ReadonlyMap<string, CheckersPiece>;
 
-  constructor(rules: CheckersMoveRules, pieces: readonly CheckersPiece[]) {
+  constructor(rules: CheckersAdvancedRules, pieces: readonly CheckersPiece[]) {
     this.rules = rules;
     this.pieces = pieces;
     this.bySquare = new Map(
@@ -253,7 +253,7 @@ class MoveGenerator {
 /** Шашки стороны `color`, которыми можно ходить (с учётом обязательного взятия). */
 export function movablePieces(
   pieces: readonly CheckersPiece[],
-  rules: CheckersMoveRules,
+  rules: CheckersAdvancedRules,
   color: CheckersColor,
 ): MovablePieces {
   const paths = new MoveGenerator(rules, pieces).legalPaths(color);
@@ -275,11 +275,11 @@ function startsWith(path: readonly Square[], prefix: readonly Square[]) {
 
 /**
  * Следующие клетки пути выбранной шашки и признак «путь завершён» — по флагам
- * `moveRules`. Пустой `next` без `complete` — выбор не ведёт ни к одному ходу.
+ * `advancedRules`. Пустой `next` без `complete` — выбор не ведёт ни к одному ходу.
  */
 export function nextSquares(
   pieces: readonly CheckersPiece[],
-  rules: CheckersMoveRules,
+  rules: CheckersAdvancedRules,
   color: CheckersColor,
   selection: PathSelection,
 ): NextSquares {

@@ -11,6 +11,7 @@ const ROOM_MESSAGES: Readonly<Record<string, string>> = {
   ROOM_NOT_WAITING: 'Идёт партия — дождитесь её окончания.',
   ROOM_NOT_IN_GAME: 'Партия не идёт.',
   NO_FREE_SEAT: 'Свободных мест игрока нет.',
+  NO_SPECTATOR_SEAT: 'Свободных мест наблюдателя нет.',
   NOT_ENOUGH_PLAYERS: 'Число игроков не подходит игре.',
   SESSION_NOT_FOUND: 'Партия не найдена.',
   SESSION_PAUSED: 'Партия на паузе — ходить нельзя.',

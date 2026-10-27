@@ -4,12 +4,12 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
-import type {CheckersTimePresetDtoPreset} from './checkersTimePresetDtoPreset';
+import type {CheckersTimePresetDtoTime} from './checkersTimePresetDtoTime';
 import type {CheckersTimePresetDtoVariant} from './checkersTimePresetDtoVariant';
 
 export interface CheckersTimePresetDto {
   baseSeconds: number;
   incrementSeconds: number;
-  preset: CheckersTimePresetDtoPreset;
+  time: CheckersTimePresetDtoTime;
   variant: CheckersTimePresetDtoVariant;
 }

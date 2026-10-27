@@ -27,16 +27,16 @@ export function checkSessionState(
 
 /**
  * Служебная часть документа партии: `status` и `meta` — общей схемой контракта.
- * `meta.moveRules` зависит от игры и здесь не разбирается — его проверяет guard
+ * `meta.advancedRules` зависит от игры и здесь не разбирается — его проверяет guard
  * игры.
  */
 const DocumentHeadSchema = SessionSnapshotDto.pick({status: true}).extend({
-  meta: SessionMetaDto.omit({moveRules: true}),
+  meta: SessionMetaDto.omit({advancedRules: true}),
 });
 
 /**
  * Документ партии после применения события (`applySessionEvent` возвращает
- * JSON без типа): `status` и `meta` (кроме `moveRules`) — общей схемой,
+ * JSON без типа): `status` и `meta` (кроме `advancedRules`) — общей схемой,
  * состояние — guard'ами core и игры (`checkSessionState`). null — документ
  * не по контракту (рассинхронизация, нужен свежий снапшот).
  */
@@ -58,9 +58,9 @@ export function parseSessionDocument(
   ) {
     return null;
   }
-  // Схема отбрасывает неизвестные ключи: moveRules переносится как есть.
-  const meta: SessionMeta = Object.hasOwn(rawMeta, 'moveRules')
-    ? {...head.data.meta, moveRules: rawMeta['moveRules']}
+  // Схема отбрасывает неизвестные ключи: advancedRules переносится как есть.
+  const meta: SessionMeta = Object.hasOwn(rawMeta, 'advancedRules')
+    ? {...head.data.meta, advancedRules: rawMeta['advancedRules']}
     : head.data.meta;
   return {status: head.data.status, meta, state};
 }
