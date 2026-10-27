@@ -1,6 +1,6 @@
-# Игры: правила кода пакетов `packages/games/*` и партии на фронте
+# Игры: правила кода пакетов игр и партии на фронте
 
-Справочник к CLAUDE.md §2: читать, когда трогаешь пакеты игр, `@qgames/game-core`, `@qgames/game-ui`, доску или применение патчей партии. Устройство партии на фронте — `../qgames-workspace/adr/c4/3-frontend.md`, формат событий — `adr/c4/3-backend-games.md`, обоснования — `adr/frontend/frontend-game-logic.md`.
+Вложенный CLAUDE.md: дополняет корневой `CLAUDE.md` (§2) для пакетов `packages/games/*`, а также `@qgames/game-core`, `@qgames/game-ui`, доски и применения патчей партии (корневой файл ссылается сюда). Устройство партии на фронте — `adr/c4/3-frontend.md`, формат событий — `adr/c4/3-backend-games.md`, обоснования — `adr/frontend/frontend-game-logic.md` (`adr/` — `../qgames-workspace/adr` от корня репозитория).
 
 - Игра — пакет `packages/games/<код>` с именем `@qgames/game-<код>`. Зависит только от `@qgames/ui`, `@qgames/game-ui`, `@qgames/game-core`, `@qgames/api` (только сгенерированные схемы и типы, без запросов) и библиотек каталога. Игры друг от друга не зависят.
 - Портал подключает пакет игры только динамическим `import()` в `entities/game/model/registry.ts`. Статический импорт `@qgames/game-*` (кроме `@qgames/game-ui`, `@qgames/game-core` и `import type`) запрещён ESLint.

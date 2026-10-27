@@ -17,6 +17,8 @@
 
 Бэкенд (`qgames-backend-monorepo`) поднимается отдельно, в своём репозитории.
 
+Вход через Google локально (необязательно, без него кнопки Google скрыты): в Google Cloud Console настроить OAuth consent screen (External, Testing, себя — в Test users) и создать OAuth client ID типа Web application с Authorized JavaScript origins `http://localhost:3000` и `http://localhost` (redirect URI не нужны). Client ID прописать в `GOOGLE_CLIENT_IDS` (`.env` бэкенда, затем `docker compose up -d`) и в `PUBLIC_GOOGLE_CLIENT_ID` (`apps/portal/.env`).
+
 Установка зависимойстей:
 ```bash
 pnpm install
