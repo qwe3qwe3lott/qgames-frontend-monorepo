@@ -1,9 +1,0 @@
-# Real-time: SSE-потоки комнаты и партии
-
-Справочник к CLAUDE.md §5: читать, когда трогаешь `shared/lib/sse`, потоки комнаты или партии.
-
-- **Real-time:** ходы и действия — REST, события — SSE модуля `game` бэкенда. WebSocket — только для real-time игр (сейчас таких нет).
-  - **Обёртка** — `apps/portal/src/shared/lib/sse` (`createEventStream(url, {schema, types, onEvent, onOpen, onError, onInvalid})`): `EventSource` с `withCredentials: true`, каждое сообщение `{type: e.type, data: JSON.parse(e.data)}` проверяется Zod-схемой union событий из components (CLAUDE.md §6). Когда поток закрылся (`readyState === CLOSED`, в том числе 401 до старта), — `refreshSession()` и переподключение с backoff 1 → 30 с; если refresh вернул false (гость), переподключения нет. Статус ответа из `EventSource` не узнать, поэтому refresh делается перед каждой попыткой.
-  - URL SSE-ручки собирается через `resolveUrl` рядом с хуком (Orval её не генерирует).
-  - **Подписки комнаты и партии — разные.** Поток комнаты — `GET /api/rooms/{roomId}/events`: первым сообщением `snapshot`, затем события без seq с полным значением (замена). После реконнекта приходит свежий `snapshot`.
-  - **Поток партии** — `GET /api/games/{gameCode}/rooms/{roomId}/sessions/{sessionId}/events`: `snapshot` (`{seq, status, serverTime, meta, state}`), затем события `event: put|patch|delete|info` с `{seq, at, method, code, data}`. Каждое сообщение проверяется Zod (`SessionStreamEvent`); seq сверяется (`checkSeq`): повтор отбрасывается; дыра, сообщение не по контракту, ошибка применения патча или провал guard'ов — поток закрывается и открывается заново за свежим снапшотом (backoff 1 → 30 с, сброс после применённого события). Поток закрывается без переподключения, когда `status` документа после патча (или у снапшота) — не `IN_PROGRESS`.
