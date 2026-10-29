@@ -3,7 +3,7 @@ import type {z} from 'zod';
 
 /** Пауза перед первым переподключением закрытого потока; дальше удваивается. */
 const RECONNECT_BASE_MS = 1000;
-const RECONNECT_MAX_MS = 30_000;
+const RECONNECT_MAX_MS = 10_000;
 
 /**
  * Страница уходит (переход по адресу, перезагрузка, закрытие вкладки): браузер
@@ -28,7 +28,10 @@ export interface EventStreamError {
    * переподключается сам.
    */
   closed: boolean;
-  /** Переподключения не будет: сессию обновить нельзя (пользователь — гость). */
+  /**
+   * Переподключения не будет: сервер отказал в обновлении сессии (пользователь —
+   * гость). Недоступный сервер (сеть, 5xx) окончательным не считается.
+   */
   final: boolean;
 }
 
@@ -56,7 +59,8 @@ export interface EventStream {
  * Поток Server-Sent Events бэкенда (`EventSource` с куками). Каждое сообщение
  * проверяется Zod-схемой (CLAUDE.md §6). Обрыв соединения браузер чинит сам;
  * если поток закрыт, обёртка один раз обновляет сессию (общий refresh с
- * клиентом API) и переподключается с нарастающей паузой.
+ * клиентом API) и переподключается с нарастающей паузой — в том числе пока
+ * сервер недоступен (перезапуск бэкенда).
  */
 export function createEventStream<T>(
   url: string,
@@ -100,7 +104,7 @@ export function createEventStream<T>(
     if (stopped) {
       return;
     }
-    if (!refreshed) {
+    if (refreshed === 'guest') {
       stopped = true;
       onError?.({closed: true, final: true});
       return;

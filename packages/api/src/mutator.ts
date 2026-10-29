@@ -10,8 +10,15 @@ interface ApiConfig {
   authPath: string;
 }
 
+/**
+ * Исход обновления сессии: `refreshed` — новая пара токенов в куках; `guest` —
+ * сервер отказал (4xx), сессии нет; `unavailable` — сервер недоступен (сеть,
+ * 5xx), сессия может быть цела.
+ */
+export type RefreshResult = 'refreshed' | 'guest' | 'unavailable';
+
 let config: ApiConfig | undefined;
-let refreshInFlight: Promise<boolean> | undefined;
+let refreshInFlight: Promise<RefreshResult> | undefined;
 
 /**
  * Задаёт адрес бэкенда и префикс ручек сессии своей группы API
@@ -39,15 +46,19 @@ export function resolveUrl(path: string): string {
 
 /**
  * Обновляет сессию по refresh-куке. Параллельные 401 ждут один общий запрос.
- * Возвращает false, если сессию обновить нельзя (пользователь — гость).
  */
-export function refreshSession(): Promise<boolean> {
+export function refreshSession(): Promise<RefreshResult> {
   refreshInFlight ??= fetch(resolveUrl(`${requireConfig().authPath}/refresh`), {
     method: 'POST',
     credentials: 'include',
   })
-    .then(response => response.ok)
-    .catch(() => false)
+    .then((response): RefreshResult => {
+      if (response.ok) {
+        return 'refreshed';
+      }
+      return response.status >= 500 ? 'unavailable' : 'guest';
+    })
+    .catch((): RefreshResult => 'unavailable')
     .finally(() => {
       refreshInFlight = undefined;
     });
@@ -86,7 +97,12 @@ export async function apiFetch<T>(path: string, init: RequestInit): Promise<T> {
     if (error.code !== UNAUTHENTICATED_CODE) {
       throw error;
     }
-    if (await refreshSession()) {
+    const refreshed = await refreshSession();
+    if (refreshed === 'unavailable') {
+      // Сервер недоступен, а не отказал: это сбой, а не выход из сессии.
+      throw new ApiError(0, NETWORK_ERROR_CODE);
+    }
+    if (refreshed === 'refreshed') {
       response = await request();
     }
   }

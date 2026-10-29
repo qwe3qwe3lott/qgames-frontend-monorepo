@@ -49,7 +49,13 @@ export function RoomPage({game, roomId, viewerId}: RoomPageProps) {
   const stream = useRoomStream(roomId);
   const pageData = {'data-testid': testIds.root, 'data-room-id': roomId};
 
-  if (probe.error !== null) {
+  // Сбой перечитывания (сеть, 5xx — например, перезапуск бэкенда) не заменяет
+  // уже построенную комнату: поток переподключается, страница показывает
+  // «переподключаемся». Окончательный ответ (4xx) показывается всегда.
+  if (
+    probe.error !== null &&
+    (isFinalError(probe.error) || stream === undefined)
+  ) {
     return (
       <PageLayout {...pageData} title={title}>
         <p className="text-destructive" role="alert">
