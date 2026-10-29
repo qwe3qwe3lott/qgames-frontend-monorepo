@@ -73,3 +73,7 @@ catalog:
 allowBuilds:
   esbuild: false
   unrs-resolver: false
+
+# Agent skills зависимостей не линкуются: пустой список выключает их и запросы на одобрение.
+skills:
+  dirs: []
