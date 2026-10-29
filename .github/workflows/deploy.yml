@@ -30,6 +30,8 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version-file: .nvmrc
+          # Иначе setup-node по packageManager в package.json включает кеш pnpm и ищет pnpm до corepack enable.
+          package-manager-cache: false
 
       # pnpm нужной версии (packageManager в package.json) ставит corepack.
       - run: corepack enable
