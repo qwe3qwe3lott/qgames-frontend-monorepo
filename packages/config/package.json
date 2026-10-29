@@ -16,6 +16,7 @@
     "@tanstack/eslint-plugin-query": "catalog:",
     "eslint-import-resolver-typescript": "catalog:",
     "eslint-plugin-boundaries": "catalog:",
+    "eslint-plugin-check-file": "catalog:",
     "eslint-plugin-react-hooks": "catalog:",
     "globals": "catalog:",
     "gts": "catalog:",

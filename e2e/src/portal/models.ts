@@ -1,14 +1,14 @@
-import {AuthDialog} from './models/auth-dialog';
-import {CheckersBoard} from './models/checkers-board';
-import {GameRoomsPage} from './models/game-rooms-page';
-import {GamesPage} from './models/games-page';
+import {AuthDialog} from './models/authDialog';
+import {CheckersBoard} from './models/checkersBoard';
+import {GameRoomsPage} from './models/gameRoomsPage';
+import {GamesPage} from './models/gamesPage';
 import {Header} from './models/header';
-import {HomePage} from './models/home-page';
-import {NothingBoard} from './models/nothing-board';
-import {RoomPage} from './models/room-page';
-import {RoomPanel} from './models/room-panel';
-import {RoomSettingsDialog} from './models/room-settings-dialog';
-import {SessionActions} from './models/session-actions';
+import {HomePage} from './models/homePage';
+import {NothingBoard} from './models/nothingBoard';
+import {RoomPage} from './models/roomPage';
+import {RoomPanel} from './models/roomPanel';
+import {RoomSettingsDialog} from './models/roomSettingsDialog';
+import {SessionActions} from './models/sessionActions';
 
 /**
  * Модели портала: из этой карты строятся фикстуры `testPortal`

@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import queryPlugin from '@tanstack/eslint-plugin-query';
 import boundaries from 'eslint-plugin-boundaries';
+import checkFile from 'eslint-plugin-check-file';
 import reactHooks from 'eslint-plugin-react-hooks';
 import {defineConfig} from 'eslint/config';
 import globals from 'globals';
@@ -89,6 +90,29 @@ export function createConfig({
               },
             ],
           },
+        ],
+      },
+    },
+    {
+      // Имя файла — по главному экспорту: компонент PascalCase, остальное camelCase (CLAUDE.md §3).
+      // Роуты TanStack Router (имена = сегменты URL) и сгенерированное — вне правила.
+      files: TS_FILES,
+      ignores: [
+        '**/routes/**',
+        '**/generated/**',
+        '**/*.config.ts',
+        '**/*.d.ts',
+      ],
+      plugins: {'check-file': checkFile},
+      rules: {
+        'check-file/filename-naming-convention': [
+          'error',
+          {'**/!(index).tsx': 'PASCAL_CASE', '**/*.ts': '+([a-zA-Z0-9])'},
+          {ignoreMiddleExtensions: true},
+        ],
+        'check-file/folder-naming-convention': [
+          'error',
+          {'**/': '+([a-zA-Z0-9])'},
         ],
       },
     },

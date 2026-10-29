@@ -5,7 +5,7 @@ import {SessionSnapshotDto} from '@qgames/api/portal/zod';
 import {activeTimer, isCoreState, moveOptionsOf, playerClock} from './core';
 import {sessionFromSnapshot, type SessionData} from './session';
 import {parseSessionDocument} from './validate';
-import {ALICE, BOB, DOCUMENT, META, STATE, TIMER} from './test-data';
+import {ALICE, BOB, DOCUMENT, META, STATE, TIMER} from './testData';
 
 const ANY_GAME = {isGameState: () => true};
 

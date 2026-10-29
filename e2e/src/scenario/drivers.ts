@@ -1,6 +1,6 @@
 import {z} from 'zod';
 
-import type {Actor} from '../portal/test-portal';
+import type {Actor} from '../portal/testPortal';
 
 /**
  * Драйвер игры: переводит ход из файла сценария в клики по доске актора.

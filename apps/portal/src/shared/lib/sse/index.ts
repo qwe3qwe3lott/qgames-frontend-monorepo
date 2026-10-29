@@ -3,4 +3,4 @@ export {
   type EventStream,
   type EventStreamError,
   type EventStreamOptions,
-} from './create-event-stream';
+} from './createEventStream';

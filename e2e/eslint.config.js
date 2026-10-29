@@ -34,7 +34,7 @@ export default [
             },
             {
               group: ['@portal/*', '@admin/*', '@qgames/*'],
-              message: 'test-ids используются только в моделях (src/).',
+              message: 'testIds используются только в моделях (src/).',
             },
           ],
         },

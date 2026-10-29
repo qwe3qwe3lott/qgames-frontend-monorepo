@@ -1,5 +1,5 @@
 export {invalidateRoom} from './lib/cache';
-export {roomErrorMessage} from './lib/error-messages';
+export {roomErrorMessage} from './lib/errorMessages';
 export {ROOM_STATUS_LABELS} from './lib/labels';
 export {
   memberName,
@@ -13,7 +13,7 @@ export {
   formatClock,
   TIME_CONTROL_LABELS,
   type SettingsRow,
-} from './lib/settings-labels';
+} from './lib/settingsLabels';
 export {
   defaultSimple,
   ROOM_SETTINGS_FIELDS,
@@ -27,7 +27,7 @@ export {
   useRoomStream,
   type RoomEvents,
   type RoomEventsStatus,
-} from './model/use-room-events';
+} from './model/useRoomEvents';
 export {
   toRoomView,
   type RoomMemberView,
@@ -39,4 +39,4 @@ export {
 export {
   RoomSettingsFields,
   type RoomSettingsFieldsProps,
-} from './ui/room-settings-fields';
+} from './ui/RoomSettingsFields';

@@ -7,13 +7,13 @@
     ".": "./src/index.ts",
     "./portal": "./src/generated/portal/query/index.ts",
     "./portal/model": "./src/generated/portal/model/index.ts",
-    "./portal/zod": "./src/portal-zod.ts",
+    "./portal/zod": "./src/portalZod.ts",
     "./admin": "./src/generated/admin/query/index.ts",
     "./admin/model": "./src/generated/admin/model/index.ts",
     "./admin/zod": "./src/generated/admin/zod/index.ts"
   },
   "scripts": {
-    "api:fetch": "node scripts/fetch-openapi.js",
+    "api:fetch": "node scripts/fetchOpenApi.js",
     "api:generate": "orval --config orval.config.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint ."

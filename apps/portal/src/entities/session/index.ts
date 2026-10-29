@@ -1,10 +1,10 @@
-export {useSession} from './model/use-session';
+export {useSession} from './model/useSession';
 export {
   useSessionAdvance,
   type SessionAdvance,
-} from './model/use-session-advance';
+} from './model/useSessionAdvance';
 export {
   useSessionEvents,
   type SessionEventsParams,
   type SessionEventsStatus,
-} from './model/use-session-events';
+} from './model/useSessionEvents';

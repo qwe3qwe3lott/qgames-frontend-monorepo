@@ -1,7 +1,7 @@
 import {readdirSync} from 'node:fs';
 import path from 'node:path';
 
-import {testPortal} from '../../../../src/portal/test-portal';
+import {testPortal} from '../../../../src/portal/testPortal';
 
 // Сценарий на тысячи ходов идёт долго.
 testPortal.describe.configure({timeout: 30 * 60_000});

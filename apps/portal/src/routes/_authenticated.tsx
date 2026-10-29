@@ -1,7 +1,7 @@
 import {createFileRoute, Outlet} from '@tanstack/react-router';
 
 import {GuestError, requireUser} from '@/entities/user';
-import {AuthRequiredPage} from '@/pages/auth-required';
+import {AuthRequiredPage} from '@/pages/authRequired';
 import {ErrorPage} from '@/pages/error';
 
 /**

@@ -2,7 +2,7 @@ import type {QueryClient} from '@tanstack/react-query';
 import {createRootRouteWithContext, Outlet} from '@tanstack/react-router';
 
 import {ErrorPage} from '@/pages/error';
-import {NotFoundPage} from '@/pages/not-found';
+import {NotFoundPage} from '@/pages/notFound';
 import {Header} from '@/widgets/header';
 
 interface RouterContext {

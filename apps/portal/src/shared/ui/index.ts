@@ -1,2 +1,2 @@
-export {GoogleButton, type GoogleButtonProps} from './google-button';
-export {WithHint, type WithHintProps} from './with-hint';
+export {GoogleButton, type GoogleButtonProps} from './GoogleButton';
+export {WithHint, type WithHintProps} from './WithHint';

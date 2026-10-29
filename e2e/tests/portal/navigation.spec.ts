@@ -1,6 +1,6 @@
 import {expect} from '@playwright/test';
 
-import {testPortal} from '../../src/portal/test-portal';
+import {testPortal} from '../../src/portal/testPortal';
 
 testPortal(
   'Переход из шапки на страницу списка игр',

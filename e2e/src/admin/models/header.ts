@@ -1,6 +1,6 @@
-import {testIds} from '@admin/widgets/header/ui/header.test-ids';
+import {testIds} from '@admin/widgets/header/ui/Header.testIds';
 
-import {componentModel} from '../../core/component-model';
+import {componentModel} from '../../core/componentModel';
 
 /** Шапка админки; текущий администратор — с `data-login`. */
 export class Header extends componentModel(testIds) {}

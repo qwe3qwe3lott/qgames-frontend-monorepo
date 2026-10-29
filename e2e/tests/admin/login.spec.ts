@@ -1,6 +1,6 @@
 import {expect} from '@playwright/test';
 
-import {ADMIN, testAdmin} from '../../src/admin/test-admin';
+import {ADMIN, testAdmin} from '../../src/admin/testAdmin';
 
 testAdmin.use({guest: true});
 

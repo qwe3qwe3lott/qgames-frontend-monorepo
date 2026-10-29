@@ -5,7 +5,7 @@
   "type": "module",
   "exports": {
     "./components/*": "./src/components/*.tsx",
-    "./test-ids/*": "./src/components/*.test-ids.ts"
+    "./testIds/*": "./src/components/*.testIds.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

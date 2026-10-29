@@ -5,7 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./test-ids/*": "./src/ui/*.test-ids.ts"
+    "./testIds/*": "./src/ui/*.testIds.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

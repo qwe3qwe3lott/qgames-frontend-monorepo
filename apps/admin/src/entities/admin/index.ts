@@ -1,2 +1,2 @@
-export {requireAdmin} from './lib/require-admin';
-export {useCurrentAdmin, type CurrentAdminState} from './lib/use-current-admin';
+export {requireAdmin} from './lib/requireAdmin';
+export {useCurrentAdmin, type CurrentAdminState} from './lib/useCurrentAdmin';

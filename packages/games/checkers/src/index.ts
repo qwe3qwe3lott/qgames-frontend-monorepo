@@ -1,5 +1,5 @@
 import {checkersRules} from './state';
-import {Board} from './ui/board';
+import {Board} from './ui/Board';
 
 export type {BoardMove, BoardPlayer, BoardProps} from './types';
 

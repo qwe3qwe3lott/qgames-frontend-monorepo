@@ -1,7 +1,7 @@
-export {GuestError, requireUser} from './lib/require-user';
-export {useViewer, type ViewerState} from './lib/use-viewer';
+export {GuestError, requireUser} from './lib/requireUser';
+export {useViewer, type ViewerState} from './lib/useViewer';
 export {loginSchema} from './model/login';
 export {nicknameSchema} from './model/nickname';
 export {toViewer, type Viewer} from './model/types';
-export {AvatarPicker, type AvatarPickerProps} from './ui/avatar-picker';
-export {CurrentUser} from './ui/current-user';
+export {AvatarPicker, type AvatarPickerProps} from './ui/AvatarPicker';
+export {CurrentUser} from './ui/CurrentUser';

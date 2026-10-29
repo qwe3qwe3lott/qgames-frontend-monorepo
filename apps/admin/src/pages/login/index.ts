@@ -1,1 +1,1 @@
-export {LoginPage, type LoginPageProps} from './ui/login-page';
+export {LoginPage, type LoginPageProps} from './ui/LoginPage';

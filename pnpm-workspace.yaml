@@ -2,7 +2,7 @@ packages:
   - apps/*
   - packages/*
   - packages/games/*
-  # e2e-тесты: импортируют *.test-ids.ts приложений, поэтому не в apps/ и не в packages/ (CLAUDE.md §2).
+  # e2e-тесты: импортируют *.testIds.ts приложений, поэтому не в apps/ и не в packages/ (CLAUDE.md §2).
   - e2e
 
 # Все зависимости — в корневом node_modules (CLAUDE.md §2).
@@ -27,6 +27,7 @@ catalog:
   '@tanstack/eslint-plugin-query': 5.104.3
   eslint-plugin-boundaries: 7.2.0
   eslint-import-resolver-typescript: 4.4.5
+  eslint-plugin-check-file: 3.3.2
   globals: 14.0.0
   stylelint: 17.16.0
   stylelint-config-standard: 40.0.0

@@ -1,4 +1,4 @@
-import {ApiError, NETWORK_ERROR_CODE} from './api-error';
+import {ApiError, NETWORK_ERROR_CODE} from './apiError';
 
 /** Код 401 бэкенда, когда нет access-токена или он истёк. */
 const UNAUTHENTICATED_CODE = 'UNAUTHENTICATED';

@@ -1,12 +1,12 @@
 import './styles/index.css';
 // Первым: настройка Zod до создания схем в остальных модулях.
-import './zod-config';
+import './zodConfig';
 
 import {configureApi} from '@qgames/api';
 import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 
-import {App} from './app';
+import {App} from './App';
 
 // Админка ходит только в группу API admin (`/api/admin/**`, CLAUDE.md §1)
 // на том же origin, что и страница (dev-proxy Rsbuild, nginx в Docker; CLAUDE.md §5).

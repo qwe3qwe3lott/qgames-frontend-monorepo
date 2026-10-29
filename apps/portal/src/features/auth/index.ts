@@ -1,1 +1,1 @@
-export {AuthDialog, type AuthDialogProps} from './ui/auth-dialog';
+export {AuthDialog, type AuthDialogProps} from './ui/AuthDialog';

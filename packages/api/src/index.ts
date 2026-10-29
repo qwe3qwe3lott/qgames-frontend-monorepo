@@ -3,11 +3,11 @@ export {
   isApiError,
   NETWORK_ERROR_CODE,
   UNKNOWN_ERROR_CODE,
-} from './api-error';
-export {errorMessage} from './error-message';
+} from './apiError';
+export {errorMessage} from './errorMessage';
 export {
   applyFieldErrors,
   type ApplyFieldErrorsOptions,
   type SetFieldError,
-} from './field-errors';
+} from './fieldErrors';
 export {configureApi, refreshSession, resolveUrl} from './mutator';

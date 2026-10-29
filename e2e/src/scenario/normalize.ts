@@ -1,4 +1,4 @@
-import type {RecordedFrame} from '../core/sse-recorder';
+import type {RecordedFrame} from '../core/sseRecorder';
 import type {Frame} from './schema';
 
 /** Заглушка изменчивого времени в ожидаемых кадрах. */

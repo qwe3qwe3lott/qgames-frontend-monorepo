@@ -1,8 +1,0 @@
-import {generateTestIds} from '@qgames/ui/lib/test-ids';
-
-export const testIds = generateTestIds('CheckersBoard', [
-  'offerDrawButton',
-  'acceptDrawButton',
-  'resignButton',
-  'resignConfirmButton',
-]);

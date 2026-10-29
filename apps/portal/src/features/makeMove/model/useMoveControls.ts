@@ -1,0 +1,49 @@
+import {useMakeMove} from '@qgames/api/portal';
+import type {MoveRequest} from '@qgames/api/portal/model';
+import {toast} from '@qgames/ui/components/Sonner';
+
+import type {GameMove} from '@/entities/game';
+import {roomErrorMessage, type RoomView} from '@/entities/room';
+import {useSessionAdvance} from '@/entities/session';
+
+export interface MoveControls {
+  onMove: (move: GameMove) => void;
+  movePending: boolean;
+}
+
+/**
+ * Отправка хода (`{type, data}`). Ответ без тела: ход, очерёдность, варианты
+ * ходов и таймер приходят событиями потока партии. Ошибки — по `code`
+ * (`SESSION_PAUSED`, `MOVE_REJECTED` и др.), показываются снекбаром. После 204 ход считается
+ * отправляемым, пока событие потока не сдвинет seq партии: иначе кнопка
+ * ненадолго оживает и повторный клик получает `NOT_YOUR_TURN`.
+ */
+export function useMoveControls(room: RoomView): MoveControls {
+  const advance = useSessionAdvance(room.session?.id ?? null);
+  const makeMove = useMakeMove({
+    mutation: {
+      onSuccess: () => {
+        advance.arm();
+      },
+      onError: error => {
+        advance.clear();
+        toast.error(roomErrorMessage(error));
+      },
+    },
+  });
+  return {
+    onMove: move => {
+      const request: MoveRequest = {type: move.type};
+      if (move.data !== undefined) {
+        request.data = {...move.data};
+      }
+      advance.mark();
+      makeMove.mutate({
+        gameCode: room.gameCode,
+        roomId: room.id,
+        data: request,
+      });
+    },
+    movePending: makeMove.isPending || advance.waiting,
+  };
+}

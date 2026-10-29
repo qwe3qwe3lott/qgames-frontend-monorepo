@@ -1,7 +1,7 @@
 import {describe, expect, it} from 'vitest';
 
 import {parseSessionDocument} from './validate';
-import {DOCUMENT, META, STATE} from './test-data';
+import {DOCUMENT, META, STATE} from './testData';
 
 const ANY_GAME = {isGameState: () => true};
 

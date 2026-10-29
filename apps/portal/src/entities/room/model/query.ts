@@ -1,6 +1,6 @@
 import {queryOptions, skipToken} from '@tanstack/react-query';
 
-import type {RoomStreamData} from '../lib/room-stream';
+import type {RoomStreamData} from '../lib/roomStream';
 
 /**
  * Комната из потока лежит в кеше Query под ключом `['room-stream', roomId]`.

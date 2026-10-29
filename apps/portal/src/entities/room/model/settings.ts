@@ -16,7 +16,7 @@ import {
 import type {Path} from 'react-hook-form';
 import {z} from 'zod';
 
-import {formatSeconds} from '../lib/settings-labels';
+import {formatSeconds} from '../lib/settingsLabels';
 
 function inRange(value: number, range: IntRangeDto): boolean {
   return Number.isInteger(value) && value >= range.min && value <= range.max;

@@ -56,7 +56,7 @@ packages/
   game-core/     @qgames/game-core: чистые функции партии — applySessionEvent (поверх applyPatch), блоки core (игроки, очерёдность, часы, итог: guard isCoreState и помощники moveOptionsOf, activeTimer, playerClock), checkSessionState
   games/
     <код>/       @qgames/game-<код>: модуль конкретной игры (сейчас nothing, checkers)
-e2e/             @qgames/e2e: e2e-тесты на Playwright (модели по *.test-ids.ts, фикстуры, сценарии партий)
+e2e/             @qgames/e2e: e2e-тесты на Playwright (модели по *.testIds.ts, фикстуры, сценарии партий)
 ```
 
 - **Игры** — пакеты `packages/games/<код>` (`@qgames/game-<код>`), портал подключает их только динамическим `import()`. Фронт не знает правил игры: применяет патчи сервера общим `applySessionEvent` и рисует только `moveOptions`. Зависимости пакетов игр, проверка состояния guard'ами, итог партии, ввод хода, время в доске — во вложенном **`packages/games/CLAUDE.md`** (читать и при работе с `@qgames/game-core`, `@qgames/game-ui` и доской в портале; устройство — `adr/c4/3-frontend.md`, решение — `adr/frontend/frontend-game-logic.md`): читать, когда трогаешь пакеты игр, `@qgames/game-core`, `@qgames/game-ui` или доску.
@@ -64,10 +64,10 @@ e2e/             @qgames/e2e: e2e-тесты на Playwright (модели по 
 - **Все зависимости лежат только в корневом `node_modules`:** `nodeLinker: hoisted` в `pnpm-workspace.yaml`. В `apps/*/node_modules` и `packages/*/node_modules` pnpm кладёт только ссылки на workspace-пакеты (`@qgames/*`), `.bin` и кеши инструментов — сторонних пакетов там быть не должно. Если появился вложенный сторонний пакет, значит версия в каталоге конфликтует с транзитивной зависимостью: выбрать совместимую версию, а не мириться с дублем.
 - **Одна версия каждой библиотеки на весь репозиторий:** версии задаются только в `catalog` файла `pnpm-workspace.yaml`, в `package.json` пакетов пишется `catalog:` (`catalogMode: strict` не даст поставить версию мимо каталога). Версии фиксируются точно, без `^`/`~`. Новая зависимость — по согласованию (§0), сначала в каталог.
 - **Защита цепочки поставок pnpm не ослабляется:** релизы моложе `minimumReleaseAge` (по умолчанию pnpm) не ставим — берём предыдущую версию, исключения (`minimumReleaseAgeExclude`) не добавляем. Install-скрипты зависимостей запрещены (`allowBuilds: <пакет>: false`); разрешить скрипт — только по согласованию.
-- CLI-генераторы (shadcn и т.п.) могут сами дописывать зависимости и каталог: после запуска проверить дифф `package.json` и `pnpm-workspace.yaml`. Известный случай: шаблоны shadcn импортируют `cn` из npm-пакета `cn` и дописывают его в каталог. Импорт заменить на `@qgames/ui/lib/utils`, правки зависимостей откатить.
+- CLI-генераторы (shadcn и т.п.) могут сами дописывать зависимости и каталог: после запуска проверить дифф `package.json` и `pnpm-workspace.yaml`. Известный случай: шаблоны shadcn импортируют `cn` из npm-пакета `cn` и дописывают его в каталог. Импорт заменить на `@qgames/ui/lib/utils`, правки зависимостей откатить. Файлы shadcn создаёт в kebab-case — переименовать в PascalCase (`radio-group.tsx` → `RadioGroup.tsx`) и поправить импорты.
 - Зависимость объявляется в `package.json` того пакета, который её импортирует (корневой `package.json` — только инструменты уровня репозитория: turbo, prettier).
 - **Внутренние пакеты не собираются:** `exports` указывает на `.ts`-исходники, транспилирует их сборщик приложения. Имена — `@qgames/<пакет>`, подключение — `workspace:*`.
-- Приложение зависит только от `packages/*`, никогда от другого приложения. `packages/*` не зависят от приложений. Исключение — `e2e/`: он импортирует файлы `*.test-ids.ts` приложений (paths `@portal/*`, `@admin/*`), поэтому лежит не в `apps/` и не в `packages/`.
+- Приложение зависит только от `packages/*`, никогда от другого приложения. `packages/*` не зависят от приложений. Исключение — `e2e/`: он импортирует файлы `*.testIds.ts` приложений (paths `@portal/*`, `@admin/*`), поэтому лежит не в `apps/` и не в `packages/`.
 - **Пустые пакеты «на вырост» не заводим.** Пакет появляется вместе с первым содержимым и удаляется, если опустел.
 
 ## 3. Архитектура кода: Feature-Sliced Design
@@ -80,7 +80,7 @@ src/
   pages/      страницы (композиция виджетов и фич)
   widgets/    крупные самостоятельные блоки UI
   features/   пользовательские сценарии (вход, создание комнаты, ход)
-  entities/   бизнес-сущности (user, room, game-session)
+  entities/   бизнес-сущности (user, room, session)
   shared/     переиспользуемое без бизнес-логики (lib, config, ui-обёртки)
 ```
 
@@ -88,7 +88,7 @@ src/
 - Снаружи слайс доступен только через публичный `index.ts`; глубокие импорты (`features/auth/ui/LoginForm`) запрещены.
 - Сегменты внутри слайса: `ui/`, `model/` (zustand-сторы, Zod-схемы, типы), `api/` (обёртки над `@qgames/api`, если нужны), `lib/`, `config/`.
 - Внутри приложения слои импортируются через alias `@/` (`@/entities/user`), внутри слайса — относительными путями.
-- Имена файлов — kebab-case (`home-page.tsx`, `current-user.tsx`), как у компонентов shadcn.
+- Имя файла — по главному экспорту: компонент — PascalCase (`HomePage.tsx`, рядом `HomePage.testIds.ts`), остальное — camelCase (`useRoomEvents.ts`, `errorMessages.ts`). Папки — camelCase (`features/createRoom`), папка компонента (если у него свои файлы) — PascalCase. Вне правила: `src/routes/` (имена — сегменты URL), сгенерированное, конфиги, каталоги и имена пакетов (`packages/game-ui`, `@qgames/game-ui`). Проверяет `eslint-plugin-check-file` (`packages/config/eslint/index.js`).
 - Правила проверяет `eslint-plugin-boundaries` (`packages/config/eslint/fsd.js`): слои сверху вниз и импорт слайса только через `index.ts`.
 - **Роутинг — отдельно от слоёв:**
   - `src/routes/` — файлы роутов TanStack Router; в них только объявление роута (loader, `validateSearch`) и подключение страницы из `pages/`. `src/app/routeTree.gen.ts` генерируется плагином, коммитится, руками не правится;
@@ -99,7 +99,7 @@ src/
 
 - **TanStack Query** — единственное место для серверных данных. `queryOptions`/`mutationOptions`/хуки и ключи берутся из `@qgames/api` (Orval), свои ключи и fetch-функции для ручек бэкенда не пишем (исключение — URL SSE-ручек, см. `adr/c4/3-frontend.md` «SSE»; решение — `adr/frontend/server-state.md`). Копировать серверные данные в zustand или `useState` запрещено. Инвалидация — через `queryClient.invalidateQueries` по сгенерированным ключам.
 - **zustand** — только клиентский стейт (UI, локальное состояние игры до отправки хода). Стор живёт в `model/` своего слайса, экспортируется хук; селекторы обязательны (`useStore((s) => s.x)`), подписку на весь стор не делаем.
-- **Формы — react-hook-form + Zod 4** через `zodResolver` из `@hookform/resolvers`. Схема запроса берётся из сгенерированных Orval-Zod-схем; если форме нужно больше полей или правил (например, повтор пароля), схема расширяется в `model/` слайса. Поля верстаются компонентами `@qgames/ui`. Ошибки бэкенда показываются по `ApiError.code`; поля из `VALIDATION_ERROR` подсвечиваются `applyFieldErrors` (`@qgames/api`) нейтральным русским текстом — английские тексты сервера не показываем. Сообщения Zod — на русском (`z.config(z.locales.ru())` и `z.config({jitless: true})` — CSP без `unsafe-eval` — в `app/zod-config.ts`, который импортируется первым в `index.tsx`: настройки должны действовать до создания схем).
+- **Формы — react-hook-form + Zod 4** через `zodResolver` из `@hookform/resolvers`. Схема запроса берётся из сгенерированных Orval-Zod-схем; если форме нужно больше полей или правил (например, повтор пароля), схема расширяется в `model/` слайса. Поля верстаются компонентами `@qgames/ui`. Ошибки бэкенда показываются по `ApiError.code`; поля из `VALIDATION_ERROR` подсвечиваются `applyFieldErrors` (`@qgames/api`) нейтральным русским текстом — английские тексты сервера не показываем. Сообщения Zod — на русском (`z.config(z.locales.ru())` и `z.config({jitless: true})` — CSP без `unsafe-eval` — в `app/zodConfig.ts`, который импортируется первым в `index.tsx`: настройки должны действовать до создания схем).
 - **Комната — SSE + кеш Query, как партия:** комнату на странице строит только поток — в кеше под ключом `['room-stream', roomId]` (`entities/room`: `useRoomEvents` пишет, `useRoomStream` читает; исключение из правила «ключи только из Orval»). Снапшот `{seq, room}` заменяет комнату, события-патчи применяются общим `applyPatch` (`@qgames/doc-patch`) строго по seq; дыра в seq или патч, который не применился, — переподключение за снапшотом (`applyRoomStreamMessage`). Мутации комнаты (роль, владение, старт, настройки) отвечают 204, изменение приходит событием потока — в кеш их ответы не пишутся. `GET /api/rooms/{id}` (лоадер маршрута) комнату не показывает: он нужен для ошибок и перечитывается (`invalidateRoom`) только после закрытия потока сервером (комната удалена, мест нет).
 - **Партия — SSE + кеш Query:** состояние партии хранится в кеше Query под ключом `['session-stream', sessionId]` (`entities/session`: `useSessionEvents` пишет, `useSession` читает). Это **исключение** из правила «ключи только из Orval»: у потока нет GET-ручки. Опроса нет ни в лобби, ни во время партии. Ответы 4xx запросы не повторяют (настройка `retry` в `app/router.ts`).
 - **TanStack Router** (portal, admin) — file-based роутинг, `autoCodeSplitting` (каждый роут — отдельный чанк). Search params типизируются через `validateSearch` со Zod-схемой. Навигация только через `Link`/`useNavigate`, строковые URL руками не собираем.
@@ -109,9 +109,9 @@ src/
   - `disabled:pointer-events-none` не используем: он прячет курсор и подсказку.
 - **Подсказки** к заблокированным элементам (причина, почему действие недоступно) делаются через Tooltip из `@qgames/ui`, а не через `title`:
   - в портале — через `WithHint` (`@/shared/ui`), триггером служит обёртка, потому что disabled-кнопка не получает событий;
-  - `TooltipProvider` подключён в `app/app.tsx`.
-- **Снекбар** — `toast` из `@qgames/ui/components/sonner` (Sonner, снизу слева; `<Toaster/>` в `app/app.tsx` обоих приложений). Показывает ошибки действий, которым некуда встать в разметке (кнопки вне форм, ход, выход), и успех действий без редиректа и заметной смены UI (смена пароля, сохранение профиля и настроек). Ошибки форм остаются inline под полями. Новые случаи применения согласуются с пользователем.
-- **Темы** — `ThemeProvider` из `@qgames/ui/components/theme-provider` (next-themes, класс на `<html>`), подключён в `app/app.tsx` обоих приложений. Сейчас тема только light (`forcedTheme`), но механизм тем в компонентах (`useTheme`, `dark:`, `.dark`) не выпиливаем.
+  - `TooltipProvider` подключён в `app/App.tsx`.
+- **Снекбар** — `toast` из `@qgames/ui/components/sonner` (Sonner, снизу слева; `<Toaster/>` в `app/App.tsx` обоих приложений). Показывает ошибки действий, которым некуда встать в разметке (кнопки вне форм, ход, выход), и успех действий без редиректа и заметной смены UI (смена пароля, сохранение профиля и настроек). Ошибки форм остаются inline под полями. Новые случаи применения согласуются с пользователем.
+- **Темы** — `ThemeProvider` из `@qgames/ui/components/ThemeProvider` (next-themes, класс на `<html>`), подключён в `app/App.tsx` обоих приложений. Сейчас тема только light (`forcedTheme`), но механизм тем в компонентах (`useTheme`, `dark:`, `.dark`) не выпиливаем.
 - **Переменные окружения** читаются в одном месте (`src/shared/config/env.ts`, наружу — через `@/shared/config`) и валидируются Zod-схемой при старте. Префикс `PUBLIC_` (Rsbuild). Секретов во фронте нет. Адреса API в env нет (same-origin). У админки переменных пока нет: схема пустая (`z.object({})`), `env.d.ts` и `.env.example` остаются местом для будущих переменных.
 
 ## 5. Взаимодействие с бэкендом
@@ -122,14 +122,14 @@ src/
 - **Контракт** — OpenAPI бэкенда, группы `portal` (`/v3/api-docs/portal`) и `admin` (`/v3/api-docs/admin`). Снапшоты `packages/api/openapi/*.json` — вход Orval, не коммитятся (`.gitignore`); коммитится только сгенерированный код `packages/api/src/generated/`, по его диффу виден контракт. Руками сгенерированный код и типы API не пишем.
   - Обновление контракта: запустить бэкенд, `pnpm api:fetch` (снимает обе группы с `API_URL`, по умолчанию `http://localhost:8080`), `pnpm api:generate`, проверить дифф `src/generated/`.
   - Конфликт в `src/generated/**` руками не сливается: взять любую сторону и перегенерировать (`api:fetch` + `api:generate`) по слитому бэкенду.
-  - Orval работает в режиме `tags-split`: файл на тег, теги латиницей (portal — `auth`, `users`, `games`, `rooms`; admin — `auth`, `admins`), раскладка `src/generated/<группа>/{query,zod,model}/`. `@qgames/api/portal/zod` — ручной barrel `src/portal-zod.ts`: схемы ручек из `zod/index.ts` и схемы components из `zod/index.schemas.ts` (Orval в barrel их не включает).
+  - Orval работает в режиме `tags-split`: файл на тег, теги латиницей (portal — `auth`, `users`, `games`, `rooms`; admin — `auth`, `admins`), раскладка `src/generated/<группа>/{query,zod,model}/`. `@qgames/api/portal/zod` — ручной barrel `src/portalZod.ts`: схемы ручек из `zod/index.ts` и схемы components из `zod/index.schemas.ts` (Orval в barrel их не включает).
   - Импорты: `@qgames/api` — `configureApi`, `ApiError`, `isApiError`, `refreshSession` (общий single-flight refresh), `resolveUrl`, `errorMessage`, `applyFieldErrors`; `@qgames/api/portal` — функции, `queryOptions`, хуки и ключи; `@qgames/api/portal/model` — типы; `@qgames/api/portal/zod` — Zod-схемы запросов и всех схем components (`generateReusableSchemas`, union — `discriminatedUnion` через `generateDiscriminatedUnion`). Для админки — `@qgames/api/admin` (`/model`, `/zod`; в `/zod` — схемы ручек, без схем components: `generateReusableSchemas` у цели `adminZod` не включён).
   - SSE-ручки (ответ 200 — `text/event-stream`) исключены из генерации react-query/fetch трансформером входа группы `portal` в `orval.config.ts`: сгенерированный fetch повис бы на бесконечном потоке. Модели и Zod-схемы их событий генерируются.
   - Если контракт неудобен или неполон — сказать пользователю, а не обходить на фронте (§0).
   - Известные расхождения контракта и генерации (фронт их обходит, обходы помечены комментариями со ссылкой сюда):
     - Orval переносит `pattern` в `new RegExp(...)` без флага `u`, поэтому шаблоны с `\p{…}` (ник: `\p{Cc}`) в JS работают неверно и отклоняют обычные ники. Ник проверяется своей схемой с флагом `u` (`entities/user/model/nickname.ts`). Это ограничение генерации, а не бэкенда;
     - тексты в `errors` у `VALIDATION_ERROR` — на английском, поэтому поля подсвечиваются нейтральным русским текстом (`applyFieldErrors`);
-    - сгенерированный Zod даёт nullable-полям `.nullish()` (`T | null | undefined`), а модель Orval — `T | null`; с `exactOptionalPropertyTypes` они несовместимы. Данные потока комнаты перед записью в кеш нормализуются (`undefined` → `null`) в `entities/room/lib/stream-data.ts`.
+    - сгенерированный Zod даёт nullable-полям `.nullish()` (`T | null | undefined`), а модель Orval — `T | null`; с `exactOptionalPropertyTypes` они несовместимы. Данные потока комнаты перед записью в кеш нормализуются (`undefined` → `null`) в `entities/room/lib/streamData.ts`.
 - **Ошибки:** все 4xx/5xx приходят как `ProblemDetail` с машиночитаемым `code`. Mutator превращает их в `ApiError` (`status`, `code`, `detail`, `reason` у `MOVE_REJECTED`, `fieldErrors` у `VALIDATION_ERROR`); недоступный сервер — `NETWORK_ERROR`. UI ветвится только по `code` (общие тексты — `errorMessage` из `@qgames/api`, тексты по своим кодам — в слайсах, для комнат — `roomErrorMessage`), тексты `detail` пользователю не показываем.
 - **Real-time:** ходы и действия — REST, события — SSE модуля `game` бэкенда через обёртку `apps/portal/src/shared/lib/sse`. Устройство обёртки, переподключение, потоки комнаты и партии, сверка seq — в **`adr/c4/3-frontend.md`** (раздел «SSE»), потоки целиком — `adr/c4/dynamic/room-stream.md` и `adr/c4/dynamic/move.md`: читать, когда трогаешь SSE.
 
@@ -155,7 +155,7 @@ src/
 ## 8. Тесты
 
 - **E2E — Playwright, пакет `e2e/`** против поднятых стендов (решение — `adr/frontend/e2e-testing.md`). Правила — во вложенном **`e2e/CLAUDE.md`**: читать, когда трогаешь тесты или добавляешь элемент, нужный тестам.
-- **`data-testid` в компонентах:** элемент, который нужен или может понадобиться e2e, получает id из файла `<компонент>.test-ids.ts` рядом с компонентом (`generateTestIds` из `@qgames/ui/lib/test-ids`). Одинаковые элементы различаются атрибутами `data-*`, а не текстом.
+- **`data-testid` в компонентах:** элемент, который нужен или может понадобиться e2e, получает id из файла `<Компонент>.testIds.ts` рядом с компонентом (`generateTestIds` из `@qgames/ui/lib/testIds`). Одинаковые элементы различаются атрибутами `data-*`, а не текстом.
 - **Unit-тесты — Vitest** (решение — `adr/frontend/unit-testing.md`): только чистая логика, и только сложная (применитель патчей, сверка seq, guard'ы, применение сообщений потоков). UI-компоненты unit-тестами не покрываем — для них позже скриншотные или снапшотные тесты.
 - Тесты лежат рядом с кодом (`*.test.ts`), без конфига Vitest. Пакет с тестами объявляет `"test": "vitest run"` и `vitest` в devDependencies. Запуск — `pnpm test` (turbo, без e2e).
 - Сценарии `@qgames/doc-patch` повторяют `DocumentPatchScenariosTest` бэкенда: правка семантики применителя — на обеих сторонах вместе.

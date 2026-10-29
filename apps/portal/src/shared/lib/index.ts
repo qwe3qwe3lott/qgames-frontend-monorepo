@@ -1,4 +1,4 @@
-export {initGoogleIdentity, loadGoogleIdentity} from './google-identity';
+export {initGoogleIdentity, loadGoogleIdentity} from './googleIdentity';
 export {
   createEventStream,
   type EventStream,

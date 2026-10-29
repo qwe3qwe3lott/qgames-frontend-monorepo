@@ -1,5 +1,5 @@
 export {GAME_IN_DEVELOPMENT_HINT, playersLabel} from './lib/labels';
-export {loadGameModule} from './lib/load-game-module';
+export {loadGameModule} from './lib/loadGameModule';
 export {
   GAME_CODES,
   gameByCode,
