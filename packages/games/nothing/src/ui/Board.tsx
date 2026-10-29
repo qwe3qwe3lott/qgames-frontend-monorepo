@@ -2,18 +2,10 @@ import {
   activeTimer,
   isSessionOver,
   moveOptionsOf,
-  playerClock,
   type MoveOption,
 } from '@qgames/game-core';
-import {
-  ChessClock,
-  ClockIncrement,
-} from '@qgames/game-ui/components/ChessClock';
+import {ClockIncrement} from '@qgames/game-ui/components/ChessClock';
 import {GameOver} from '@qgames/game-ui/components/GameOver';
-import {
-  PlayerList,
-  type PlayerListItem,
-} from '@qgames/game-ui/components/PlayerList';
 import {TurnIndicator} from '@qgames/game-ui/components/TurnIndicator';
 import {Button} from '@qgames/ui/components/Button';
 import {
@@ -23,7 +15,7 @@ import {
 } from '@qgames/ui/components/Tooltip';
 
 import {isNothingSession, PASS} from '../state';
-import type {BoardMove, BoardPlayer, BoardProps} from '../types';
+import type {BoardMove, BoardProps} from '../types';
 import {testIds} from './Board.testIds';
 
 const UNKNOWN_PLAYER_NAME = 'Игрок';
@@ -37,8 +29,8 @@ function toMove(option: MoveOption): BoardMove {
 }
 
 /**
- * Доска «Игры в ничто»: игроки по очереди завершают ход, N раундов; при
- * таймере — шахматные часы игроков. Правила не знает: доступность хода — из
+ * Доска «Игры в ничто»: игроки по очереди завершают ход, N раундов; часы
+ * игроков — в их карточках (`PlayerCard`). Правила не знает: доступность хода — из
  * `moveOptions` игрока в состоянии.
  */
 export function Board({
@@ -56,9 +48,6 @@ export function Board({
   const {state} = session;
   const {round, rounds} = state.turns;
   const byId = new Map(players.map(player => [player.id, player]));
-  const sessionPlayers: BoardPlayer[] = state.players.map(
-    ({id}) => byId.get(id) ?? {id, name: UNKNOWN_PLAYER_NAME, avatar: null},
-  );
   const currentId = state.turns.currentPlayerId ?? null;
   const current = currentId === null ? undefined : byId.get(currentId);
 
@@ -74,26 +63,12 @@ export function Board({
               : `Сыграно раундов: ${String(rounds ?? round)}. В этой игре не бывает победителей.`
           }
         />
-        <PlayerList players={sessionPlayers} title="Участники партии" />
       </div>
     );
   }
 
   const timer = activeTimer(session);
   const paused = timer?.paused ?? false;
-  // Часы — в строке каждого игрока: идут только у ходящего.
-  const playerItems: PlayerListItem[] = sessionPlayers.map(player => {
-    const clock =
-      timer === null ? null : playerClock(timer, player.id, currentId);
-    return clock === null
-      ? player
-      : {
-          ...player,
-          extra: (
-            <ChessClock clock={clock} clockOffsetMs={session.clockOffsetMs} />
-          ),
-        };
-  });
   const pass = moveOptionsOf(state, viewerId).find(
     option => option.type === PASS,
   );
@@ -132,11 +107,6 @@ export function Board({
           )}
         </div>
       </div>
-      <PlayerList
-        players={playerItems}
-        activePlayerId={currentId}
-        title="Порядок ходов"
-      />
       <div className="flex items-center gap-3">
         {paused ? (
           // Заблокированная кнопка не получает событий мыши: триггер — обёртка.

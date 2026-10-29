@@ -1,4 +1,4 @@
-import {Component, Suspense, use, type ReactNode} from 'react';
+import {Suspense, use} from 'react';
 
 import {
   GAME_IN_DEVELOPMENT_HINT,
@@ -11,33 +11,12 @@ import {memberName, type RoomView, type SessionView} from '@/entities/room';
 import {useSession, useSessionEvents} from '@/entities/session';
 import {useMoveControls} from '@/features/makeMove';
 
+import {ChunkErrorBoundary} from './ChunkErrorBoundary';
+
 export interface GameBoardProps {
   game: GameEntry;
   room: RoomView;
   viewerId: string;
-}
-
-/** Ошибка загрузки чанка игры не должна ронять страницу комнаты. */
-class ChunkErrorBoundary extends Component<
-  {children: ReactNode},
-  {failed: boolean}
-> {
-  override state = {failed: false};
-
-  static getDerivedStateFromError(): {failed: boolean} {
-    return {failed: true};
-  }
-
-  override render(): ReactNode {
-    if (this.state.failed) {
-      return (
-        <p className="text-destructive">
-          Не удалось загрузить игру. Обновите страницу.
-        </p>
-      );
-    }
-    return this.props.children;
-  }
 }
 
 function Board({
@@ -110,7 +89,13 @@ export function GameBoard({game, room, viewerId}: GameBoardProps) {
     );
   }
   return (
-    <ChunkErrorBoundary>
+    <ChunkErrorBoundary
+      fallback={
+        <p className="text-destructive">
+          Не удалось загрузить игру. Обновите страницу.
+        </p>
+      }
+    >
       <Suspense
         fallback={<p className="text-muted-foreground">Загружаем игру…</p>}
       >

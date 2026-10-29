@@ -1,21 +1,9 @@
-import {
-  activeTimer,
-  isSessionOver,
-  moveOptionsOf,
-  playerClock,
-} from '@qgames/game-core';
-import {
-  ChessClock,
-  ClockIncrement,
-} from '@qgames/game-ui/components/ChessClock';
+import {activeTimer, isSessionOver, moveOptionsOf} from '@qgames/game-core';
+import {ClockIncrement} from '@qgames/game-ui/components/ChessClock';
 import {
   GameOver,
   type GameOverResult,
 } from '@qgames/game-ui/components/GameOver';
-import {
-  PlayerList,
-  type PlayerListItem,
-} from '@qgames/game-ui/components/PlayerList';
 import {TurnIndicator} from '@qgames/game-ui/components/TurnIndicator';
 import {Button} from '@qgames/ui/components/Button';
 import {
@@ -35,7 +23,7 @@ import {
 } from '@qgames/ui/components/Tooltip';
 import {useState, type ReactNode} from 'react';
 
-import {COLOR_LABELS, reasonLabel} from '../lib/labels';
+import {reasonLabel} from '../lib/labels';
 import {
   movablePieces,
   nextSquares,
@@ -50,7 +38,7 @@ import {
   RESIGN,
   type CheckersSession,
 } from '../state';
-import type {BoardPlayer, BoardProps} from '../types';
+import type {BoardProps} from '../types';
 import {testIds} from './Board.testIds';
 import {CheckersGrid} from './CheckersGrid';
 
@@ -171,26 +159,6 @@ function CheckersBoard({
   const timer = activeTimer(session);
   const paused = timer?.paused ?? false;
   const turnPlayerId = state.turns.currentPlayerId ?? null;
-  const playerItems: PlayerListItem[] = state.players.map(({id, color}) => {
-    const player: BoardPlayer = byId.get(id) ?? {
-      id,
-      name: UNKNOWN_PLAYER_NAME,
-      avatar: null,
-    };
-    // Часы — в строке игрока: идут только у ходящего.
-    const clock = timer === null ? null : playerClock(timer, id, turnPlayerId);
-    return {
-      ...player,
-      badges: [COLOR_LABELS[color]],
-      ...(clock === null
-        ? {}
-        : {
-            extra: (
-              <ChessClock clock={clock} clockOffsetMs={session.clockOffsetMs} />
-            ),
-          }),
-    };
-  });
   const viewerColor =
     state.players.find(player => player.id === viewerId)?.color ?? null;
   const lastMovePath = (state.lastMove?.path ?? []).map(toSquare);
@@ -293,7 +261,6 @@ function CheckersBoard({
           }
         />
         {grid}
-        <PlayerList players={playerItems} title="Участники партии" />
       </div>
     );
   }
@@ -302,8 +269,7 @@ function CheckersBoard({
   const canResign = options.some(option => option.type === RESIGN);
   const myTurn = options.some(option => option.type === MOVE);
   const canAcceptDraw = options.some(option => option.type === ACCEPT_DRAW);
-  const drawOffered =
-    state.drawOfferedBy !== undefined && state.drawOfferedBy !== null;
+  // Кто предложил ничью, видно в его карточке в списке игроков (PlayerCard).
   return (
     <div className="flex flex-col gap-4" data-testid={testIds.root}>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -346,10 +312,6 @@ function CheckersBoard({
             Сделайте ход, чтобы отказаться
           </span>
         </div>
-      ) : drawOffered && state.drawOfferedBy === viewerId ? (
-        <p role="status" className="text-sm text-muted-foreground">
-          Вы предложили ничью
-        </p>
       ) : null}
       {grid}
       <div className="flex flex-wrap items-center gap-3">
@@ -392,11 +354,6 @@ function CheckersBoard({
           </span>
         ) : null}
       </div>
-      <PlayerList
-        players={playerItems}
-        activePlayerId={currentId}
-        title="Игроки"
-      />
     </div>
   );
 }

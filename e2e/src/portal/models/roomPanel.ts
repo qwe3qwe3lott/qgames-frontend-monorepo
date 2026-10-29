@@ -1,5 +1,5 @@
 import type {Locator} from '@playwright/test';
-import {testIds as playerListTestIds} from '@qgames/game-ui/testIds/PlayerList';
+import {testIds as playerCardTestIds} from '@qgames/game-ui/testIds/PlayerCard';
 import {testIds as changeRoleTestIds} from '@portal/features/roomMembership/ui/ChangeRoleButton.testIds';
 import {testIds as kickTestIds} from '@portal/features/roomMembership/ui/KickMemberButton.testIds';
 import {testIds} from '@portal/widgets/roomPanel/ui/RoomPanel.testIds';
@@ -34,6 +34,6 @@ export class RoomPanel extends componentModel(testIds) {
   }
 
   private member(list: Locator, userId: string): Locator {
-    return this.byData(list.getByTestId(playerListTestIds.item), {userId});
+    return this.byData(list.getByTestId(playerCardTestIds.root), {userId});
   }
 }

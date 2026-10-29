@@ -16,4 +16,5 @@ export type {
   GameBoardSession,
   GameModule,
   GameMove,
+  GamePlayerCardProps,
 } from './model/types';

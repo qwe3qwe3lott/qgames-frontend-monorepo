@@ -1,34 +1,25 @@
-import {cn} from '@qgames/ui/lib/utils';
-import type {ReactNode} from 'react';
+import type {ComponentType, ReactNode} from 'react';
 
-import {PlayerAvatar, type PlayerAvatarKind} from './PlayerAvatar';
+import {PlayerCard, type PlayerCardProps} from './PlayerCard';
 import {testIds} from './PlayerList.testIds';
 
-export interface PlayerListItem {
-  id: string;
-  name: string;
-  avatar: PlayerAvatarKind | null;
-  /** Пометки рядом с именем: «Владелец», «Вы», «Наблюдатель». */
-  badges?: readonly string[];
-  /** Содержимое справа в строке игрока, например его часы. */
-  extra?: ReactNode;
-}
+export type PlayerListItem = PlayerCardProps;
 
 export interface PlayerListProps {
   players: readonly PlayerListItem[];
-  /** Игрок, который сейчас ходит; подсвечивается. */
-  activePlayerId?: string | null;
   title?: string;
   /** Действие в заголовке списка, например переход в этот список. */
   action?: ReactNode;
+  /** Реализация карточки игрока, например от игры; по умолчанию — базовая. */
+  Card?: ComponentType<PlayerCardProps>;
 }
 
-/** Список игроков комнаты или партии. */
+/** Список игроков комнаты. Карточку игрока рисует переданный `Card`. */
 export function PlayerList({
   players,
-  activePlayerId = null,
   title = 'Игроки',
   action,
+  Card = PlayerCard,
 }: PlayerListProps) {
   return (
     <section className="flex flex-col gap-2" data-testid={testIds.root}>
@@ -40,35 +31,9 @@ export function PlayerList({
         <p className="text-sm text-muted-foreground">Никого нет</p>
       ) : (
         <ul className="flex flex-col gap-1">
-          {players.map(player => {
-            const active = player.id === activePlayerId;
-            return (
-              <li
-                key={player.id}
-                data-testid={testIds.item}
-                data-user-id={player.id}
-                aria-current={active ? 'true' : undefined}
-                className={cn(
-                  'flex items-center gap-2 rounded-md border px-3 py-2 text-sm',
-                  active && 'border-primary bg-primary/10 font-medium',
-                )}
-              >
-                <PlayerAvatar avatar={player.avatar} />
-                <span className="truncate">{player.name}</span>
-                {(player.badges ?? []).map(badge => (
-                  <span
-                    key={badge}
-                    className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground"
-                  >
-                    {badge}
-                  </span>
-                ))}
-                {player.extra === undefined ? null : (
-                  <span className="ml-auto">{player.extra}</span>
-                )}
-              </li>
-            );
-          })}
+          {players.map(player => (
+            <Card key={player.id} {...player} />
+          ))}
         </ul>
       )}
     </section>

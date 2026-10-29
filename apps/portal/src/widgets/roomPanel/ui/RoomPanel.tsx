@@ -2,7 +2,9 @@ import {
   PlayerList,
   type PlayerListItem,
 } from '@qgames/game-ui/components/PlayerList';
+import type {PlayerCardProps} from '@qgames/game-ui/components/PlayerCard';
 import {RoomInfo} from '@qgames/game-ui/components/RoomInfo';
+import type {ComponentType} from 'react';
 
 import {
   memberName,
@@ -28,6 +30,11 @@ export interface RoomPanelProps {
   room: RoomView;
   membership: Membership;
   viewerId: string;
+  /**
+   * Реализация карточки участника, например от игры идущей партии (часы,
+   * цвет); по умолчанию — базовая. Панель про игры не знает.
+   */
+  playerCard?: ComponentType<PlayerCardProps>;
 }
 
 function toListItem(
@@ -51,7 +58,7 @@ function toListItem(
     name: memberName(member),
     avatar: member.avatar,
     badges,
-    extra: (
+    actions: (
       <span className="flex">
         <TransferOwnershipButton
           room={room}
@@ -70,7 +77,10 @@ export function RoomPanel({
   room,
   membership,
   viewerId,
+  playerCard,
 }: RoomPanelProps) {
+  // Без карточки PlayerList берёт базовую: пропс со значением undefined не передаём.
+  const card = playerCard === undefined ? {} : {Card: playerCard};
   const players = room.members.filter(m => m.role === 'PLAYER');
   const spectators = room.members.filter(m => m.role === 'SPECTATOR');
 
@@ -92,6 +102,7 @@ export function RoomPanel({
       />
       <div data-testid={testIds.players}>
         <PlayerList
+          {...card}
           players={players.map(m => toListItem(m, viewerId, room, membership))}
           title={`Игроки (${String(players.length)}/${String(room.maxPlayers)})`}
           action={
@@ -105,6 +116,7 @@ export function RoomPanel({
       </div>
       <div data-testid={testIds.spectators}>
         <PlayerList
+          {...card}
           players={spectators.map(m =>
             toListItem(m, viewerId, room, membership),
           )}

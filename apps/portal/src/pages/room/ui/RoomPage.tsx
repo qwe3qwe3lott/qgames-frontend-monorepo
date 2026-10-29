@@ -12,7 +12,11 @@ import {
   useRoomStream,
 } from '@/entities/room';
 import {useRoomPresence} from '@/features/roomMembership';
-import {GameBoard} from '@/widgets/gameBoard';
+import {
+  GameBoard,
+  GameSessionProvider,
+  SessionPlayerCard,
+} from '@/widgets/gameBoard';
 import {RoomPanel} from '@/widgets/roomPanel';
 
 import {testIds} from './RoomPage.testIds';
@@ -121,17 +125,20 @@ export function RoomPage({game, roomId, viewerId}: RoomPageProps) {
           Нет связи с комнатой — переподключаемся…
         </p>
       ) : null}
-      <div className="grid gap-6 md:grid-cols-[20rem_1fr]">
-        <RoomPanel
-          gameTitle={title}
-          room={room}
-          membership={viewerMembership}
-          viewerId={viewerId}
-        />
-        <section className="flex flex-col gap-4 rounded-lg border p-6">
-          <GameBoard game={game} room={room} viewerId={viewerId} />
-        </section>
-      </div>
+      <GameSessionProvider game={game} room={room} viewerId={viewerId}>
+        <div className="grid gap-6 md:grid-cols-[20rem_1fr]">
+          <RoomPanel
+            gameTitle={title}
+            room={room}
+            membership={viewerMembership}
+            viewerId={viewerId}
+            playerCard={SessionPlayerCard}
+          />
+          <section className="flex flex-col gap-4 rounded-lg border p-6">
+            <GameBoard game={game} room={room} viewerId={viewerId} />
+          </section>
+        </div>
+      </GameSessionProvider>
     </PageLayout>
   );
 }

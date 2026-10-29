@@ -2,6 +2,7 @@
 // поэтому форма дублирует ожидание портала и сверяется с ним структурной типизацией.
 
 import type {SessionData} from '@qgames/game-core';
+import type {PlayerCardProps} from '@qgames/game-ui/components/PlayerCard';
 
 export interface BoardPlayer {
   id: string;
@@ -23,4 +24,13 @@ export interface BoardProps {
   viewerId: string;
   onMove: (move: BoardMove) => void;
   movePending: boolean;
+}
+
+/** Пропсы карточки игрока, которую портал подставляет в список игроков комнаты. */
+export interface GamePlayerCardProps {
+  /** Партия из потока, как у доски. */
+  session: SessionData;
+  viewerId: string;
+  /** Базовая карточка участника комнаты: имя, аватар, пометки и действия комнаты. */
+  card: PlayerCardProps;
 }
