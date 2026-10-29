@@ -2,10 +2,12 @@
 # Шаблон: при старте контейнера entrypoint образа nginx подставляет переменные окружения
 # (envsubst заменяет только заданные переменные, поэтому $uri, $host и т.п. остаются переменными nginx)
 # и кладёт результат в /etc/nginx/conf.d/web.conf. Значения по умолчанию — ENV в docker/app.Dockerfile:
-#   PORTAL_LISTEN / ADMIN_LISTEN           — порты сайтов (3000 / 3001);
-#   PORTAL_SERVER_NAME / ADMIN_SERVER_NAME — имена хостов (_ — любой; в проде — <имя>.duckdns.org и admin.<имя>.duckdns.org);
+#   HTTPS_LISTEN / HTTP_LISTEN             — порты в контейнере (8443 / 8080; снаружи — 443 / 80);
+#   PORTAL_SERVER_NAME / ADMIN_SERVER_NAME — имена хостов (обязательны: оба сайта на одном порту различаются по имени;
+#     локально — <LOCAL_DOMAIN> и admin.<LOCAL_DOMAIN>, в проде — qgames.duckdns.org и admin.qgames.duckdns.org);
 #   API_UPSTREAM                           — бэкенд (host.docker.internal:8080 — бэкенд в своём compose);
 #     в upstream попадает только его IPv4-адрес (API_UPSTREAM_IPV4, см. 18-api-upstream-ipv4.envsh).
+# Сертификат на оба имени — /etc/nginx/certs/cert.pem и key.pem (том; локально — mkcert из docker/certs/).
 
 # Заголовки ответа: add_header в location дополняет заголовки server, а не отменяет их (nginx >= 1.29.3).
 add_header_inherit merge;
@@ -20,8 +22,38 @@ upstream qgames_api {
     keepalive 16;
 }
 
+# TLS: один сертификат на оба имени. HTTP/2 к браузеру: потоки SSE комнаты и партии не упираются
+# в лимит 6 соединений HTTP/1.1 на хост. До бэкенда — HTTP/1.1 (api-proxy.conf).
+ssl_certificate /etc/nginx/certs/cert.pem;
+ssl_certificate_key /etc/nginx/certs/key.pem;
+ssl_protocols TLSv1.2 TLSv1.3;
+ssl_session_cache shared:SSL:1m;
+http2 on;
+
+# HTTP: только редирект на HTTPS и проверка живости для healthcheck compose.
 server {
-    listen ${PORTAL_LISTEN};
+    listen ${HTTP_LISTEN} default_server;
+    server_name _;
+
+    location = /healthz {
+        access_log off;
+        return 200;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# Чужое имя хоста (или обращение по IP) по HTTPS — обрыв TLS-рукопожатия, а не сайт с чужим сертификатом.
+server {
+    listen ${HTTPS_LISTEN} ssl default_server;
+    server_name _;
+    ssl_reject_handshake on;
+}
+
+server {
+    listen ${HTTPS_LISTEN} ssl;
     server_name ${PORTAL_SERVER_NAME};
     root /usr/share/nginx/html/portal;
 
@@ -47,7 +79,7 @@ server {
 }
 
 server {
-    listen ${ADMIN_LISTEN};
+    listen ${HTTPS_LISTEN} ssl;
     server_name ${ADMIN_SERVER_NAME};
     root /usr/share/nginx/html/admin;
 

@@ -106,10 +106,11 @@ export const testPortal = withExpected(
         player: async () => {
           const login = playerLogin(testInfo.parallelIndex, next);
           next += 1;
-          const {baseURL} = testInfo.project.use;
-          const context = await browser.newContext(
-            baseURL === undefined ? {} : {baseURL},
-          );
+          const {baseURL, ignoreHTTPSErrors} = testInfo.project.use;
+          const context = await browser.newContext({
+            ...(baseURL === undefined ? {} : {baseURL}),
+            ...(ignoreHTTPSErrors === undefined ? {} : {ignoreHTTPSErrors}),
+          });
           contexts.push(context);
           await recordEventStreams(context);
           const player = await loginPlayer(context, login);

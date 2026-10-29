@@ -4,7 +4,7 @@ Playwright (только Chromium) против поднятых стендов.
 
 ## Запуск
 
-- Стенды: бэкенд — `docker compose up --build -d --wait` в `../qgames-backend-monorepo` (профиль local: тестовые игроки, seed из заголовка), фронт — то же здесь или `pnpm dev`. Адреса — `E2E_PORTAL_URL` (по умолчанию `http://localhost:3000`), `E2E_ADMIN_URL` (`:3001`).
+- Стенды: бэкенд — `docker compose up --build -d --wait` в `../qgames-backend-monorepo` (профиль local: тестовые игроки, seed из заголовка), фронт — то же здесь или `pnpm dev`. Адреса — `E2E_PORTAL_URL` и `E2E_ADMIN_URL`, по умолчанию Docker-стенд `https://<LOCAL_DOMAIN>` и `https://admin.<LOCAL_DOMAIN>` (`.env` корня); для `pnpm dev` — те же с портами :3000 и :3001. Ошибки сертификата игнорируются (`ignoreHTTPSErrors`), новые контексты браузера создаются с `use` проекта.
 - Браузер: `pnpm --filter @qgames/e2e exec playwright install chromium`. Тесты: `pnpm test:e2e`, отчёт — `e2e/playwright-report/`.
 - Запись ОР сценариев партий: `E2E_UPDATE_SCENARIOS=1 pnpm test:e2e`, затем проверить дифф JSON глазами.
 

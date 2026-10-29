@@ -7,7 +7,11 @@
     "./tsconfig/*": "./tsconfig/*",
     "./eslint": "./eslint/index.js",
     "./stylelint": "./stylelint/index.js",
-    "./prettier": "./prettier/index.js"
+    "./prettier": "./prettier/index.js",
+    "./local-https": {
+      "types": "./local-https/index.d.ts",
+      "default": "./local-https/index.js"
+    }
   },
   "scripts": {
     "lint": "eslint ."

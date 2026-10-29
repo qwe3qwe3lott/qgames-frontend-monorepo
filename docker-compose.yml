@@ -1,8 +1,10 @@
 # Локальный запуск фронта в прод-сборке: docker compose up --build -d --wait
 # Один сервис web (nginx): статика обоих приложений и reverse proxy API на бэкенд — same-origin, как в проде.
-# portal — http://localhost:3000 (/api/** → бэкенд), admin — http://localhost:3001 (/api/admin/** → бэкенд).
+# portal — https://<LOCAL_DOMAIN> (/api/** → бэкенд), admin — https://admin.<LOCAL_DOMAIN> (/api/admin/** → бэкенд);
+# http:// — редирект на https://. LOCAL_DOMAIN — из .env в корне (шаблон — .env.example), сертификаты mkcert —
+# docker/certs/, имена — в hosts (README.md, «Подготовка»).
 # Без hot reload; для разработки — pnpm dev.
-# Переменные окружения вшиваются при сборке из apps/<app>/.env (шаблон — .env.example): после правки — --build.
+# Переменные окружения приложений вшиваются при сборке из apps/<app>/.env (шаблон — .env.example): после правки — --build.
 # Бэкенд поднимается отдельно в своём репозитории (qgames-backend-monorepo): docker compose up --build -d --wait.
 
 services:
@@ -11,28 +13,31 @@ services:
       context: .
       dockerfile: docker/app.Dockerfile
     ports:
-      - '3000:3000'
-      - '3001:3001'
+      - '443:8443'
+      - '80:8080'
     environment:
-      # Порты и имена хостов сайтов (шаблон docker/nginx/web.conf.template); в проде — имена DuckDNS.
-      PORTAL_LISTEN: '3000'
-      PORTAL_SERVER_NAME: '_'
-      ADMIN_LISTEN: '3001'
-      ADMIN_SERVER_NAME: '_'
+      # Имена хостов сайтов (шаблон docker/nginx/web.conf.template): оба на одном порту, различаются по имени.
+      PORTAL_SERVER_NAME: ${LOCAL_DOMAIN:?скопируйте .env.example в .env в корне репозитория}
+      ADMIN_SERVER_NAME: admin.${LOCAL_DOMAIN:?скопируйте .env.example в .env в корне репозитория}
       # Бэкенд из своего compose, опубликованный на хосте.
       API_UPSTREAM: 'host.docker.internal:8080'
+    # Сертификат mkcert на оба имени (cert.pem, key.pem); в образ не входит.
+    volumes:
+      - ./docker/certs:/etc/nginx/certs:ro
     # host.docker.internal на Linux (в Docker Desktop есть и так). Резолвится и в IPv6 — в upstream nginx
     # берётся только IPv4 (docker/nginx/18-api-upstream-ipv4.envsh).
     extra_hosts:
       - 'host.docker.internal:host-gateway'
-    # Без свопа: memswap_limit = mem_limit. Замер: простой ~14 MiB, 360 SSE 5 мин — пик ~29 MiB.
+    # Без свопа: memswap_limit = mem_limit. Замер без TLS: простой ~14 MiB, 360 SSE 5 мин — пик ~29 MiB.
+    # С TLS и HTTP/2: простой ~13 MiB, под нагрузкой не мерили (BACKLOG «Замер памяти nginx с TLS»).
     mem_limit: 48m
     memswap_limit: 48m
-    # Оба сайта; 127.0.0.1, а не localhost: localhost в alpine может разрешиться в ::1.
+    # nginx жив и конфиг с сертификатами загружен (иначе nginx не стартует). 127.0.0.1, а не localhost:
+    # localhost в alpine может разрешиться в ::1.
     healthcheck:
       test:
         - CMD-SHELL
-        - wget -q --spider http://127.0.0.1:3000/ && wget -q --spider http://127.0.0.1:3001/
+        - wget -q --spider http://127.0.0.1:8080/healthz
       interval: 10s
       timeout: 3s
       retries: 6

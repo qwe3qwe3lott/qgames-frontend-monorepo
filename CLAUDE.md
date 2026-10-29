@@ -37,7 +37,7 @@
 | `apps/admin`   | Админка портала                                       | Rsbuild (Rspack)    | CSR SPA, чанки по роутам            | 3001       |
 
 - **Бэкенд — одно приложение** (`http://localhost:8080` локально), API разделён на две группы: portal → группа `portal` (`/api/**`, кроме `/api/admin/**`), admin → группа `admin` (`/api/admin/**`).
-- Приложения ходят в API **того же origin**, что и страница: портал — `/api/**` своего хоста (прод — `https://<имя>.duckdns.org`), админка — `/api/admin/**` своего хоста (прод — `https://admin.<имя>.duckdns.org`). API админки на хосте портала закрыт (404), API портала на хосте админки — тоже. Локально: portal :3000, admin :3001, бэкенд :8080 за прокси.
+- Приложения ходят в API **того же origin**, что и страница: портал — `/api/**` своего хоста (прод — `https://qgames.duckdns.org`), админка — `/api/admin/**` своего хоста (прод — `https://admin.qgames.duckdns.org`). API админки на хосте портала закрыт (404), API портала на хосте админки — тоже. Локально — так же по HTTPS на `<LOCAL_DOMAIN>` и `admin.<LOCAL_DOMAIN>` (`.env` корня, mkcert, hosts — `README.md`), в `pnpm dev` с портами :3000 и :3001; бэкенд :8080 за прокси. На `http://localhost` не переходить: там другие правила кук и same-site.
 - **Админка ходит только в группу `admin` (`/api/admin/**`), никогда в ручки портала.** Сессия — в куках `admin_access_token` (`Path=/api/admin`) / `admin_refresh_token` (`Path=/api/admin/auth`), ручки сессии — `/api/admin/auth/*`, 401 `UNAUTHENTICATED` — как у портала.
 - **Маршруты и поведение страниц** (таблицы маршрутов админки и портала, реестр игр, каталог и статусы игр, авторизованная зона, вход и регистрация, настройки комнаты, присутствие, партия на странице комнаты, роли) — в **`adr/c4/3-frontend-portal.md`**: читать, когда трогаешь страницы или маршруты. В портале страницы «после входа» лежат под layout-маршрутом `routes/_authenticated.tsx`: гостю он показывает окно входа и регистрации на том же адресе, страницы `/login` нет. Новую страницу «после входа» кладём в `routes/_authenticated/`. В админке гость по-прежнему уходит на `/login?redirect=<текущий адрес>`.
 
@@ -182,8 +182,8 @@ pnpm api:generate            # сгенерировать клиент API (Orva
 pnpm test:e2e                # e2e против поднятых стендов (браузер: pnpm --filter @qgames/e2e exec playwright install chromium); E2E_UPDATE_SCENARIOS=1 — записать ОР сценариев партий
 ```
 
-- Порты: portal — http://localhost:3000, admin — http://localhost:3001.
-- Прод-сборка в Docker: `docker compose up --build -d --wait` — один сервис `web` на nginx (статика обоих приложений + reverse proxy на бэкенд). Правила nginx и `PUBLIC_*` при сборке — во вложенном **`docker/CLAUDE.md`**, локальная настройка Google-входа — в `README.md`, устройство образа и CSP — в `adr/c4/deployment.md` и `adr/system/reverse-proxy.md`: читать, когда трогаешь `docker/`, nginx, CSP или Google-вход.
+- Адреса: Docker — `https://<LOCAL_DOMAIN>` и `https://admin.<LOCAL_DOMAIN>`, `pnpm dev` — те же с портами :3000 и :3001 (HTTPS-хост dev-сервера — `@qgames/config/local-https`, только для `rsbuild dev`).
+- Прод-сборка в Docker: `docker compose up --build -d --wait` — один сервис `web` на nginx (статика обоих приложений + reverse proxy на бэкенд). Правила nginx и `PUBLIC_*` при сборке — во вложенном **`docker/CLAUDE.md`**, локальная настройка домена, сертификатов и Google-входа — в `README.md`, устройство образа и CSP — в `adr/c4/deployment.md` и `adr/system/reverse-proxy.md`: читать, когда трогаешь `docker/`, nginx, CSP или Google-вход.
 - Бэкенд поднимается в его репозитории: `docker compose up --build -d --wait` (одно приложение, :8080). Swagger UI — http://localhost:8080/swagger-ui.html (выбор группы `portal` / `admin`). Вход в админку на стенде — `admin` / `admin`.
 - Переменные окружения приложений — в `.env` приложения (шаблон — `.env.example`).
 - Статический результат Rsbuild-приложений — `apps/<app>/dist/`.

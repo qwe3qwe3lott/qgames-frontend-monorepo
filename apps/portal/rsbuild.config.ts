@@ -1,8 +1,10 @@
+import {localHttpsServer} from '@qgames/config/local-https';
 import {defineConfig} from '@rsbuild/core';
 import {pluginReact} from '@rsbuild/plugin-react';
 import {tanstackRouter} from '@tanstack/router-plugin/rspack';
 
-export default defineConfig({
+// Сборка (Docker, CI) идёт без сертификатов и .env корня: HTTPS-хост — только у dev-сервера.
+export default defineConfig(({command}) => ({
   plugins: [pluginReact()],
   source: {
     entry: {index: './src/app/index.tsx'},
@@ -11,6 +13,8 @@ export default defineConfig({
     title: 'qgames',
   },
   server: {
+    // https://<LOCAL_DOMAIN>:3000, как портал в проде (за вычетом порта, куки от него не зависят).
+    ...(command === 'dev' ? localHttpsServer() : {}),
     port: 3000,
     strictPort: true,
     // Same-origin, как за nginx в Docker: /api/** уходит в бэкенд (CLAUDE.md §5).
@@ -29,4 +33,4 @@ export default defineConfig({
       ],
     },
   },
-});
+}));

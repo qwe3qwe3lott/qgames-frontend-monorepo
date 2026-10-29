@@ -32,19 +32,20 @@ RUN --mount=type=cache,target=/pnpm/store,sharing=locked \
     pnpm install --frozen-lockfile --offline --store-dir /pnpm/store
 RUN pnpm turbo run build --filter=@qgames/portal --filter=@qgames/admin
 
-# nginx-unprivileged: процесс работает от пользователя nginx (uid 101), порты 3000 и 3001.
+# nginx-unprivileged: процесс работает от пользователя nginx (uid 101), порты 8080 (редирект на HTTPS) и 8443 (HTTPS).
+# Сертификаты в образ не входят: каталог /etc/nginx/certs монтируется томом (cert.pem и key.pem).
 FROM nginxinc/nginx-unprivileged:1.30.6-alpine
 # Значения по умолчанию для шаблона docker/nginx/web.conf.template (переопределяются env контейнера).
-ENV PORTAL_LISTEN=3000 \
-    PORTAL_SERVER_NAME=_ \
-    ADMIN_LISTEN=3001 \
-    ADMIN_SERVER_NAME=_ \
+ENV HTTPS_LISTEN=8443 \
+    HTTP_LISTEN=8080 \
+    PORTAL_SERVER_NAME=qgames.duckdns.org \
+    ADMIN_SERVER_NAME=admin.qgames.duckdns.org \
     API_UPSTREAM=host.docker.internal:8080
 # Убираем дефолтные конфиг и страницы образа. Каталог статики принадлежит root, поэтому root — только на этот шаг.
 USER root
 # Каталоги шаблонов и сниппетов создаются заранее: COPY --chmod=644 выставил бы этот режим и новому каталогу.
 RUN rm /etc/nginx/conf.d/default.conf && rm -rf /usr/share/nginx/html/* \
-    && mkdir -p /etc/nginx/templates /etc/nginx/snippets
+    && mkdir -p /etc/nginx/templates /etc/nginx/snippets /etc/nginx/certs
 USER nginx
 # Файлы копируются от root и доступны nginx только на чтение.
 # Шаблон при старте превращается в /etc/nginx/conf.d/web.conf (envsubst в entrypoint образа).
@@ -54,4 +55,4 @@ COPY --chmod=644 docker/nginx/api-proxy.conf docker/nginx/spa.conf /etc/nginx/sn
 COPY --chmod=755 docker/nginx/18-api-upstream-ipv4.envsh /docker-entrypoint.d/
 COPY --from=build /workspace/apps/portal/dist /usr/share/nginx/html/portal
 COPY --from=build /workspace/apps/admin/dist /usr/share/nginx/html/admin
-EXPOSE 3000 3001
+EXPOSE 8080 8443
