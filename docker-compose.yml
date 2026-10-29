@@ -29,7 +29,7 @@ services:
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     # Без свопа: memswap_limit = mem_limit. Замер без TLS: простой ~14 MiB, 360 SSE 5 мин — пик ~29 MiB.
-    # С TLS и HTTP/2: простой ~13 MiB, под нагрузкой не мерили (BACKLOG «Замер памяти nginx с TLS»).
+    # С TLS и HTTP/2: простой ~13 MiB; пик под нагрузкой считаем прежним (adr/system/reverse-proxy.md).
     mem_limit: 48m
     memswap_limit: 48m
     # nginx жив и конфиг с сертификатами загружен (иначе nginx не стартует). 127.0.0.1, а не localhost:
