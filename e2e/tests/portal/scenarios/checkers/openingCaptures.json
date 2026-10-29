@@ -29,7 +29,10 @@
                 "code": "checkers",
                 "settings": {
                   "gameCode": "checkers",
-                  "variant": "RUSSIAN",
+                  "boardSize": 8,
+                  "firstColor": "WHITE",
+                  "endgameRule": "RUSSIAN",
+                  "drawQuietMoves": 30,
                   "timeControl": {
                     "enabled": true,
                     "baseSeconds": 480,
@@ -264,7 +267,10 @@
                 "code": "checkers",
                 "settings": {
                   "gameCode": "checkers",
-                  "variant": "RUSSIAN",
+                  "boardSize": 8,
+                  "firstColor": "WHITE",
+                  "endgameRule": "RUSSIAN",
+                  "drawQuietMoves": 30,
                   "timeControl": {
                     "enabled": true,
                     "baseSeconds": 480,
@@ -503,7 +509,10 @@
                 "code": "checkers",
                 "settings": {
                   "gameCode": "checkers",
-                  "variant": "RUSSIAN",
+                  "boardSize": 8,
+                  "firstColor": "WHITE",
+                  "endgameRule": "RUSSIAN",
+                  "drawQuietMoves": 30,
                   "timeControl": {
                     "enabled": true,
                     "baseSeconds": 480,

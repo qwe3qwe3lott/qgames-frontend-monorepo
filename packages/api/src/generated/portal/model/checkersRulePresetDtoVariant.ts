@@ -5,10 +5,10 @@
  * OpenAPI spec version: v0
  */
 
-export type CheckersAdvancedSettingsDtoVariant =
-  (typeof CheckersAdvancedSettingsDtoVariant)[keyof typeof CheckersAdvancedSettingsDtoVariant];
+export type CheckersRulePresetDtoVariant =
+  (typeof CheckersRulePresetDtoVariant)[keyof typeof CheckersRulePresetDtoVariant];
 
-export const CheckersAdvancedSettingsDtoVariant = {
+export const CheckersRulePresetDtoVariant = {
   RUSSIAN: 'RUSSIAN',
   INTERNATIONAL: 'INTERNATIONAL',
   ENGLISH: 'ENGLISH',

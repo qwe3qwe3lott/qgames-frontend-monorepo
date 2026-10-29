@@ -1,8 +1,9 @@
 import type {
   CheckersAdvancedSettingsDto,
+  CheckersAdvancedSettingsDtoEndgameRule,
+  CheckersAdvancedSettingsDtoFirstColor,
   CheckersSimpleSettingsDtoTime,
   CheckersSimpleSettingsDtoVariant,
-  GameAdvancedSettingsDto,
   GameSimpleSettingsDto,
   NothingSimpleSettingsDtoTime,
   RoomSettingsDto,
@@ -42,10 +43,57 @@ export const NOTHING_TIME_LABELS: Readonly<
   CLASSIC: 'Классика',
 };
 
-/** Правила хода шашек, которые владелец задаёт в advanced-настройках. */
+/** Цвет, который ходит первым (`CheckersColor`). */
+export const CHECKERS_COLOR_LABELS: Readonly<
+  Record<CheckersAdvancedSettingsDtoFirstColor, string>
+> = {
+  WHITE: 'Белые',
+  BLACK: 'Чёрные',
+};
+
+/** Правила окончаний шашек (`CheckersEndgameRule`). */
+export const CHECKERS_ENDGAME_RULE_LABELS: Readonly<
+  Record<CheckersAdvancedSettingsDtoEndgameRule, string>
+> = {
+  NONE: 'Нет',
+  RUSSIAN: 'Русские',
+  INTERNATIONAL: 'Международные',
+};
+
+/** Доска шашек: «8×8». */
+export function formatBoardSize(size: number): string {
+  return `${String(size)}×${String(size)}`;
+}
+
+const pluralRules = new Intl.PluralRules('ru-RU');
+
+const MOVE_FORMS: Readonly<Record<Intl.LDMLPluralRule, string>> = {
+  zero: 'ходов',
+  one: 'ход',
+  two: 'хода',
+  few: 'хода',
+  many: 'ходов',
+  other: 'хода',
+};
+
+/**
+ * Ничья по ходам только дамками: счётчик — ходы обеих сторон в сумме, в
+ * подписи — у каждой стороны («по 15 ходов»).
+ */
+export function formatDrawQuietMoves(moves: number): string {
+  const perSide = moves / 2;
+  return `По ${String(perSide)} ${MOVE_FORMS[pluralRules.select(perSide)]}`;
+}
+
+/** Правила хода шашек, которые владелец задаёт галочками в advanced-настройках. */
 export type CheckersRuleFlag = Exclude<
   keyof CheckersAdvancedSettingsDto,
-  'gameCode' | 'variant' | 'timeControl'
+  | 'gameCode'
+  | 'timeControl'
+  | 'boardSize'
+  | 'firstColor'
+  | 'endgameRule'
+  | 'drawQuietMoves'
 >;
 
 export const CHECKERS_RULE_LABELS: Readonly<Record<CheckersRuleFlag, string>> =
@@ -87,16 +135,21 @@ export interface SettingsRow {
   value: string;
 }
 
-/** Строка настроек игры из advanced (по ним идёт партия) — по `gameCode`. */
-function gameSettingsRow(settings: GameAdvancedSettingsDto): SettingsRow {
-  switch (settings.gameCode) {
+/**
+ * Строка настроек игры — по `gameCode`. У шашек в simple-режиме — вариант
+ * правил, в advanced варианта нет — доска.
+ */
+function gameSettingsRow({simple, advanced}: RoomSettingsDto): SettingsRow {
+  switch (advanced.gameCode) {
     case 'nothing':
-      return {label: 'Раундов', value: String(settings.rounds)};
+      return {label: 'Раундов', value: String(advanced.rounds)};
     case 'checkers':
-      return {
-        label: 'Вариант правил',
-        value: CHECKERS_VARIANT_LABELS[settings.variant],
-      };
+      return simple?.gameCode === 'checkers'
+        ? {
+            label: 'Вариант правил',
+            value: CHECKERS_VARIANT_LABELS[simple.variant],
+          }
+        : {label: 'Доска', value: formatBoardSize(advanced.boardSize)};
   }
 }
 
@@ -134,7 +187,7 @@ function timeRow(settings: RoomSettingsDto): SettingsRow {
 export function roomSettingsRows(settings: RoomSettingsDto): SettingsRow[] {
   const advanced = settings.simple === undefined || settings.simple === null;
   return [
-    gameSettingsRow(settings.advanced),
+    gameSettingsRow(settings),
     timeRow(settings),
     ...(advanced ? [{label: 'Правила', value: 'Продвинутые'}] : []),
     {

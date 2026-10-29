@@ -1,7 +1,10 @@
-import type {
-  CheckersSettingsLimitsDto,
-  GameRulesDto,
-  NothingSettingsLimitsDto,
+import {
+  CheckersAdvancedSettingsDtoEndgameRule,
+  CheckersAdvancedSettingsDtoFirstColor,
+  type CheckersRulePresetDto,
+  type CheckersSettingsLimitsDto,
+  type GameRulesDto,
+  type NothingSettingsLimitsDto,
 } from '@qgames/api/portal/model';
 import {Button} from '@qgames/ui/components/Button';
 import {Checkbox} from '@qgames/ui/components/Checkbox';
@@ -19,10 +22,14 @@ import {RadioGroup, RadioGroupItem} from '@qgames/ui/components/RadioGroup';
 import {Controller, useWatch, type UseFormReturn} from 'react-hook-form';
 
 import {
+  CHECKERS_COLOR_LABELS,
+  CHECKERS_ENDGAME_RULE_LABELS,
   CHECKERS_RULE_LABELS,
   CHECKERS_TIME_LABELS,
   CHECKERS_VARIANT_LABELS,
+  formatBoardSize,
   formatClock,
+  formatDrawQuietMoves,
   formatSeconds,
   NOTHING_TIME_LABELS,
   TIME_CONTROL_LABELS,
@@ -63,11 +70,26 @@ function RadioField({
   name:
     | 'simple.variant'
     | 'simple.time'
-    | 'advanced.variant'
+    | 'advanced.boardSize'
+    | 'advanced.firstColor'
+    | 'advanced.endgameRule'
+    | 'advanced.drawQuietMoves'
     | 'advanced.timeControl.enabled';
   legend: string;
   options: readonly Option[];
 }) {
+  const parse = (value: string): string | number | boolean => {
+    switch (name) {
+      // Часы включаются радиокнопками «без таймера / часы».
+      case 'advanced.timeControl.enabled':
+        return value === 'true';
+      case 'advanced.boardSize':
+      case 'advanced.drawQuietMoves':
+        return Number(value);
+      default:
+        return value;
+    }
+  };
   const id = `${idPrefix}-${name.replaceAll('.', '-')}`;
   return (
     <FieldSet>
@@ -84,12 +106,7 @@ function RadioField({
                 if (selected === undefined) {
                   return;
                 }
-                // Часы включаются радиокнопками «без таймера / часы».
-                field.onChange(
-                  name === 'advanced.timeControl.enabled'
-                    ? selected.value === 'true'
-                    : selected.value,
-                );
+                field.onChange(parse(selected.value));
               }}
               aria-invalid={fieldState.error !== undefined}
               className="flex flex-wrap gap-4"
@@ -240,7 +257,64 @@ const CHECKERS_RULE_FLAGS = [
   'removeCapturedAfterMove',
 ] as const satisfies readonly CheckersRuleFlag[];
 
-/** Advanced шашек: вариант (доска, первый ход) и правила хода галочками. */
+/**
+ * Пресеты вариантов шашек для advanced: кнопка подставляет правила варианта
+ * (доска, первый ход, ничьи, правила хода) в поля. Часы не трогает — у них свои
+ * пресеты.
+ */
+function CheckersRulePresets({
+  form,
+  limits,
+}: {
+  form: UseFormReturn<RoomSettingsValues>;
+  limits: CheckersSettingsLimitsDto;
+}) {
+  if (limits.rulePresets.length === 0) {
+    return null;
+  }
+  const apply = (rules: CheckersRulePresetDto) => {
+    const options = {shouldDirty: true, shouldValidate: true};
+    form.setValue('advanced.boardSize', rules.boardSize, options);
+    form.setValue('advanced.firstColor', rules.firstColor, options);
+    form.setValue('advanced.endgameRule', rules.endgameRule, options);
+    form.setValue('advanced.drawQuietMoves', rules.drawQuietMoves, options);
+    for (const flag of CHECKERS_RULE_FLAGS) {
+      form.setValue(`advanced.${flag}`, rules[flag], options);
+    }
+  };
+  return (
+    <div className="flex flex-col gap-2">
+      <span className="text-sm text-muted-foreground">Варианты правил</span>
+      <div className="flex flex-wrap gap-2">
+        {limits.rulePresets.map(item => (
+          <Button
+            key={item.variant}
+            type="button"
+            variant="outline"
+            size="sm"
+            data-testid={testIds.rulePreset}
+            data-value={item.variant}
+            onClick={() => {
+              apply(item);
+            }}
+          >
+            {CHECKERS_VARIANT_LABELS[item.variant]}
+          </Button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const CHECKERS_COLORS = Object.values(CheckersAdvancedSettingsDtoFirstColor);
+const CHECKERS_ENDGAME_RULES = Object.values(
+  CheckersAdvancedSettingsDtoEndgameRule,
+);
+
+/**
+ * Advanced шашек: кнопки вариантов, доска, первый ход, правила хода галочками и
+ * правила ничьих.
+ */
 function CheckersAdvancedFields({
   form,
   idPrefix,
@@ -248,12 +322,26 @@ function CheckersAdvancedFields({
 }: FormProps & {limits: CheckersSettingsLimitsDto}) {
   return (
     <>
+      <CheckersRulePresets form={form} limits={limits} />
       <RadioField
         form={form}
         idPrefix={idPrefix}
-        name="advanced.variant"
-        legend="Вариант правил (доска и первый ход)"
-        options={variantOptions(limits)}
+        name="advanced.boardSize"
+        legend="Доска"
+        options={limits.boardSizes.map(size => ({
+          value: String(size),
+          label: formatBoardSize(size),
+        }))}
+      />
+      <RadioField
+        form={form}
+        idPrefix={idPrefix}
+        name="advanced.firstColor"
+        legend="Первыми ходят"
+        options={CHECKERS_COLORS.map(color => ({
+          value: color,
+          label: CHECKERS_COLOR_LABELS[color],
+        }))}
       />
       <FieldSet>
         <FieldLegend variant="label">Правила хода</FieldLegend>
@@ -282,12 +370,32 @@ function CheckersAdvancedFields({
           />
         ))}
       </FieldSet>
+      <RadioField
+        form={form}
+        idPrefix={idPrefix}
+        name="advanced.drawQuietMoves"
+        legend="Ничья после ходов только дамками без взятий"
+        options={limits.drawQuietMoves.map(moves => ({
+          value: String(moves),
+          label: formatDrawQuietMoves(moves),
+        }))}
+      />
+      <RadioField
+        form={form}
+        idPrefix={idPrefix}
+        name="advanced.endgameRule"
+        legend="Правила окончаний"
+        options={CHECKERS_ENDGAME_RULES.map(rule => ({
+          value: rule,
+          label: CHECKERS_ENDGAME_RULE_LABELS[rule],
+        }))}
+      />
     </>
   );
 }
 
 /**
- * Официальные контроли времени шашек для выбранного варианта advanced: кнопка
+ * Официальные контроли времени шашек, сгруппированные по вариантам: кнопка
  * подставляет запас и добавку в поля часов.
  */
 function CheckersTimePresets({
@@ -297,9 +405,13 @@ function CheckersTimePresets({
   form: UseFormReturn<RoomSettingsValues>;
   limits: CheckersSettingsLimitsDto;
 }) {
-  const variant = useWatch({control: form.control, name: 'advanced.variant'});
-  const presets = limits.timePresets.filter(item => item.variant === variant);
-  if (presets.length === 0) {
+  const groups = limits.variants
+    .map(variant => ({
+      variant,
+      presets: limits.timePresets.filter(item => item.variant === variant),
+    }))
+    .filter(group => group.presets.length > 0);
+  if (groups.length === 0) {
     return null;
   }
   const apply = (baseSeconds: number, incrementSeconds: number) => {
@@ -314,21 +426,29 @@ function CheckersTimePresets({
   return (
     <div className="flex flex-col gap-2">
       <span className="text-sm text-muted-foreground">Контроли времени</span>
-      <div className="flex flex-wrap gap-2">
-        {presets.map(item => (
-          <Button
-            key={item.time}
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              apply(item.baseSeconds, item.incrementSeconds);
-            }}
-          >
-            {CHECKERS_TIME_LABELS[item.time]} ({formatClock(item)})
-          </Button>
-        ))}
-      </div>
+      {groups.map(group => (
+        <div key={group.variant} className="flex flex-wrap items-center gap-2">
+          <span className="w-32 text-sm">
+            {CHECKERS_VARIANT_LABELS[group.variant]}
+          </span>
+          {group.presets.map(item => (
+            <Button
+              key={item.time}
+              type="button"
+              variant="outline"
+              size="sm"
+              data-testid={testIds.timePreset}
+              data-variant={item.variant}
+              data-value={item.time}
+              onClick={() => {
+                apply(item.baseSeconds, item.incrementSeconds);
+              }}
+            >
+              {CHECKERS_TIME_LABELS[item.time]} ({formatClock(item)})
+            </Button>
+          ))}
+        </div>
+      ))}
     </div>
   );
 }

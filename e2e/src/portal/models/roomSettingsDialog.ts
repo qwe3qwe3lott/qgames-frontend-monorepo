@@ -32,7 +32,7 @@ export class RoomSettingsDialog extends componentModel(testIds) {
   readonly baseMinutes = this.page.getByTestId(fieldsTestIds.baseMinutes);
   readonly baseSeconds = this.page.getByTestId(fieldsTestIds.baseSeconds);
 
-  /** Поле формы (число или галочка) по пути `simple.rounds`, `advanced.flyingKings`. */
+  /** Поле формы (ввод числа или галочка) по пути `simple.rounds`, `advanced.flyingKings`. */
   field(path: string): Locator {
     return this.byData(this.page.getByTestId(fieldsTestIds.field), {
       field: path,
@@ -93,7 +93,13 @@ export class RoomSettingsDialog extends componentModel(testIds) {
       if (typeof value === 'boolean') {
         await this.field(path).setChecked(value);
       } else if (typeof value === 'number') {
-        await this.field(path).fill(String(value));
+        // Число — поле ввода или выбор из списка (доска шашек) радиокнопками.
+        const option = this.option(path, String(value));
+        if ((await option.count()) > 0) {
+          await option.click();
+        } else {
+          await this.field(path).fill(String(value));
+        }
       } else if (typeof value === 'string') {
         await this.option(path, value).click();
       } else {

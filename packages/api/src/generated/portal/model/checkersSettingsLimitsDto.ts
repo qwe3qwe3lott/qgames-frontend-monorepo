@@ -4,12 +4,16 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
+import type {CheckersRulePresetDto} from './checkersRulePresetDto';
 import type {CheckersSettingsLimitsDtoGameCode} from './checkersSettingsLimitsDtoGameCode';
 import type {CheckersSettingsLimitsDtoVariantsItem} from './checkersSettingsLimitsDtoVariantsItem';
 import type {CheckersTimePresetDto} from './checkersTimePresetDto';
 
 export interface CheckersSettingsLimitsDto {
+  boardSizes: number[];
+  drawQuietMoves: number[];
   gameCode: CheckersSettingsLimitsDtoGameCode;
+  rulePresets: CheckersRulePresetDto[];
   timePresets: CheckersTimePresetDto[];
   variants: CheckersSettingsLimitsDtoVariantsItem[];
 }

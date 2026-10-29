@@ -4,12 +4,17 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
+import type {CheckersAdvancedSettingsDtoEndgameRule} from './checkersAdvancedSettingsDtoEndgameRule';
+import type {CheckersAdvancedSettingsDtoFirstColor} from './checkersAdvancedSettingsDtoFirstColor';
 import type {CheckersAdvancedSettingsDtoGameCode} from './checkersAdvancedSettingsDtoGameCode';
-import type {CheckersAdvancedSettingsDtoVariant} from './checkersAdvancedSettingsDtoVariant';
 import type {TimeControlDto} from './timeControlDto';
 
 export interface CheckersAdvancedSettingsDto {
+  boardSize: number;
   captureRequired: boolean;
+  drawQuietMoves: number;
+  endgameRule: CheckersAdvancedSettingsDtoEndgameRule;
+  firstColor: CheckersAdvancedSettingsDtoFirstColor;
   flyingKings: boolean;
   gameCode: CheckersAdvancedSettingsDtoGameCode;
   maxCaptureRequired: boolean;
@@ -18,5 +23,4 @@ export interface CheckersAdvancedSettingsDto {
   promoteMidCapture: boolean;
   removeCapturedAfterMove: boolean;
   timeControl: TimeControlDto;
-  variant: CheckersAdvancedSettingsDtoVariant;
 }

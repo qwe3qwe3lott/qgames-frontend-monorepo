@@ -6,7 +6,11 @@
       "maxSpectators": 2
     },
     "advanced": {
+      "boardSize": 8,
       "captureRequired": false,
+      "drawQuietMoves": 30,
+      "endgameRule": "RUSSIAN",
+      "firstColor": "WHITE",
       "flyingKings": true,
       "gameCode": "checkers",
       "maxCaptureRequired": false,
@@ -18,8 +22,7 @@
         "baseSeconds": 480,
         "enabled": false,
         "incrementSeconds": 4
-      },
-      "variant": "RUSSIAN"
+      }
     }
   },
   "actors": [
@@ -2061,7 +2064,10 @@
                 "code": "checkers",
                 "settings": {
                   "gameCode": "checkers",
-                  "variant": "RUSSIAN",
+                  "boardSize": 8,
+                  "firstColor": "WHITE",
+                  "endgameRule": "RUSSIAN",
+                  "drawQuietMoves": 30,
                   "timeControl": {
                     "enabled": false,
                     "baseSeconds": 480,
@@ -2354,7 +2360,10 @@
                 "code": "checkers",
                 "settings": {
                   "gameCode": "checkers",
-                  "variant": "RUSSIAN",
+                  "boardSize": 8,
+                  "firstColor": "WHITE",
+                  "endgameRule": "RUSSIAN",
+                  "drawQuietMoves": 30,
                   "timeControl": {
                     "enabled": false,
                     "baseSeconds": 480,
@@ -2651,7 +2660,10 @@
                 "code": "checkers",
                 "settings": {
                   "gameCode": "checkers",
-                  "variant": "RUSSIAN",
+                  "boardSize": 8,
+                  "firstColor": "WHITE",
+                  "endgameRule": "RUSSIAN",
+                  "drawQuietMoves": 30,
                   "timeControl": {
                     "enabled": false,
                     "baseSeconds": 480,

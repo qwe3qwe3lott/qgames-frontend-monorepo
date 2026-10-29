@@ -58,7 +58,11 @@ export type TimeControlDto = zod.input<typeof TimeControlDto>;
 export type TimeControlDtoOutput = zod.output<typeof TimeControlDto>;
 
 export const CheckersAdvancedSettingsDto = zod.object({
+  boardSize: zod.int(),
   captureRequired: zod.boolean(),
+  drawQuietMoves: zod.int(),
+  endgameRule: zod.enum(['NONE', 'RUSSIAN', 'INTERNATIONAL']),
+  firstColor: zod.enum(['WHITE', 'BLACK']),
   flyingKings: zod.boolean(),
   gameCode: zod.enum(['checkers']),
   maxCaptureRequired: zod.boolean(),
@@ -67,7 +71,6 @@ export const CheckersAdvancedSettingsDto = zod.object({
   promoteMidCapture: zod.boolean(),
   removeCapturedAfterMove: zod.boolean(),
   timeControl: TimeControlDto,
-  variant: zod.enum(['RUSSIAN', 'INTERNATIONAL', 'ENGLISH']),
 });
 
 export type CheckersAdvancedSettingsDto = zod.input<
@@ -126,6 +129,26 @@ export const CheckersPlayerDto = zod.object({
 
 export type CheckersPlayerDto = zod.input<typeof CheckersPlayerDto>;
 export type CheckersPlayerDtoOutput = zod.output<typeof CheckersPlayerDto>;
+
+export const CheckersRulePresetDto = zod.object({
+  boardSize: zod.int(),
+  captureRequired: zod.boolean(),
+  drawQuietMoves: zod.int(),
+  endgameRule: zod.enum(['NONE', 'RUSSIAN', 'INTERNATIONAL']),
+  firstColor: zod.enum(['WHITE', 'BLACK']),
+  flyingKings: zod.boolean(),
+  maxCaptureRequired: zod.boolean(),
+  menCaptureBackward: zod.boolean(),
+  menMoveBackward: zod.boolean(),
+  promoteMidCapture: zod.boolean(),
+  removeCapturedAfterMove: zod.boolean(),
+  variant: zod.enum(['RUSSIAN', 'INTERNATIONAL', 'ENGLISH']),
+});
+
+export type CheckersRulePresetDto = zod.input<typeof CheckersRulePresetDto>;
+export type CheckersRulePresetDtoOutput = zod.output<
+  typeof CheckersRulePresetDto
+>;
 
 export const SessionResultDto = zod.object({
   outcome: zod.enum(['WIN', 'DRAW']),
@@ -198,7 +221,10 @@ export type CheckersTimePresetDtoOutput = zod.output<
 >;
 
 export const CheckersSettingsLimitsDto = zod.object({
+  boardSizes: zod.array(zod.int()),
+  drawQuietMoves: zod.array(zod.int()),
   gameCode: zod.enum(['checkers']),
+  rulePresets: zod.array(CheckersRulePresetDto),
   timePresets: zod.array(CheckersTimePresetDto),
   variants: zod.array(zod.enum(['RUSSIAN', 'INTERNATIONAL', 'ENGLISH'])),
 });

@@ -62,6 +62,7 @@ function timeControlSchema(rules: GameRulesDto) {
 }
 
 const UNSUPPORTED_VARIANT = 'Этот вариант игра не поддерживает';
+const UNSUPPORTED_VALUE = 'Это значение игра не поддерживает';
 
 /**
  * Simple-настройки: union по `gameCode` из сгенерированных схем, вариант игры
@@ -89,7 +90,7 @@ function simpleSchema(limits: GameSettingsLimitsDto) {
   return z.discriminatedUnion('gameCode', [nothing, checkers]);
 }
 
-/** Advanced-настройки: как simple, плюс часы с границами игры. */
+/** Advanced-настройки: поля игры с её границами, плюс часы. */
 function advancedSchema(rules: GameRulesDto) {
   const limits = rules.gameSettingsLimits;
   const timeControl = timeControlSchema(rules);
@@ -102,14 +103,22 @@ function advancedSchema(rules: GameRulesDto) {
         : NothingAdvancedSettingsDto.shape.rounds,
     timeControl,
   });
+  const {boardSize, drawQuietMoves} = CheckersAdvancedSettingsDto.shape;
   const checkers = CheckersAdvancedSettingsDto.extend({
-    variant:
+    boardSize:
       limits.gameCode === 'checkers'
-        ? CheckersAdvancedSettingsDto.shape.variant.refine(
-            variant => limits.variants.includes(variant),
-            UNSUPPORTED_VARIANT,
+        ? boardSize.refine(
+            size => limits.boardSizes.includes(size),
+            UNSUPPORTED_VALUE,
           )
-        : CheckersAdvancedSettingsDto.shape.variant,
+        : boardSize,
+    drawQuietMoves:
+      limits.gameCode === 'checkers'
+        ? drawQuietMoves.refine(
+            moves => limits.drawQuietMoves.includes(moves),
+            UNSUPPORTED_VALUE,
+          )
+        : drawQuietMoves,
     timeControl,
   });
   return z.discriminatedUnion('gameCode', [nothing, checkers]);
@@ -146,7 +155,10 @@ export const ROOM_SETTINGS_FIELDS = [
   'simple.variant',
   'simple.time',
   'advanced.rounds',
-  'advanced.variant',
+  'advanced.boardSize',
+  'advanced.firstColor',
+  'advanced.endgameRule',
+  'advanced.drawQuietMoves',
   'advanced.timeControl.enabled',
   'advanced.timeControl.baseSeconds',
   'advanced.timeControl.incrementSeconds',
