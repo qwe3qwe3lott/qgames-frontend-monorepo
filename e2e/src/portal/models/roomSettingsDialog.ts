@@ -26,9 +26,6 @@ const FIRST_FIELDS = ['variant'];
 /** Окно настроек комнаты у владельца. */
 export class RoomSettingsDialog extends componentModel(testIds) {
   readonly fields = this.page.getByTestId(fieldsTestIds.root);
-  readonly advancedCheckbox = this.page.getByTestId(
-    fieldsTestIds.advancedCheckbox,
-  );
   readonly baseMinutes = this.page.getByTestId(fieldsTestIds.baseMinutes);
   readonly baseSeconds = this.page.getByTestId(fieldsTestIds.baseSeconds);
 
@@ -39,7 +36,14 @@ export class RoomSettingsDialog extends componentModel(testIds) {
     });
   }
 
-  /** Вариант радиокнопок поля [path] со значением [value]. */
+  /** Сегмент режима правил: `simple` или `advanced`. */
+  rulesMode(value: 'simple' | 'advanced'): Locator {
+    return this.byData(this.page.getByTestId(fieldsTestIds.rulesMode), {
+      value,
+    });
+  }
+
+  /** Сегмент выбора поля [path] со значением [value]. */
   option(path: string, value: string): Locator {
     return this.byData(this.page.getByTestId(fieldsTestIds.option), {
       field: path,
@@ -49,8 +53,9 @@ export class RoomSettingsDialog extends componentModel(testIds) {
 
   /**
    * Открывает окно, выставляет переданные группы кликами и сохраняет. advanced
-   * включает галочку «Продвинутые правила» (сервер заполняет поля из simple),
-   * simple — выключает её. Код игры в группе не выставляется: он из комнаты.
+   * переключает режим правил на «Продвинутые» (сервер заполняет поля из
+   * simple), simple — на «Простые». Код игры в группе не выставляется: он из
+   * комнаты.
    */
   async apply(settings: RoomSettingsInput): Promise<void> {
     await this.openButton.click();
@@ -61,21 +66,25 @@ export class RoomSettingsDialog extends componentModel(testIds) {
       );
     }
     if (settings.simple !== undefined) {
-      await this.advancedCheckbox.setChecked(false);
+      await this.selectRulesMode('simple');
       await this.fill('simple', settings.simple);
     }
     if (settings.advanced !== undefined) {
-      if (!(await this.advancedCheckbox.isChecked())) {
-        await this.advancedCheckbox.click();
-      }
-      // Галочка и поля появляются после ответа сервера на перевод simple → advanced.
-      await expect(this.advancedCheckbox).toBeChecked();
+      // Режим и поля переключаются после ответа сервера на перевод simple → advanced.
+      await this.selectRulesMode('advanced');
       const {timeControl, ...rules} = settings.advanced;
       await this.fill('advanced', rules);
       await this.fillTimeControl(timeControl);
     }
     await this.submitButton.click();
     await expect(this.root).toBeHidden();
+  }
+
+  private async selectRulesMode(value: 'simple' | 'advanced'): Promise<void> {
+    const mode = this.rulesMode(value);
+    // Повторный клик по выбранному сегменту ничего не меняет.
+    await mode.click();
+    await expect(mode).toBeChecked();
   }
 
   private async fill(
@@ -93,7 +102,7 @@ export class RoomSettingsDialog extends componentModel(testIds) {
       if (typeof value === 'boolean') {
         await this.field(path).setChecked(value);
       } else if (typeof value === 'number') {
-        // Число — поле ввода или выбор из списка (доска шашек) радиокнопками.
+        // Число — поле ввода или выбор из списка (доска шашек) сегментами.
         const option = this.option(path, String(value));
         if ((await option.count()) > 0) {
           await option.click();
@@ -115,7 +124,7 @@ export class RoomSettingsDialog extends componentModel(testIds) {
       'advanced.timeControl.enabled',
       String(timeControl.enabled),
     );
-    // Без радиокнопок часы у игры обязательны.
+    // Без сегментов «без таймера / часы» часы у игры обязательны.
     if ((await enabled.count()) > 0) {
       await enabled.click();
     }

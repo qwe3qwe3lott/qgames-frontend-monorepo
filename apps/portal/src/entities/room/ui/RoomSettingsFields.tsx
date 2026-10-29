@@ -14,11 +14,13 @@ import {
   FieldError,
   FieldLabel,
   FieldLegend,
+  FieldSeparator,
   FieldSet,
 } from '@qgames/ui/components/Field';
 import {Input} from '@qgames/ui/components/Input';
 import {Label} from '@qgames/ui/components/Label';
-import {RadioGroup, RadioGroupItem} from '@qgames/ui/components/RadioGroup';
+import {ToggleGroup, ToggleGroupItem} from '@qgames/ui/components/ToggleGroup';
+import type {ReactNode} from 'react';
 import {Controller, useWatch, type UseFormReturn} from 'react-hook-form';
 
 import {
@@ -46,7 +48,7 @@ export interface RoomSettingsFieldsProps {
   idPrefix: string;
   /** Причина, по которой правила игры сейчас не меняются; null — меняются. */
   gameLockReason: string | null;
-  /** Галочка «Продвинутые правила»: включение заполняет advanced-поля. */
+  /** Переключатель «Простые / Продвинутые»: включение заполняет advanced-поля. */
   onAdvancedChange: (enabled: boolean) => void;
   /** Advanced-поля заполняются (идёт запрос к серверу). */
   advancedPending: boolean;
@@ -57,30 +59,99 @@ type FormProps = Pick<RoomSettingsFieldsProps, 'form' | 'idPrefix'>;
 interface Option {
   value: string;
   label: string;
+  /** Пояснение мелким текстом под подписью (часы пресета времени). */
+  hint?: string;
 }
 
-/** Выбор одного значения радиокнопками; значение вне [options] не принимается. */
-function RadioField({
+/** Классы сегментного переключателя: дорожка и выбранный сегмент. */
+const SEGMENTS_CLASS = 'h-auto max-w-full flex-wrap rounded-lg bg-muted p-1';
+const SEGMENT_CLASS =
+  'h-auto min-h-8 rounded-md px-3 py-1 text-muted-foreground hover:bg-background/60 hover:text-foreground data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm';
+
+/** Сегменты [options]: выбрано ровно одно значение, повторный клик его не снимает. */
+function Segments({
+  value,
+  options,
+  onChange,
+  label,
+  invalid = false,
+  disabled = false,
+  itemProps,
+}: {
+  value: string;
+  options: readonly Option[];
+  onChange: (value: string) => void;
+  label: string;
+  invalid?: boolean;
+  disabled?: boolean;
+  /** Атрибуты сегмента для тестов. */
+  itemProps: (option: Option) => Record<`data-${string}`, string>;
+}) {
+  return (
+    <ToggleGroup
+      type="single"
+      spacing={1}
+      value={value}
+      onValueChange={next => {
+        // Пустое значение — клик по выбранному сегменту: выбор не снимается.
+        if (options.some(item => item.value === next)) {
+          onChange(next);
+        }
+      }}
+      disabled={disabled}
+      aria-label={label}
+      aria-invalid={invalid}
+      className={SEGMENTS_CLASS}
+    >
+      {options.map(item => (
+        <ToggleGroupItem
+          key={item.value}
+          value={item.value}
+          className={SEGMENT_CLASS}
+          {...itemProps(item)}
+        >
+          {item.hint === undefined ? (
+            item.label
+          ) : (
+            <span className="flex flex-col items-center leading-tight">
+              <span>{item.label}</span>
+              <span className="text-xs font-normal text-muted-foreground">
+                {item.hint}
+              </span>
+            </span>
+          )}
+        </ToggleGroupItem>
+      ))}
+    </ToggleGroup>
+  );
+}
+
+type SegmentedName =
+  | 'simple.variant'
+  | 'simple.time'
+  | 'advanced.boardSize'
+  | 'advanced.firstColor'
+  | 'advanced.endgameRule'
+  | 'advanced.drawQuietMoves'
+  | 'advanced.timeControl.enabled';
+
+/** Выбор одного значения сегментами; значение вне [options] не принимается. */
+function SegmentedField({
   form,
-  idPrefix,
   name,
   legend,
   options,
-}: FormProps & {
-  name:
-    | 'simple.variant'
-    | 'simple.time'
-    | 'advanced.boardSize'
-    | 'advanced.firstColor'
-    | 'advanced.endgameRule'
-    | 'advanced.drawQuietMoves'
-    | 'advanced.timeControl.enabled';
+  hideLegend = false,
+}: Pick<FormProps, 'form'> & {
+  name: SegmentedName;
   legend: string;
   options: readonly Option[];
+  /** Подпись уже стоит рядом (шапка блока): у поля только aria-label. */
+  hideLegend?: boolean;
 }) {
   const parse = (value: string): string | number | boolean => {
     switch (name) {
-      // Часы включаются радиокнопками «без таймера / часы».
+      // Часы включаются сегментами «без таймера / часы».
       case 'advanced.timeControl.enabled':
         return value === 'true';
       case 'advanced.boardSize':
@@ -90,51 +161,89 @@ function RadioField({
         return value;
     }
   };
-  const id = `${idPrefix}-${name.replaceAll('.', '-')}`;
   return (
-    <FieldSet>
-      <FieldLegend variant="label">{legend}</FieldLegend>
-      <Controller
-        control={form.control}
-        name={name}
-        render={({field, fieldState}) => (
-          <>
-            <RadioGroup
-              value={String(field.value)}
-              onValueChange={next => {
-                const selected = options.find(item => item.value === next);
-                if (selected === undefined) {
-                  return;
-                }
-                field.onChange(parse(selected.value));
-              }}
-              aria-invalid={fieldState.error !== undefined}
-              className="flex flex-wrap gap-4"
-            >
-              {options.map(item => (
-                <Label
-                  key={item.value}
-                  htmlFor={`${id}-${item.value}`}
-                  className="flex items-center gap-2"
-                >
-                  <RadioGroupItem
-                    id={`${id}-${item.value}`}
-                    value={item.value}
-                    data-testid={testIds.option}
-                    data-field={name}
-                    data-value={item.value}
-                  />
-                  {item.label}
-                </Label>
-              ))}
-            </RadioGroup>
+    <Controller
+      control={form.control}
+      name={name}
+      render={({field, fieldState}) => {
+        const segments = (
+          <Segments
+            value={String(field.value)}
+            options={options}
+            onChange={next => {
+              field.onChange(parse(next));
+            }}
+            label={legend}
+            invalid={fieldState.error !== undefined}
+            itemProps={item => ({
+              'data-testid': testIds.option,
+              'data-field': name,
+              'data-value': item.value,
+            })}
+          />
+        );
+        if (hideLegend) {
+          return segments;
+        }
+        return (
+          <FieldSet className="gap-2">
+            <FieldLegend variant="label">{legend}</FieldLegend>
+            {segments}
             <FieldError errors={[fieldState.error]} />
-          </>
-        )}
-      />
-    </FieldSet>
+          </FieldSet>
+        );
+      }}
+    />
   );
 }
+
+/** Секция окна: заголовок, справа — элемент управления секцией. */
+function Section({
+  title,
+  action,
+  children,
+}: {
+  title: string;
+  action?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <section className="flex min-w-0 flex-col gap-5">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className="text-base font-semibold">{title}</h3>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+/**
+ * Рамка группы полей, которые выставляются вместе (пресетом): заголовок,
+ * справа — элемент управления группой.
+ */
+function Block({
+  title,
+  action,
+  children,
+}: {
+  title: string;
+  action?: ReactNode;
+  children?: ReactNode;
+}) {
+  return (
+    <div className="flex min-w-0 flex-col gap-4 rounded-lg border bg-muted/40 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="text-sm font-semibold">{title}</span>
+        {action}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+/** Подпись перед кнопками пресета: кнопки заполняют поля, а не сохраняют. */
+const PRESET_LABEL = 'Выставить пресет';
 
 /** Число раундов «игры в ничто». */
 function RoundsField({
@@ -161,6 +270,7 @@ function RoundsField({
         min={rounds.min}
         max={rounds.max}
         step={1}
+        className="max-w-24"
         aria-invalid={error !== undefined}
         {...form.register(name, {valueAsNumber: true})}
       />
@@ -189,7 +299,8 @@ function NothingSimpleFields({
     {value: 'NONE', label: NOTHING_TIME_LABELS.NONE},
     ...limits.timePresets.map(item => ({
       value: item.time,
-      label: `${NOTHING_TIME_LABELS[item.time]} (${formatClock(item)})`,
+      label: NOTHING_TIME_LABELS[item.time],
+      hint: formatClock(item),
     })),
   ];
   return (
@@ -200,9 +311,8 @@ function NothingSimpleFields({
         name="simple.rounds"
         limits={limits}
       />
-      <RadioField
+      <SegmentedField
         form={form}
-        idPrefix={idPrefix}
         name="simple.time"
         legend="Время"
         options={options}
@@ -214,9 +324,8 @@ function NothingSimpleFields({
 /** Simple шашек: вариант правил и официальный контроль времени варианта. */
 function CheckersSimpleFields({
   form,
-  idPrefix,
   limits,
-}: FormProps & {limits: CheckersSettingsLimitsDto}) {
+}: Pick<FormProps, 'form'> & {limits: CheckersSettingsLimitsDto}) {
   const variant = useWatch({control: form.control, name: 'simple.variant'});
   const options: Option[] = [
     {value: 'NONE', label: CHECKERS_TIME_LABELS.NONE},
@@ -224,21 +333,20 @@ function CheckersSimpleFields({
       .filter(item => item.variant === variant)
       .map(item => ({
         value: item.time,
-        label: `${CHECKERS_TIME_LABELS[item.time]} (${formatClock(item)})`,
+        label: CHECKERS_TIME_LABELS[item.time],
+        hint: formatClock(item),
       })),
   ];
   return (
     <>
-      <RadioField
+      <SegmentedField
         form={form}
-        idPrefix={idPrefix}
         name="simple.variant"
         legend="Вариант правил"
         options={variantOptions(limits)}
       />
-      <RadioField
+      <SegmentedField
         form={form}
-        idPrefix={idPrefix}
         name="simple.time"
         legend="Время"
         options={options}
@@ -265,10 +373,7 @@ const CHECKERS_RULE_FLAGS = [
 function CheckersRulePresets({
   form,
   limits,
-}: {
-  form: UseFormReturn<RoomSettingsValues>;
-  limits: CheckersSettingsLimitsDto;
-}) {
+}: Pick<FormProps, 'form'> & {limits: CheckersSettingsLimitsDto}) {
   if (limits.rulePresets.length === 0) {
     return null;
   }
@@ -283,25 +388,25 @@ function CheckersRulePresets({
     }
   };
   return (
-    <div className="flex flex-col gap-2">
-      <span className="text-sm text-muted-foreground">Варианты правил</span>
-      <div className="flex flex-wrap gap-2">
-        {limits.rulePresets.map(item => (
-          <Button
-            key={item.variant}
-            type="button"
-            variant="outline"
-            size="sm"
-            data-testid={testIds.rulePreset}
-            data-value={item.variant}
-            onClick={() => {
-              apply(item);
-            }}
-          >
-            {CHECKERS_VARIANT_LABELS[item.variant]}
-          </Button>
-        ))}
-      </div>
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="text-sm text-muted-foreground">
+        {PRESET_LABEL} варианта:
+      </span>
+      {limits.rulePresets.map(item => (
+        <Button
+          key={item.variant}
+          type="button"
+          variant="outline"
+          size="sm"
+          data-testid={testIds.rulePreset}
+          data-value={item.variant}
+          onClick={() => {
+            apply(item);
+          }}
+        >
+          {CHECKERS_VARIANT_LABELS[item.variant]}
+        </Button>
+      ))}
     </div>
   );
 }
@@ -312,8 +417,8 @@ const CHECKERS_ENDGAME_RULES = Object.values(
 );
 
 /**
- * Advanced шашек: кнопки вариантов, доска, первый ход, правила хода галочками и
- * правила ничьих.
+ * Advanced шашек — одна рамка, которую заполняет пресет варианта: доска, первый
+ * ход, правила хода галочками и правила ничьих.
  */
 function CheckersAdvancedFields({
   form,
@@ -321,58 +426,60 @@ function CheckersAdvancedFields({
   limits,
 }: FormProps & {limits: CheckersSettingsLimitsDto}) {
   return (
-    <>
+    <Block title="Правила шашек">
       <CheckersRulePresets form={form} limits={limits} />
-      <RadioField
-        form={form}
-        idPrefix={idPrefix}
-        name="advanced.boardSize"
-        legend="Доска"
-        options={limits.boardSizes.map(size => ({
-          value: String(size),
-          label: formatBoardSize(size),
-        }))}
-      />
-      <RadioField
-        form={form}
-        idPrefix={idPrefix}
-        name="advanced.firstColor"
-        legend="Первыми ходят"
-        options={CHECKERS_COLORS.map(color => ({
-          value: color,
-          label: CHECKERS_COLOR_LABELS[color],
-        }))}
-      />
-      <FieldSet>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <SegmentedField
+          form={form}
+          name="advanced.boardSize"
+          legend="Доска"
+          options={limits.boardSizes.map(size => ({
+            value: String(size),
+            label: formatBoardSize(size),
+          }))}
+        />
+        <SegmentedField
+          form={form}
+          name="advanced.firstColor"
+          legend="Первыми ходят"
+          options={CHECKERS_COLORS.map(color => ({
+            value: color,
+            label: CHECKERS_COLOR_LABELS[color],
+          }))}
+        />
+      </div>
+      <FieldSet className="gap-2">
         <FieldLegend variant="label">Правила хода</FieldLegend>
-        {CHECKERS_RULE_FLAGS.map(flag => (
-          <Controller
-            key={flag}
-            control={form.control}
-            name={`advanced.${flag}`}
-            render={({field}) => (
-              <Label
-                htmlFor={`${idPrefix}-${flag}`}
-                className="flex items-center gap-2 font-normal"
-              >
-                <Checkbox
-                  id={`${idPrefix}-${flag}`}
-                  data-testid={testIds.field}
-                  data-field={`advanced.${flag}`}
-                  checked={field.value}
-                  onCheckedChange={checked => {
-                    field.onChange(checked === true);
-                  }}
-                />
-                {CHECKERS_RULE_LABELS[flag]}
-              </Label>
-            )}
-          />
-        ))}
+        <div className="grid gap-x-4 gap-y-2 sm:grid-cols-2">
+          {CHECKERS_RULE_FLAGS.map(flag => (
+            <Controller
+              key={flag}
+              control={form.control}
+              name={`advanced.${flag}`}
+              render={({field}) => (
+                <Label
+                  htmlFor={`${idPrefix}-${flag}`}
+                  className="flex items-start gap-2 font-normal"
+                >
+                  <Checkbox
+                    id={`${idPrefix}-${flag}`}
+                    data-testid={testIds.field}
+                    data-field={`advanced.${flag}`}
+                    className="mt-px"
+                    checked={field.value}
+                    onCheckedChange={checked => {
+                      field.onChange(checked === true);
+                    }}
+                  />
+                  {CHECKERS_RULE_LABELS[flag]}
+                </Label>
+              )}
+            />
+          ))}
+        </div>
       </FieldSet>
-      <RadioField
+      <SegmentedField
         form={form}
-        idPrefix={idPrefix}
         name="advanced.drawQuietMoves"
         legend="Ничья после ходов только дамками без взятий"
         options={limits.drawQuietMoves.map(moves => ({
@@ -380,9 +487,8 @@ function CheckersAdvancedFields({
           label: formatDrawQuietMoves(moves),
         }))}
       />
-      <RadioField
+      <SegmentedField
         form={form}
-        idPrefix={idPrefix}
         name="advanced.endgameRule"
         legend="Правила окончаний"
         options={CHECKERS_ENDGAME_RULES.map(rule => ({
@@ -390,21 +496,18 @@ function CheckersAdvancedFields({
           label: CHECKERS_ENDGAME_RULE_LABELS[rule],
         }))}
       />
-    </>
+    </Block>
   );
 }
 
 /**
  * Официальные контроли времени шашек, сгруппированные по вариантам: кнопка
- * подставляет запас и добавку в поля часов.
+ * подставляет запас и добавку в поля часов, значения видны в полях.
  */
 function CheckersTimePresets({
   form,
   limits,
-}: {
-  form: UseFormReturn<RoomSettingsValues>;
-  limits: CheckersSettingsLimitsDto;
-}) {
+}: Pick<FormProps, 'form'> & {limits: CheckersSettingsLimitsDto}) {
   const groups = limits.variants
     .map(variant => ({
       variant,
@@ -425,107 +528,163 @@ function CheckersTimePresets({
   };
   return (
     <div className="flex flex-col gap-2">
-      <span className="text-sm text-muted-foreground">Контроли времени</span>
-      {groups.map(group => (
-        <div key={group.variant} className="flex flex-wrap items-center gap-2">
-          <span className="w-32 text-sm">
-            {CHECKERS_VARIANT_LABELS[group.variant]}
-          </span>
-          {group.presets.map(item => (
-            <Button
-              key={item.time}
-              type="button"
-              variant="outline"
-              size="sm"
-              data-testid={testIds.timePreset}
-              data-variant={item.variant}
-              data-value={item.time}
-              onClick={() => {
-                apply(item.baseSeconds, item.incrementSeconds);
-              }}
-            >
-              {CHECKERS_TIME_LABELS[item.time]} ({formatClock(item)})
-            </Button>
-          ))}
-        </div>
-      ))}
+      <span className="text-sm text-muted-foreground">{PRESET_LABEL}:</span>
+      <div className="flex flex-col gap-3 sm:gap-2">
+        {groups.map(group => (
+          <div
+            key={group.variant}
+            className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3"
+          >
+            <span className="text-sm sm:w-32">
+              {CHECKERS_VARIANT_LABELS[group.variant]}
+            </span>
+            <div className="flex flex-wrap gap-2">
+              {group.presets.map(item => (
+                <Button
+                  key={item.time}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  data-testid={testIds.timePreset}
+                  data-variant={item.variant}
+                  data-value={item.time}
+                  onClick={() => {
+                    apply(item.baseSeconds, item.incrementSeconds);
+                  }}
+                >
+                  {CHECKERS_TIME_LABELS[item.time]}
+                </Button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
 
-/** Запас часов: минуты и секунды двумя полями, в форме — секунды целиком. */
-function BaseTimeField({
+/**
+ * Запас и добавка часов одной строкой: запас — минуты и секунды двумя полями
+ * (в форме — секунды целиком), диапазоны и ошибки — под строкой.
+ */
+function ClockFields({
   form,
   idPrefix,
   rules,
 }: FormProps & {rules: GameRulesDto}) {
-  const range = rules.timeControl.baseSeconds;
+  const {baseSeconds: baseRange, incrementSeconds: incrementRange} =
+    rules.timeControl;
+  const {error: baseError} = form.getFieldState(
+    'advanced.timeControl.baseSeconds',
+    form.formState,
+  );
+  const {error: incrementError} = form.getFieldState(
+    'advanced.timeControl.incrementSeconds',
+    form.formState,
+  );
+  const errors = [baseError, incrementError].filter(
+    error => error !== undefined,
+  );
   return (
-    <Controller
-      control={form.control}
-      name="advanced.timeControl.baseSeconds"
-      render={({field, fieldState}) => {
-        const total = Number.isNaN(field.value) ? 0 : field.value;
-        const minutes = Math.floor(total / 60);
-        const seconds = total % 60;
-        // Пустое поле — ноль: запас собирается из двух чисел.
-        const set = (nextMinutes: number, nextSeconds: number) => {
-          field.onChange(
-            (Number.isNaN(nextMinutes) ? 0 : nextMinutes) * 60 +
-              (Number.isNaN(nextSeconds) ? 0 : nextSeconds),
-          );
-        };
-        const invalid = fieldState.error !== undefined;
-        return (
-          <FieldSet data-invalid={invalid}>
-            <FieldLegend variant="label">Запас</FieldLegend>
-            <div className="flex items-center gap-2">
-              <Input
-                id={`${idPrefix}-base-minutes`}
-                data-testid={testIds.baseMinutes}
-                type="number"
-                inputMode="numeric"
-                min={0}
-                step={1}
-                aria-label="Запас, минуты"
-                aria-invalid={invalid}
-                className="w-24"
-                value={minutes}
-                onChange={event => {
-                  set(event.target.valueAsNumber, seconds);
-                }}
-              />
-              <span className="text-sm">мин</span>
-              <Input
-                id={`${idPrefix}-base-seconds`}
-                data-testid={testIds.baseSeconds}
-                type="number"
-                inputMode="numeric"
-                min={0}
-                max={59}
-                step={1}
-                aria-label="Запас, секунды"
-                aria-invalid={invalid}
-                className="w-24"
-                value={seconds}
-                onChange={event => {
-                  set(minutes, event.target.valueAsNumber);
-                }}
-              />
-              <span className="text-sm">с</span>
-            </div>
-            <FieldDescription>
-              От {formatSeconds(range.min)} до {formatSeconds(range.max)}
-            </FieldDescription>
-            <FieldError errors={[fieldState.error]} />
-          </FieldSet>
-        );
-      }}
-    />
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+        <Controller
+          control={form.control}
+          name="advanced.timeControl.baseSeconds"
+          render={({field}) => {
+            const total = Number.isNaN(field.value) ? 0 : field.value;
+            const minutes = Math.floor(total / 60);
+            const seconds = total % 60;
+            // Пустое поле — ноль: запас собирается из двух чисел.
+            const set = (nextMinutes: number, nextSeconds: number) => {
+              field.onChange(
+                (Number.isNaN(nextMinutes) ? 0 : nextMinutes) * 60 +
+                  (Number.isNaN(nextSeconds) ? 0 : nextSeconds),
+              );
+            };
+            const invalid = baseError !== undefined;
+            return (
+              <Field
+                orientation="horizontal"
+                data-invalid={invalid}
+                className="w-auto gap-2"
+              >
+                <Label htmlFor={`${idPrefix}-base-minutes`}>Запас</Label>
+                <Input
+                  id={`${idPrefix}-base-minutes`}
+                  data-testid={testIds.baseMinutes}
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  step={1}
+                  aria-label="Запас, минуты"
+                  aria-invalid={invalid}
+                  className="w-16"
+                  value={minutes}
+                  onChange={event => {
+                    set(event.target.valueAsNumber, seconds);
+                  }}
+                />
+                <span className="text-sm">мин</span>
+                <Input
+                  id={`${idPrefix}-base-seconds`}
+                  data-testid={testIds.baseSeconds}
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  max={59}
+                  step={1}
+                  aria-label="Запас, секунды"
+                  aria-invalid={invalid}
+                  className="w-16"
+                  value={seconds}
+                  onChange={event => {
+                    set(minutes, event.target.valueAsNumber);
+                  }}
+                />
+                <span className="text-sm">с</span>
+              </Field>
+            );
+          }}
+        />
+        <Field
+          orientation="horizontal"
+          data-invalid={incrementError !== undefined}
+          className="w-auto gap-2"
+        >
+          <Label htmlFor={`${idPrefix}-increment`}>Добавка за ход</Label>
+          <Input
+            id={`${idPrefix}-increment`}
+            data-testid={testIds.field}
+            data-field="advanced.timeControl.incrementSeconds"
+            type="number"
+            inputMode="numeric"
+            min={incrementRange.min}
+            max={incrementRange.max}
+            step={1}
+            className="w-16"
+            aria-invalid={incrementError !== undefined}
+            {...form.register('advanced.timeControl.incrementSeconds', {
+              valueAsNumber: true,
+            })}
+          />
+          <span className="text-sm">с</span>
+        </Field>
+      </div>
+      <FieldDescription>
+        Запас от {formatSeconds(baseRange.min)} до{' '}
+        {formatSeconds(baseRange.max)}, добавка от {incrementRange.min} до{' '}
+        {incrementRange.max} с (0 — без добавки)
+      </FieldDescription>
+      <FieldError errors={errors} />
+    </div>
   );
 }
 
-/** Часы advanced: без таймера (если игра разрешает) или шахматные часы. */
+/**
+ * Часы advanced — рамка «Время»: в шапке без таймера (если игра разрешает) или
+ * шахматные часы, внутри — пресеты (у шашек) и поля часов.
+ */
 function TimeControlFields({
   form,
   idPrefix,
@@ -535,65 +694,32 @@ function TimeControlFields({
     control: form.control,
     name: 'advanced.timeControl.enabled',
   });
-  const {error: incrementError} = form.getFieldState(
-    'advanced.timeControl.incrementSeconds',
-    form.formState,
-  );
-  const {optional, incrementSeconds} = rules.timeControl;
   const limits = rules.gameSettingsLimits;
+  const mode = rules.timeControl.optional ? (
+    <SegmentedField
+      form={form}
+      name="advanced.timeControl.enabled"
+      legend="Время"
+      hideLegend
+      options={[
+        {value: 'false', label: TIME_CONTROL_LABELS.none},
+        {value: 'true', label: TIME_CONTROL_LABELS.clock},
+      ]}
+    />
+  ) : (
+    <span className="text-sm">{TIME_CONTROL_LABELS.clock}</span>
+  );
   return (
-    <>
-      {optional ? (
-        <RadioField
-          form={form}
-          idPrefix={idPrefix}
-          name="advanced.timeControl.enabled"
-          legend="Время"
-          options={[
-            {value: 'false', label: TIME_CONTROL_LABELS.none},
-            {value: 'true', label: TIME_CONTROL_LABELS.clock},
-          ]}
-        />
-      ) : (
-        <FieldSet>
-          <FieldLegend variant="label">Время</FieldLegend>
-          <p className="text-sm">{TIME_CONTROL_LABELS.clock}</p>
-        </FieldSet>
-      )}
+    <Block title="Время" action={mode}>
       {enabled ? (
         <>
           {limits.gameCode === 'checkers' ? (
             <CheckersTimePresets form={form} limits={limits} />
           ) : null}
-          <BaseTimeField form={form} idPrefix={idPrefix} rules={rules} />
-          <Field data-invalid={incrementError !== undefined}>
-            <FieldLabel htmlFor={`${idPrefix}-increment`}>
-              Добавка за ход, с
-            </FieldLabel>
-            <Input
-              id={`${idPrefix}-increment`}
-              data-testid={testIds.field}
-              data-field="advanced.timeControl.incrementSeconds"
-              type="number"
-              inputMode="numeric"
-              min={incrementSeconds.min}
-              max={incrementSeconds.max}
-              step={1}
-              className="w-24"
-              aria-invalid={incrementError !== undefined}
-              {...form.register('advanced.timeControl.incrementSeconds', {
-                valueAsNumber: true,
-              })}
-            />
-            <FieldDescription>
-              От {incrementSeconds.min} до {incrementSeconds.max}, 0 — без
-              добавки
-            </FieldDescription>
-            <FieldError errors={[incrementError]} />
-          </Field>
+          <ClockFields form={form} idPrefix={idPrefix} rules={rules} />
         </>
       ) : null}
-    </>
+    </Block>
   );
 }
 
@@ -610,9 +736,7 @@ function SimpleFields({
         <NothingSimpleFields form={form} idPrefix={idPrefix} limits={limits} />
       );
     case 'checkers':
-      return (
-        <CheckersSimpleFields form={form} idPrefix={idPrefix} limits={limits} />
-      );
+      return <CheckersSimpleFields form={form} limits={limits} />;
   }
 }
 
@@ -666,7 +790,7 @@ function RoomOptionsFields({
         min={spectators.min}
         max={spectators.max}
         step={1}
-        className="w-24"
+        className="max-w-24"
         aria-invalid={error !== undefined}
         {...form.register('room.maxSpectators', {valueAsNumber: true})}
       />
@@ -679,9 +803,14 @@ function RoomOptionsFields({
   );
 }
 
+const RULES_MODES: readonly Option[] = [
+  {value: 'simple', label: 'Простые'},
+  {value: 'advanced', label: 'Продвинутые'},
+];
+
 /**
- * Поля настроек комнаты: места наблюдателей и правила игры — simple или, с
- * галочкой «Продвинутые правила», advanced.
+ * Поля настроек комнаты двумя секциями: «Комната» (места наблюдателей) и
+ * «Правила игры» — simple или, переключателем «Продвинутые», advanced.
  */
 export function RoomSettingsFields({
   form,
@@ -695,36 +824,39 @@ export function RoomSettingsFields({
   const enabled = advanced !== null;
   const {simple} = rules.defaultSettings;
   const simpleAvailable = simple !== undefined && simple !== null;
+  const rulesMode = (
+    <Segments
+      value={enabled ? 'advanced' : 'simple'}
+      options={RULES_MODES}
+      onChange={next => {
+        onAdvancedChange(next === 'advanced');
+      }}
+      label="Режим правил"
+      disabled={advancedPending || (enabled && !simpleAvailable)}
+      itemProps={item => ({
+        'data-testid': testIds.rulesMode,
+        'data-value': item.value,
+      })}
+    />
+  );
   return (
-    <div data-testid={testIds.root} className="contents">
-      <RoomOptionsFields form={form} idPrefix={idPrefix} rules={rules} />
-      <fieldset
-        disabled={gameLockReason !== null}
-        className="flex flex-col gap-6"
-      >
-        <Label
-          htmlFor={`${idPrefix}-advanced`}
-          className="flex items-center gap-2"
-        >
-          <Checkbox
-            id={`${idPrefix}-advanced`}
-            data-testid={testIds.advancedCheckbox}
-            checked={enabled}
-            disabled={advancedPending || (enabled && !simpleAvailable)}
-            onCheckedChange={checked => {
-              onAdvancedChange(checked === true);
-            }}
-          />
-          Продвинутые правила
-        </Label>
-        {gameLockReason === null ? null : (
-          <p className="text-sm text-muted-foreground">{gameLockReason}.</p>
-        )}
-        {enabled ? (
-          <AdvancedFields form={form} idPrefix={idPrefix} rules={rules} />
-        ) : (
-          <SimpleFields form={form} idPrefix={idPrefix} rules={rules} />
-        )}
+    <div data-testid={testIds.root} className="flex flex-col gap-6">
+      <Section title="Комната">
+        <RoomOptionsFields form={form} idPrefix={idPrefix} rules={rules} />
+      </Section>
+      <FieldSeparator />
+      {/* Блокировка правил во время партии выключает и переключатель режима. */}
+      <fieldset disabled={gameLockReason !== null} className="min-w-0">
+        <Section title="Правила игры" action={rulesMode}>
+          {gameLockReason === null ? null : (
+            <p className="text-sm text-muted-foreground">{gameLockReason}.</p>
+          )}
+          {enabled ? (
+            <AdvancedFields form={form} idPrefix={idPrefix} rules={rules} />
+          ) : (
+            <SimpleFields form={form} idPrefix={idPrefix} rules={rules} />
+          )}
+        </Section>
       </fieldset>
     </div>
   );

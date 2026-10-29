@@ -18,6 +18,7 @@ export {
   defaultSimple,
   ROOM_SETTINGS_FIELDS,
   roomSettingsSchema,
+  sameSimple,
   toRoomSettingsRequest,
   toRoomSettingsValues,
   type RoomSettingsValues,

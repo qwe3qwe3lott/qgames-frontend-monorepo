@@ -11,7 +11,6 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -19,7 +18,7 @@ import {
 } from '@qgames/ui/components/Dialog';
 import {FieldError, FieldGroup} from '@qgames/ui/components/Field';
 import {toast} from '@qgames/ui/components/Sonner';
-import {useMemo, useState} from 'react';
+import {useMemo, useRef, useState} from 'react';
 import {useForm} from 'react-hook-form';
 
 import {
@@ -28,6 +27,7 @@ import {
   roomErrorMessage,
   RoomSettingsFields,
   roomSettingsSchema,
+  sameSimple,
   toRoomSettingsRequest,
   toRoomSettingsValues,
   type Membership,
@@ -84,25 +84,41 @@ function SettingsForm({room, inGame, rules, onSaved}: SettingsFormProps) {
     },
   });
 
+  // Advanced на момент выключения и simple, с которым ушли в «Простые»: пока
+  // simple не меняли, обратное включение возвращает эти правила без запроса.
+  const leftAdvanced = useRef<{
+    simple: NonNullable<RoomSettingsValues['simple']>;
+    advanced: NonNullable<RoomSettingsValues['advanced']>;
+  } | null>(null);
+
   const onAdvancedChange = (enabled: boolean) => {
     form.clearErrors('root');
     if (!enabled) {
       // Выключение: правила снова задаются simple (прежние или по умолчанию).
-      form.setValue(
-        'simple',
-        form.getValues('simple') ?? defaultSimple(rules),
-        {
-          shouldDirty: true,
-        },
-      );
-      form.setValue('advanced', null, {shouldDirty: true});
+      const simple = form.getValues('simple') ?? defaultSimple(rules);
+      const advanced = form.getValues('advanced');
+      // Копии: getValues отдаёт объекты формы, а правки полей меняют их на месте.
+      leftAdvanced.current =
+        simple !== null && advanced !== null
+          ? {simple: {...simple}, advanced: structuredClone(advanced)}
+          : null;
+      form.setValue('simple', simple, {shouldDirty: true});
+      // Без shouldDirty: react-hook-form падает, сравнивая с null объект
+      // advanced из значений по умолчанию (комната сохранена с advanced).
+      form.setValue('advanced', null);
       return;
     }
     void form.trigger('simple').then(valid => {
       const simple = form.getValues('simple');
-      if (valid && simple !== null) {
-        toAdvanced.mutate({gameCode: room.gameCode, data: simple});
+      if (!valid || simple === null) {
+        return;
       }
+      const left = leftAdvanced.current;
+      if (left !== null && sameSimple(left.simple, simple)) {
+        form.setValue('advanced', left.advanced, {shouldDirty: true});
+        return;
+      }
+      toAdvanced.mutate({gameCode: room.gameCode, data: simple});
     });
   };
 
@@ -187,14 +203,12 @@ export function RoomSettingsDialog({
       </DialogTrigger>
       <DialogContent
         data-testid={testIds.root}
-        className="max-h-[90vh] overflow-y-auto"
+        // Описания у окна нет: Radix без этого предупреждает в консоли.
+        aria-describedby={undefined}
+        className="max-h-[90vh] overflow-y-auto sm:max-w-2xl"
       >
         <DialogHeader>
           <DialogTitle>Настройки комнаты</DialogTitle>
-          <DialogDescription>
-            Правила игры действуют со следующей партии, места наблюдателей —
-            сразу.
-          </DialogDescription>
         </DialogHeader>
         <SettingsContent
           room={room}

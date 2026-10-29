@@ -128,7 +128,7 @@ function advancedSchema(rules: GameRulesDto) {
  * Схема формы настроек комнаты с границами из `rules` ответа
  * `GET /api/games/{gameCode}`: настройки комнаты, simple- и
  * advanced-настройки игры. Режим формы — advanced, если `advanced` не null
- * (галочка «Продвинутые правила»), иначе simple.
+ * (режим «Продвинутые»), иначе simple.
  */
 export function roomSettingsSchema(rules: GameRulesDto) {
   const {spectators} = rules;
@@ -169,6 +169,19 @@ export function defaultSimple(
   rules: GameRulesDto,
 ): GameSimpleSettingsDto | null {
   return rules.defaultSettings.simple ?? null;
+}
+
+/** Совпадают ли simple-настройки формы: поля simple — примитивы. */
+export function sameSimple(
+  a: NonNullable<RoomSettingsValues['simple']>,
+  b: NonNullable<RoomSettingsValues['simple']>,
+): boolean {
+  const own = Object.entries(a);
+  const other = new Map(Object.entries(b));
+  return (
+    own.length === other.size &&
+    own.every(([key, value]) => other.get(key) === value)
+  );
 }
 
 /**
