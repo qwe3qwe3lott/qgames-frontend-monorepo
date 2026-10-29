@@ -14,7 +14,8 @@
     "lint": "turbo run lint lint:styles --continue",
     "format": "prettier --write .",
     "api:fetch": "pnpm --filter @qgames/api api:fetch",
-    "api:generate": "pnpm --filter @qgames/api api:generate"
+    "api:generate": "pnpm --filter @qgames/api api:generate",
+    "test:e2e": "pnpm --filter @qgames/e2e test"
   },
   "devDependencies": {
     "@qgames/config": "workspace:*",

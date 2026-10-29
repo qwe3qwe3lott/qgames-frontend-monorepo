@@ -7,6 +7,8 @@ import {GAME_IN_DEVELOPMENT_HINT, type GameEntry} from '@/entities/game';
 import {roomErrorMessage} from '@/entities/room';
 import {WithHint} from '@/shared/ui';
 
+import {testIds} from './create-room-button.test-ids';
+
 export interface CreateRoomButtonProps {
   game: GameEntry;
 }
@@ -35,6 +37,7 @@ export function CreateRoomButton({game}: CreateRoomButtonProps) {
   return (
     <WithHint hint={hint}>
       <Button
+        data-testid={testIds.root}
         disabled={hint !== null || createRoom.isPending}
         onClick={() => {
           createRoom.mutate({gameCode: game.code});

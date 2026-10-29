@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./components/*": "./src/components/*.tsx"
+    "./components/*": "./src/components/*.tsx",
+    "./test-ids/*": "./src/components/*.test-ids.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

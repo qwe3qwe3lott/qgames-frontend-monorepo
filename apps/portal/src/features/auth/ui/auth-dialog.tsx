@@ -16,6 +16,7 @@ import {GoogleButton} from '@/shared/ui';
 import {useAuthSuccess} from '../lib/use-auth-success';
 import {LoginForm} from './login-form';
 import {RegisterForm} from './register-form';
+import {testIds} from './auth-dialog.test-ids';
 
 const GOOGLE_LOGIN_MESSAGES = {
   INVALID_GOOGLE_TOKEN: 'Не удалось войти через Google, попробуйте ещё раз.',
@@ -69,7 +70,7 @@ export function AuthDialog({open, onOpenChange, description}: AuthDialogProps) {
         }
       }}
     >
-      <DialogContent>
+      <DialogContent data-testid={testIds.root}>
         <DialogHeader>
           <DialogTitle>{mode === 'login' ? 'Вход' : 'Регистрация'}</DialogTitle>
           <DialogDescription>

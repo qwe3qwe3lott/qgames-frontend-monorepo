@@ -5,6 +5,8 @@ import {toast} from '@qgames/ui/components/sonner';
 import {useQueryClient} from '@tanstack/react-query';
 import {useNavigate} from '@tanstack/react-router';
 
+import {testIds} from './logout-button.test-ids';
+
 /**
  * Выход: сессия отзывается, все данные администратора убираются из кеша.
  * Если отозвать сессию не удалось, администратор остаётся на странице и видит снекбар;
@@ -37,6 +39,7 @@ export function LogoutButton() {
     <Button
       variant="ghost"
       size="sm"
+      data-testid={testIds.root}
       disabled={logout.isPending}
       onClick={() => {
         logout.mutate();

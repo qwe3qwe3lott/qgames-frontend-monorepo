@@ -2,6 +2,8 @@ packages:
   - apps/*
   - packages/*
   - packages/games/*
+  # e2e-тесты: импортируют *.test-ids.ts приложений, поэтому не в apps/ и не в packages/ (CLAUDE.md §2).
+  - e2e
 
 # Все зависимости — в корневом node_modules (CLAUDE.md §2).
 nodeLinker: hoisted
@@ -48,6 +50,9 @@ catalog:
   '@hookform/resolvers': 5.9.2
   zod: 4.6.7
   orval: 8.43.0
+
+  # E2E-тесты
+  '@playwright/test': 1.64.1
 
   # Стили и UI
   tailwindcss: 4.3.3

@@ -13,6 +13,7 @@ import {Input} from '@qgames/ui/components/input';
 import {useForm} from 'react-hook-form';
 
 import {loginFormSchema, type LoginFormValues} from '../model/schema';
+import {testIds} from './login-form.test-ids';
 
 const LOGIN_MESSAGES = {
   INVALID_CREDENTIALS: 'Неверный логин или пароль.',
@@ -54,6 +55,7 @@ export function LoginForm({onSuccess}: LoginFormProps) {
           <FieldLabel htmlFor="auth-login">Логин</FieldLabel>
           <Input
             id="auth-login"
+            data-testid={testIds.loginInput}
             autoComplete="username"
             autoCapitalize="none"
             spellCheck={false}
@@ -66,6 +68,7 @@ export function LoginForm({onSuccess}: LoginFormProps) {
           <FieldLabel htmlFor="auth-password">Пароль</FieldLabel>
           <Input
             id="auth-password"
+            data-testid={testIds.passwordInput}
             type="password"
             autoComplete="current-password"
             aria-invalid={errors.password !== undefined}
@@ -74,7 +77,11 @@ export function LoginForm({onSuccess}: LoginFormProps) {
           <FieldError errors={[errors.password]} />
         </Field>
         <FieldError errors={[errors.root]} />
-        <Button type="submit" disabled={login.isPending}>
+        <Button
+          type="submit"
+          disabled={login.isPending}
+          data-testid={testIds.submitButton}
+        >
           Войти
         </Button>
       </FieldGroup>

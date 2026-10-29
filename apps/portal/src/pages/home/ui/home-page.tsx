@@ -2,14 +2,19 @@ import {Button} from '@qgames/ui/components/button';
 import {PageLayout} from '@qgames/ui/components/page-layout';
 import {Link} from '@tanstack/react-router';
 
+import {testIds} from './home-page.test-ids';
+
 export function HomePage() {
   return (
     <PageLayout
+      data-testid={testIds.root}
       title="qgames"
       description="Настольные игры онлайн: создайте комнату и пригласите друзей."
     >
       <Button asChild className="self-start">
-        <Link to="/games">Выбрать игру</Link>
+        <Link to="/games" data-testid={testIds.gamesButton}>
+          Выбрать игру
+        </Link>
       </Button>
     </PageLayout>
   );

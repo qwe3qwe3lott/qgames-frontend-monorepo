@@ -1,0 +1,14 @@
+{
+  "extends": "@qgames/config/tsconfig/base.json",
+  "compilerOptions": {
+    // DOM — для кода, который выполняется в странице (page.evaluate, init-скрипты).
+    "lib": ["ES2023", "DOM"],
+    "types": ["node"],
+    // test-ids приложений (только *.test-ids.ts; CLAUDE.md пакета).
+    "paths": {
+      "@portal/*": ["../apps/portal/src/*"],
+      "@admin/*": ["../apps/admin/src/*"]
+    }
+  },
+  "include": ["src", "tests", "*.config.ts", "*.config.js"]
+}

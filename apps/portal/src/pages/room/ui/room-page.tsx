@@ -9,6 +9,8 @@ import {useRoomPresence} from '@/features/room-membership';
 import {GameBoard} from '@/widgets/game-board';
 import {RoomPanel} from '@/widgets/room-panel';
 
+import {testIds} from './room-page.test-ids';
+
 /** Заголовок, пока название игры не загружено или игра недоступна. */
 const FALLBACK_TITLE = 'Комната';
 
@@ -25,7 +27,12 @@ export interface RoomPageProps {
 
 export function RoomPage({game, roomId, viewerId}: RoomPageProps) {
   // Комнату обновляет её поток событий, партию — поток партии; опроса нет.
-  const {data, error, isPending} = useGetRoom(roomId);
+  // Комнату уже загрузил маршрут, а фоновый перезапрос при монтировании мог
+  // завершиться после снапшота потока и затереть его (вошедший не видел себя),
+  // поэтому данные не устаревают сами; invalidateRoom перезапрашивает их явно.
+  const {data, error, isPending} = useGetRoom(roomId, {
+    query: {staleTime: Infinity},
+  });
   // Название игры приходит с бэкенда; маршрут комнаты загружает его заранее.
   const title = useGetGame(game.code).data?.title ?? FALLBACK_TITLE;
   // Сервер не впустил: мест нет (NO_SPECTATOR_SEAT). Отказ окончательный —
@@ -33,17 +40,18 @@ export function RoomPage({game, roomId, viewerId}: RoomPageProps) {
   const [refused, setRefused] = useState(false);
   // Пока страница открыта и комната доступна, пользователь в ней.
   const presence = useRoomPresence(roomId, !isFinalError(error) && !refused);
+  const pageData = {'data-testid': testIds.root, 'data-room-id': roomId};
 
   if (isPending) {
     return (
-      <PageLayout title={title}>
+      <PageLayout {...pageData} title={title}>
         <p className="text-muted-foreground">Загружаем комнату…</p>
       </PageLayout>
     );
   }
   if (error !== null) {
     return (
-      <PageLayout title={title}>
+      <PageLayout {...pageData} title={title}>
         <p className="text-destructive" role="alert">
           {roomErrorMessage(error)}
         </p>
@@ -60,7 +68,7 @@ export function RoomPage({game, roomId, viewerId}: RoomPageProps) {
   }
   if (refused) {
     return (
-      <PageLayout title={title}>
+      <PageLayout {...pageData} title={title}>
         <p className="text-destructive" role="alert">
           В комнате нет свободных мест: игроки и наблюдатели заняли все места.
           Обновите страницу, чтобы попробовать войти снова.
@@ -71,6 +79,7 @@ export function RoomPage({game, roomId, viewerId}: RoomPageProps) {
 
   return (
     <PageLayout
+      {...pageData}
       title={title}
       description="Отправьте ссылку на эту страницу друзьям, чтобы они вошли в комнату."
     >

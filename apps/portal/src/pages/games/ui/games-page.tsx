@@ -11,6 +11,8 @@ import {
 import {PageLayout} from '@qgames/ui/components/page-layout';
 import {Link} from '@tanstack/react-router';
 
+import {testIds} from './games-page.test-ids';
+
 /** Карточка игры каталога со ссылкой на создание комнаты. */
 function GameCard({game}: {game: GameSummaryDto}) {
   return (
@@ -19,6 +21,8 @@ function GameCard({game}: {game: GameSummaryDto}) {
         to="/games/$gameCode/rooms"
         params={{gameCode: game.code}}
         className="block h-full rounded-xl"
+        data-testid={testIds.gameCard}
+        data-game-code={game.code}
       >
         <Card className="h-full transition-colors hover:border-foreground/30">
           <CardHeader>
@@ -37,14 +41,14 @@ export function GamesPage() {
 
   if (isPending) {
     return (
-      <PageLayout title="Игры">
+      <PageLayout data-testid={testIds.root} title="Игры">
         <p className="text-muted-foreground">Загружаем игры…</p>
       </PageLayout>
     );
   }
   if (error !== null) {
     return (
-      <PageLayout title="Игры">
+      <PageLayout data-testid={testIds.root} title="Игры">
         <div className="flex flex-col items-start gap-3" role="alert">
           <p className="text-destructive">{errorMessage(error)}</p>
           <Button
@@ -63,6 +67,7 @@ export function GamesPage() {
 
   return (
     <PageLayout
+      data-testid={testIds.root}
       title="Игры"
       description="Выберите игру, чтобы создать комнату."
     >

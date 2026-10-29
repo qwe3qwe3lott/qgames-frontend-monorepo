@@ -29,6 +29,8 @@ import {
 import {useSession, useSessionAdvance} from '@/entities/session';
 import {WithHint} from '@/shared/ui';
 
+import {testIds} from './session-actions.test-ids';
+
 export interface SessionActionsProps {
   room: RoomView;
   membership: Membership;
@@ -90,6 +92,7 @@ export function SessionActions({room, membership}: SessionActionsProps) {
         <>
           {timer === null ? null : timer.paused ? (
             <Button
+              data-testid={testIds.resumeButton}
               disabled={pending}
               onClick={() => {
                 advance.mark();
@@ -101,6 +104,7 @@ export function SessionActions({room, membership}: SessionActionsProps) {
           ) : (
             <Button
               variant="outline"
+              data-testid={testIds.pauseButton}
               disabled={pending}
               onClick={() => {
                 advance.mark();
@@ -112,7 +116,11 @@ export function SessionActions({room, membership}: SessionActionsProps) {
           )}
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="destructive" disabled={pending}>
+              <Button
+                variant="destructive"
+                data-testid={testIds.cancelButton}
+                disabled={pending}
+              >
                 Отменить партию
               </Button>
             </DialogTrigger>
@@ -133,6 +141,7 @@ export function SessionActions({room, membership}: SessionActionsProps) {
                   <Button
                     type="button"
                     variant="destructive"
+                    data-testid={testIds.cancelConfirmButton}
                     onClick={() => {
                       cancel.mutate({roomId: room.id});
                     }}
@@ -153,6 +162,7 @@ export function SessionActions({room, membership}: SessionActionsProps) {
           }
         >
           <Button
+            data-testid={testIds.startButton}
             disabled={pending || !membership.enoughPlayers}
             onClick={() => {
               start.mutate({roomId: room.id});

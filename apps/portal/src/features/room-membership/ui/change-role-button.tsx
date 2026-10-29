@@ -11,6 +11,7 @@ import {
   type RoomView,
 } from '@/entities/room';
 import {WithHint} from '@/shared/ui';
+import {testIds} from './change-role-button.test-ids';
 
 export interface ChangeRoleButtonProps {
   room: RoomView;
@@ -64,6 +65,8 @@ export function ChangeRoleButton({
       <Button
         size="sm"
         variant="outline"
+        data-testid={testIds.root}
+        data-role={role}
         disabled={reason !== null || changeRole.isPending}
         onClick={() => {
           changeRole.mutate({roomId: room.id, data: {role}});

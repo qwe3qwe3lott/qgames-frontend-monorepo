@@ -9,6 +9,7 @@ import {
   type Square,
 } from '../lib/path';
 import type {CheckersColor} from '../state';
+import {testIds} from './checkers-grid.test-ids';
 
 export interface CheckersGridProps {
   boardSize: number;
@@ -76,6 +77,7 @@ export function CheckersGrid({
     <div
       role="group"
       aria-label="Доска"
+      data-testid={testIds.root}
       className="grid w-full max-w-[min(100%,32rem)] overflow-hidden rounded-md border"
       // Число столбцов приходит из правил партии — классом не выразить.
       style={{
@@ -113,6 +115,14 @@ export function CheckersGrid({
             inLastMove && 'bg-amber-700',
             inPath && 'bg-sky-700',
           );
+          // Координаты партии и шашка на клетке — для e2e (доска переворачивается).
+          const squareData = {
+            'data-testid': testIds.square,
+            'data-x': x,
+            'data-y': y,
+            'data-piece-color': piece?.color,
+            'data-piece-kind': piece?.kind,
+          };
           const content = (
             <>
               {piece === undefined ? null : (
@@ -150,11 +160,18 @@ export function CheckersGrid({
                 onSquareClick(square);
               }}
               className={cellClass}
+              {...squareData}
             >
               {content}
             </button>
           ) : (
-            <div key={name} role="img" aria-label={label} className={cellClass}>
+            <div
+              key={name}
+              role="img"
+              aria-label={label}
+              className={cellClass}
+              {...squareData}
+            >
               {content}
             </div>
           );

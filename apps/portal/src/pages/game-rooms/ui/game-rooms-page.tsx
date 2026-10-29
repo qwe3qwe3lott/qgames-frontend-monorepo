@@ -5,6 +5,8 @@ import {PageLayout} from '@qgames/ui/components/page-layout';
 import {playersLabel, type GameEntry} from '@/entities/game';
 import {CreateRoomButton} from '@/features/create-room';
 
+import {testIds} from './game-rooms-page.test-ids';
+
 export interface GameRoomsPageProps {
   game: GameEntry;
 }
@@ -13,17 +15,21 @@ export interface GameRoomsPageProps {
 export function GameRoomsPage({game}: GameRoomsPageProps) {
   // Маршрут загружает игру заранее, поэтому ожидание здесь — только при сбое кеша.
   const {data, error, isPending} = useGetGame(game.code);
+  const pageData = {
+    'data-testid': testIds.root,
+    'data-game-code': game.code,
+  };
 
   if (isPending) {
     return (
-      <PageLayout title="Игра">
+      <PageLayout {...pageData} title="Игра">
         <p className="text-muted-foreground">Загружаем игру…</p>
       </PageLayout>
     );
   }
   if (error !== null) {
     return (
-      <PageLayout title="Игра">
+      <PageLayout {...pageData} title="Игра">
         <p className="text-destructive" role="alert">
           {errorMessage(error, {GAME_NOT_FOUND: 'Игра недоступна.'})}
         </p>
@@ -34,6 +40,7 @@ export function GameRoomsPage({game}: GameRoomsPageProps) {
   const {rules} = data;
   return (
     <PageLayout
+      {...pageData}
       title={data.title}
       description={data.description}
       actions={<CreateRoomButton game={game} />}

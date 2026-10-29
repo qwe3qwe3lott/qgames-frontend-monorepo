@@ -2,6 +2,7 @@ import {cn} from '@qgames/ui/lib/utils';
 import type {ReactNode} from 'react';
 
 import {PlayerAvatar, type PlayerAvatarKind} from './player-avatar';
+import {testIds} from './player-list.test-ids';
 
 export interface PlayerListItem {
   id: string;
@@ -30,7 +31,7 @@ export function PlayerList({
   action,
 }: PlayerListProps) {
   return (
-    <section className="flex flex-col gap-2">
+    <section className="flex flex-col gap-2" data-testid={testIds.root}>
       <div className="flex min-h-8 flex-wrap items-center justify-between gap-2">
         <h2 className="text-sm font-medium text-muted-foreground">{title}</h2>
         {action}
@@ -44,6 +45,8 @@ export function PlayerList({
             return (
               <li
                 key={player.id}
+                data-testid={testIds.item}
+                data-user-id={player.id}
                 aria-current={active ? 'true' : undefined}
                 className={cn(
                   'flex items-center gap-2 rounded-md border px-3 py-2 text-sm',

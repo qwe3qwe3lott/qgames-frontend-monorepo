@@ -24,6 +24,7 @@ import {
 
 import {isNothingSession, PASS} from '../state';
 import type {BoardMove, BoardPlayer, BoardProps} from '../types';
+import {testIds} from './board.test-ids';
 
 const UNKNOWN_PLAYER_NAME = 'Игрок';
 const PAUSED_HINT = 'Партия на паузе';
@@ -64,7 +65,7 @@ export function Board({
   if (isSessionOver(session)) {
     const cancelled = session.status === 'CANCELLED';
     return (
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4" data-testid={testIds.root}>
         <GameOver
           title={cancelled ? 'Партия отменена' : 'Игра окончена'}
           description={
@@ -98,6 +99,7 @@ export function Board({
   );
   const passButton = (
     <Button
+      data-testid={testIds.passButton}
       disabled={paused || pass === undefined || movePending}
       onClick={() => {
         if (pass !== undefined) {
@@ -109,7 +111,7 @@ export function Board({
     </Button>
   );
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4" data-testid={testIds.root}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <TurnIndicator
           round={round}

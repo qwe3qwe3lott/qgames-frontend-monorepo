@@ -1,0 +1,2788 @@
+{
+  "game": "checkers",
+  "seed": 1,
+  "actors": [
+    {
+      "name": "black",
+      "role": "PLAYER"
+    },
+    {
+      "name": "white",
+      "role": "PLAYER"
+    },
+    {
+      "name": "spectator",
+      "role": "SPECTATOR"
+    }
+  ],
+  "start": {
+    "expected": {
+      "black": [
+        {
+          "type": "snapshot",
+          "data": {
+            "seq": 1,
+            "status": "IN_PROGRESS",
+            "serverTime": "$time",
+            "meta": {
+              "game": {
+                "code": "checkers",
+                "settings": {
+                  "gameCode": "checkers",
+                  "variant": "RUSSIAN",
+                  "timeControl": {
+                    "enabled": true,
+                    "baseSeconds": 480,
+                    "incrementSeconds": 4
+                  },
+                  "menMoveBackward": false,
+                  "menCaptureBackward": true,
+                  "flyingKings": true,
+                  "captureRequired": true,
+                  "maxCaptureRequired": false,
+                  "promoteMidCapture": true,
+                  "removeCapturedAfterMove": true
+                }
+              },
+              "advancedRules": {
+                "boardSize": 8,
+                "firstColor": "WHITE",
+                "menMoveBackward": false,
+                "menCaptureBackward": true,
+                "flyingKings": true,
+                "captureRequired": true,
+                "maxCaptureRequired": false,
+                "promoteMidCapture": true,
+                "removeCapturedAfterMove": true
+              }
+            },
+            "state": {
+              "players": [
+                {
+                  "id": "{{black.id}}",
+                  "moveOptions": [
+                    {
+                      "type": "RESIGN",
+                      "data": null
+                    }
+                  ],
+                  "color": "BLACK"
+                },
+                {
+                  "id": "{{white.id}}",
+                  "moveOptions": [],
+                  "color": "WHITE"
+                }
+              ],
+              "timer": {
+                "status": "RUNNING",
+                "deadline": "$time",
+                "pausedAt": null,
+                "clocks": [
+                  {
+                    "playerId": "{{black.id}}",
+                    "remainingMs": "$time"
+                  },
+                  {
+                    "playerId": "{{white.id}}",
+                    "remainingMs": "$time"
+                  }
+                ]
+              },
+              "turns": {
+                "currentPlayerId": "{{white.id}}",
+                "round": 1,
+                "rounds": null
+              },
+              "result": null,
+              "pieces": [
+                {
+                  "id": "w1",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [1, 1]
+                },
+                {
+                  "id": "w2",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [3, 1]
+                },
+                {
+                  "id": "w3",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [5, 1]
+                },
+                {
+                  "id": "w4",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [7, 1]
+                },
+                {
+                  "id": "w5",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [2, 2]
+                },
+                {
+                  "id": "w6",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [4, 2]
+                },
+                {
+                  "id": "w7",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [6, 2]
+                },
+                {
+                  "id": "w8",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [8, 2]
+                },
+                {
+                  "id": "w9",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [1, 3]
+                },
+                {
+                  "id": "w10",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [3, 3]
+                },
+                {
+                  "id": "w11",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [5, 3]
+                },
+                {
+                  "id": "w12",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [7, 3]
+                },
+                {
+                  "id": "b1",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [8, 8]
+                },
+                {
+                  "id": "b2",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [6, 8]
+                },
+                {
+                  "id": "b3",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [4, 8]
+                },
+                {
+                  "id": "b4",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [2, 8]
+                },
+                {
+                  "id": "b5",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [7, 7]
+                },
+                {
+                  "id": "b6",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [5, 7]
+                },
+                {
+                  "id": "b7",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [3, 7]
+                },
+                {
+                  "id": "b8",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [1, 7]
+                },
+                {
+                  "id": "b9",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [8, 6]
+                },
+                {
+                  "id": "b10",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [6, 6]
+                },
+                {
+                  "id": "b11",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [4, 6]
+                },
+                {
+                  "id": "b12",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [2, 6]
+                }
+              ],
+              "lastMove": null,
+              "quietMoves": 0,
+              "materialMoves": 0,
+              "positionHistory": [
+                "W|BM1,7;BM2,6;BM2,8;BM3,7;BM4,6;BM4,8;BM5,7;BM6,6;BM6,8;BM7,7;BM8,6;BM8,8;WM1,1;WM1,3;WM2,2;WM3,1;WM3,3;WM4,2;WM5,1;WM5,3;WM6,2;WM7,1;WM7,3;WM8,2"
+              ],
+              "drawOfferedBy": null
+            }
+          }
+        }
+      ],
+      "white": [
+        {
+          "type": "snapshot",
+          "data": {
+            "seq": 1,
+            "status": "IN_PROGRESS",
+            "serverTime": "$time",
+            "meta": {
+              "game": {
+                "code": "checkers",
+                "settings": {
+                  "gameCode": "checkers",
+                  "variant": "RUSSIAN",
+                  "timeControl": {
+                    "enabled": true,
+                    "baseSeconds": 480,
+                    "incrementSeconds": 4
+                  },
+                  "menMoveBackward": false,
+                  "menCaptureBackward": true,
+                  "flyingKings": true,
+                  "captureRequired": true,
+                  "maxCaptureRequired": false,
+                  "promoteMidCapture": true,
+                  "removeCapturedAfterMove": true
+                }
+              },
+              "advancedRules": {
+                "boardSize": 8,
+                "firstColor": "WHITE",
+                "menMoveBackward": false,
+                "menCaptureBackward": true,
+                "flyingKings": true,
+                "captureRequired": true,
+                "maxCaptureRequired": false,
+                "promoteMidCapture": true,
+                "removeCapturedAfterMove": true
+              }
+            },
+            "state": {
+              "players": [
+                {
+                  "id": "{{black.id}}",
+                  "moveOptions": [],
+                  "color": "BLACK"
+                },
+                {
+                  "id": "{{white.id}}",
+                  "moveOptions": [
+                    {
+                      "type": "MOVE",
+                      "data": null
+                    },
+                    {
+                      "type": "RESIGN",
+                      "data": null
+                    }
+                  ],
+                  "color": "WHITE"
+                }
+              ],
+              "timer": {
+                "status": "RUNNING",
+                "deadline": "$time",
+                "pausedAt": null,
+                "clocks": [
+                  {
+                    "playerId": "{{black.id}}",
+                    "remainingMs": "$time"
+                  },
+                  {
+                    "playerId": "{{white.id}}",
+                    "remainingMs": "$time"
+                  }
+                ]
+              },
+              "turns": {
+                "currentPlayerId": "{{white.id}}",
+                "round": 1,
+                "rounds": null
+              },
+              "result": null,
+              "pieces": [
+                {
+                  "id": "w1",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [1, 1]
+                },
+                {
+                  "id": "w2",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [3, 1]
+                },
+                {
+                  "id": "w3",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [5, 1]
+                },
+                {
+                  "id": "w4",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [7, 1]
+                },
+                {
+                  "id": "w5",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [2, 2]
+                },
+                {
+                  "id": "w6",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [4, 2]
+                },
+                {
+                  "id": "w7",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [6, 2]
+                },
+                {
+                  "id": "w8",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [8, 2]
+                },
+                {
+                  "id": "w9",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [1, 3]
+                },
+                {
+                  "id": "w10",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [3, 3]
+                },
+                {
+                  "id": "w11",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [5, 3]
+                },
+                {
+                  "id": "w12",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [7, 3]
+                },
+                {
+                  "id": "b1",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [8, 8]
+                },
+                {
+                  "id": "b2",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [6, 8]
+                },
+                {
+                  "id": "b3",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [4, 8]
+                },
+                {
+                  "id": "b4",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [2, 8]
+                },
+                {
+                  "id": "b5",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [7, 7]
+                },
+                {
+                  "id": "b6",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [5, 7]
+                },
+                {
+                  "id": "b7",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [3, 7]
+                },
+                {
+                  "id": "b8",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [1, 7]
+                },
+                {
+                  "id": "b9",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [8, 6]
+                },
+                {
+                  "id": "b10",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [6, 6]
+                },
+                {
+                  "id": "b11",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [4, 6]
+                },
+                {
+                  "id": "b12",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [2, 6]
+                }
+              ],
+              "lastMove": null,
+              "quietMoves": 0,
+              "materialMoves": 0,
+              "positionHistory": [
+                "W|BM1,7;BM2,6;BM2,8;BM3,7;BM4,6;BM4,8;BM5,7;BM6,6;BM6,8;BM7,7;BM8,6;BM8,8;WM1,1;WM1,3;WM2,2;WM3,1;WM3,3;WM4,2;WM5,1;WM5,3;WM6,2;WM7,1;WM7,3;WM8,2"
+              ],
+              "drawOfferedBy": null
+            }
+          }
+        }
+      ],
+      "spectator": [
+        {
+          "type": "snapshot",
+          "data": {
+            "seq": 1,
+            "status": "IN_PROGRESS",
+            "serverTime": "$time",
+            "meta": {
+              "game": {
+                "code": "checkers",
+                "settings": {
+                  "gameCode": "checkers",
+                  "variant": "RUSSIAN",
+                  "timeControl": {
+                    "enabled": true,
+                    "baseSeconds": 480,
+                    "incrementSeconds": 4
+                  },
+                  "menMoveBackward": false,
+                  "menCaptureBackward": true,
+                  "flyingKings": true,
+                  "captureRequired": true,
+                  "maxCaptureRequired": false,
+                  "promoteMidCapture": true,
+                  "removeCapturedAfterMove": true
+                }
+              },
+              "advancedRules": {
+                "boardSize": 8,
+                "firstColor": "WHITE",
+                "menMoveBackward": false,
+                "menCaptureBackward": true,
+                "flyingKings": true,
+                "captureRequired": true,
+                "maxCaptureRequired": false,
+                "promoteMidCapture": true,
+                "removeCapturedAfterMove": true
+              }
+            },
+            "state": {
+              "players": [
+                {
+                  "id": "{{black.id}}",
+                  "moveOptions": [],
+                  "color": "BLACK"
+                },
+                {
+                  "id": "{{white.id}}",
+                  "moveOptions": [],
+                  "color": "WHITE"
+                }
+              ],
+              "timer": {
+                "status": "RUNNING",
+                "deadline": "$time",
+                "pausedAt": null,
+                "clocks": [
+                  {
+                    "playerId": "{{black.id}}",
+                    "remainingMs": "$time"
+                  },
+                  {
+                    "playerId": "{{white.id}}",
+                    "remainingMs": "$time"
+                  }
+                ]
+              },
+              "turns": {
+                "currentPlayerId": "{{white.id}}",
+                "round": 1,
+                "rounds": null
+              },
+              "result": null,
+              "pieces": [
+                {
+                  "id": "w1",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [1, 1]
+                },
+                {
+                  "id": "w2",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [3, 1]
+                },
+                {
+                  "id": "w3",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [5, 1]
+                },
+                {
+                  "id": "w4",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [7, 1]
+                },
+                {
+                  "id": "w5",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [2, 2]
+                },
+                {
+                  "id": "w6",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [4, 2]
+                },
+                {
+                  "id": "w7",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [6, 2]
+                },
+                {
+                  "id": "w8",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [8, 2]
+                },
+                {
+                  "id": "w9",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [1, 3]
+                },
+                {
+                  "id": "w10",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [3, 3]
+                },
+                {
+                  "id": "w11",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [5, 3]
+                },
+                {
+                  "id": "w12",
+                  "color": "WHITE",
+                  "kind": "MAN",
+                  "square": [7, 3]
+                },
+                {
+                  "id": "b1",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [8, 8]
+                },
+                {
+                  "id": "b2",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [6, 8]
+                },
+                {
+                  "id": "b3",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [4, 8]
+                },
+                {
+                  "id": "b4",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [2, 8]
+                },
+                {
+                  "id": "b5",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [7, 7]
+                },
+                {
+                  "id": "b6",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [5, 7]
+                },
+                {
+                  "id": "b7",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [3, 7]
+                },
+                {
+                  "id": "b8",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [1, 7]
+                },
+                {
+                  "id": "b9",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [8, 6]
+                },
+                {
+                  "id": "b10",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [6, 6]
+                },
+                {
+                  "id": "b11",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [4, 6]
+                },
+                {
+                  "id": "b12",
+                  "color": "BLACK",
+                  "kind": "MAN",
+                  "square": [2, 6]
+                }
+              ],
+              "lastMove": null,
+              "quietMoves": 0,
+              "materialMoves": 0,
+              "positionHistory": [
+                "W|BM1,7;BM2,6;BM2,8;BM3,7;BM4,6;BM4,8;BM5,7;BM6,6;BM6,8;BM7,7;BM8,6;BM8,8;WM1,1;WM1,3;WM2,2;WM3,1;WM3,3;WM4,2;WM5,1;WM5,3;WM6,2;WM7,1;WM7,3;WM8,2"
+              ],
+              "drawOfferedBy": null
+            }
+          }
+        }
+      ]
+    }
+  },
+  "steps": [
+    {
+      "title": "c3-d4",
+      "actor": "white",
+      "move": {
+        "path": [
+          [3, 3],
+          [4, 4]
+        ]
+      },
+      "expected": {
+        "black": [
+          {
+            "type": "patch",
+            "data": {
+              "seq": 2,
+              "at": "$time",
+              "method": "PATCH",
+              "code": "piece-moved",
+              "data": {
+                "path": [
+                  "state",
+                  "pieces",
+                  {
+                    "id": "w10"
+                  }
+                ],
+                "value": {
+                  "square": [4, 4]
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 3,
+              "at": "$time",
+              "method": "PUT",
+              "code": "last-move-changed",
+              "data": {
+                "path": ["state", "lastMove"],
+                "value": {
+                  "pieceId": "w10",
+                  "path": [
+                    [3, 3],
+                    [4, 4]
+                  ],
+                  "captured": []
+                }
+              }
+            }
+          },
+          {
+            "type": "patch",
+            "data": {
+              "seq": 4,
+              "at": "$time",
+              "method": "PATCH",
+              "code": "counters-changed",
+              "data": {
+                "path": ["state"],
+                "value": {
+                  "quietMoves": 0,
+                  "materialMoves": 1
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 5,
+              "at": "$time",
+              "method": "PUT",
+              "code": "position-recorded",
+              "data": {
+                "path": ["state", "positionHistory"],
+                "value": [
+                  "B|BM1,7;BM2,6;BM2,8;BM3,7;BM4,6;BM4,8;BM5,7;BM6,6;BM6,8;BM7,7;BM8,6;BM8,8;WM1,1;WM1,3;WM2,2;WM3,1;WM4,2;WM4,4;WM5,1;WM5,3;WM6,2;WM7,1;WM7,3;WM8,2"
+                ]
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 6,
+              "at": "$time",
+              "method": "PUT",
+              "code": "turn-changed",
+              "data": {
+                "path": ["state", "turns"],
+                "value": {
+                  "currentPlayerId": "{{black.id}}",
+                  "round": 1,
+                  "rounds": null
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 7,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{black.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": [
+                  {
+                    "type": "MOVE",
+                    "data": null
+                  },
+                  {
+                    "type": "RESIGN",
+                    "data": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 8,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{white.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": []
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 9,
+              "at": "$time",
+              "method": "PUT",
+              "code": "clock-switched",
+              "data": {
+                "path": ["state", "timer"],
+                "value": {
+                  "status": "RUNNING",
+                  "deadline": "$time",
+                  "pausedAt": null,
+                  "clocks": [
+                    {
+                      "playerId": "{{black.id}}",
+                      "remainingMs": "$time"
+                    },
+                    {
+                      "playerId": "{{white.id}}",
+                      "remainingMs": "$time"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ],
+        "white": [
+          {
+            "type": "patch",
+            "data": {
+              "seq": 2,
+              "at": "$time",
+              "method": "PATCH",
+              "code": "piece-moved",
+              "data": {
+                "path": [
+                  "state",
+                  "pieces",
+                  {
+                    "id": "w10"
+                  }
+                ],
+                "value": {
+                  "square": [4, 4]
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 3,
+              "at": "$time",
+              "method": "PUT",
+              "code": "last-move-changed",
+              "data": {
+                "path": ["state", "lastMove"],
+                "value": {
+                  "pieceId": "w10",
+                  "path": [
+                    [3, 3],
+                    [4, 4]
+                  ],
+                  "captured": []
+                }
+              }
+            }
+          },
+          {
+            "type": "patch",
+            "data": {
+              "seq": 4,
+              "at": "$time",
+              "method": "PATCH",
+              "code": "counters-changed",
+              "data": {
+                "path": ["state"],
+                "value": {
+                  "quietMoves": 0,
+                  "materialMoves": 1
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 5,
+              "at": "$time",
+              "method": "PUT",
+              "code": "position-recorded",
+              "data": {
+                "path": ["state", "positionHistory"],
+                "value": [
+                  "B|BM1,7;BM2,6;BM2,8;BM3,7;BM4,6;BM4,8;BM5,7;BM6,6;BM6,8;BM7,7;BM8,6;BM8,8;WM1,1;WM1,3;WM2,2;WM3,1;WM4,2;WM4,4;WM5,1;WM5,3;WM6,2;WM7,1;WM7,3;WM8,2"
+                ]
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 6,
+              "at": "$time",
+              "method": "PUT",
+              "code": "turn-changed",
+              "data": {
+                "path": ["state", "turns"],
+                "value": {
+                  "currentPlayerId": "{{black.id}}",
+                  "round": 1,
+                  "rounds": null
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 7,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{black.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": []
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 8,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{white.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": [
+                  {
+                    "type": "RESIGN",
+                    "data": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 9,
+              "at": "$time",
+              "method": "PUT",
+              "code": "clock-switched",
+              "data": {
+                "path": ["state", "timer"],
+                "value": {
+                  "status": "RUNNING",
+                  "deadline": "$time",
+                  "pausedAt": null,
+                  "clocks": [
+                    {
+                      "playerId": "{{black.id}}",
+                      "remainingMs": "$time"
+                    },
+                    {
+                      "playerId": "{{white.id}}",
+                      "remainingMs": "$time"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ],
+        "spectator": [
+          {
+            "type": "patch",
+            "data": {
+              "seq": 2,
+              "at": "$time",
+              "method": "PATCH",
+              "code": "piece-moved",
+              "data": {
+                "path": [
+                  "state",
+                  "pieces",
+                  {
+                    "id": "w10"
+                  }
+                ],
+                "value": {
+                  "square": [4, 4]
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 3,
+              "at": "$time",
+              "method": "PUT",
+              "code": "last-move-changed",
+              "data": {
+                "path": ["state", "lastMove"],
+                "value": {
+                  "pieceId": "w10",
+                  "path": [
+                    [3, 3],
+                    [4, 4]
+                  ],
+                  "captured": []
+                }
+              }
+            }
+          },
+          {
+            "type": "patch",
+            "data": {
+              "seq": 4,
+              "at": "$time",
+              "method": "PATCH",
+              "code": "counters-changed",
+              "data": {
+                "path": ["state"],
+                "value": {
+                  "quietMoves": 0,
+                  "materialMoves": 1
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 5,
+              "at": "$time",
+              "method": "PUT",
+              "code": "position-recorded",
+              "data": {
+                "path": ["state", "positionHistory"],
+                "value": [
+                  "B|BM1,7;BM2,6;BM2,8;BM3,7;BM4,6;BM4,8;BM5,7;BM6,6;BM6,8;BM7,7;BM8,6;BM8,8;WM1,1;WM1,3;WM2,2;WM3,1;WM4,2;WM4,4;WM5,1;WM5,3;WM6,2;WM7,1;WM7,3;WM8,2"
+                ]
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 6,
+              "at": "$time",
+              "method": "PUT",
+              "code": "turn-changed",
+              "data": {
+                "path": ["state", "turns"],
+                "value": {
+                  "currentPlayerId": "{{black.id}}",
+                  "round": 1,
+                  "rounds": null
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 7,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{black.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": []
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 8,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{white.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": []
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 9,
+              "at": "$time",
+              "method": "PUT",
+              "code": "clock-switched",
+              "data": {
+                "path": ["state", "timer"],
+                "value": {
+                  "status": "RUNNING",
+                  "deadline": "$time",
+                  "pausedAt": null,
+                  "clocks": [
+                    {
+                      "playerId": "{{black.id}}",
+                      "remainingMs": "$time"
+                    },
+                    {
+                      "playerId": "{{white.id}}",
+                      "remainingMs": "$time"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "title": "f6-e5",
+      "actor": "black",
+      "move": {
+        "path": [
+          [6, 6],
+          [5, 5]
+        ]
+      },
+      "expected": {
+        "black": [
+          {
+            "type": "patch",
+            "data": {
+              "seq": 10,
+              "at": "$time",
+              "method": "PATCH",
+              "code": "piece-moved",
+              "data": {
+                "path": [
+                  "state",
+                  "pieces",
+                  {
+                    "id": "b10"
+                  }
+                ],
+                "value": {
+                  "square": [5, 5]
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 11,
+              "at": "$time",
+              "method": "PUT",
+              "code": "last-move-changed",
+              "data": {
+                "path": ["state", "lastMove"],
+                "value": {
+                  "pieceId": "b10",
+                  "path": [
+                    [6, 6],
+                    [5, 5]
+                  ],
+                  "captured": []
+                }
+              }
+            }
+          },
+          {
+            "type": "patch",
+            "data": {
+              "seq": 12,
+              "at": "$time",
+              "method": "PATCH",
+              "code": "counters-changed",
+              "data": {
+                "path": ["state"],
+                "value": {
+                  "quietMoves": 0,
+                  "materialMoves": 2
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 13,
+              "at": "$time",
+              "method": "PUT",
+              "code": "position-recorded",
+              "data": {
+                "path": ["state", "positionHistory"],
+                "value": [
+                  "W|BM1,7;BM2,6;BM2,8;BM3,7;BM4,6;BM4,8;BM5,5;BM5,7;BM6,8;BM7,7;BM8,6;BM8,8;WM1,1;WM1,3;WM2,2;WM3,1;WM4,2;WM4,4;WM5,1;WM5,3;WM6,2;WM7,1;WM7,3;WM8,2"
+                ]
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 14,
+              "at": "$time",
+              "method": "PUT",
+              "code": "turn-changed",
+              "data": {
+                "path": ["state", "turns"],
+                "value": {
+                  "currentPlayerId": "{{white.id}}",
+                  "round": 1,
+                  "rounds": null
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 15,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{black.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": [
+                  {
+                    "type": "RESIGN",
+                    "data": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 16,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{white.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": []
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 17,
+              "at": "$time",
+              "method": "PUT",
+              "code": "clock-switched",
+              "data": {
+                "path": ["state", "timer"],
+                "value": {
+                  "status": "RUNNING",
+                  "deadline": "$time",
+                  "pausedAt": null,
+                  "clocks": [
+                    {
+                      "playerId": "{{black.id}}",
+                      "remainingMs": "$time"
+                    },
+                    {
+                      "playerId": "{{white.id}}",
+                      "remainingMs": "$time"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ],
+        "white": [
+          {
+            "type": "patch",
+            "data": {
+              "seq": 10,
+              "at": "$time",
+              "method": "PATCH",
+              "code": "piece-moved",
+              "data": {
+                "path": [
+                  "state",
+                  "pieces",
+                  {
+                    "id": "b10"
+                  }
+                ],
+                "value": {
+                  "square": [5, 5]
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 11,
+              "at": "$time",
+              "method": "PUT",
+              "code": "last-move-changed",
+              "data": {
+                "path": ["state", "lastMove"],
+                "value": {
+                  "pieceId": "b10",
+                  "path": [
+                    [6, 6],
+                    [5, 5]
+                  ],
+                  "captured": []
+                }
+              }
+            }
+          },
+          {
+            "type": "patch",
+            "data": {
+              "seq": 12,
+              "at": "$time",
+              "method": "PATCH",
+              "code": "counters-changed",
+              "data": {
+                "path": ["state"],
+                "value": {
+                  "quietMoves": 0,
+                  "materialMoves": 2
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 13,
+              "at": "$time",
+              "method": "PUT",
+              "code": "position-recorded",
+              "data": {
+                "path": ["state", "positionHistory"],
+                "value": [
+                  "W|BM1,7;BM2,6;BM2,8;BM3,7;BM4,6;BM4,8;BM5,5;BM5,7;BM6,8;BM7,7;BM8,6;BM8,8;WM1,1;WM1,3;WM2,2;WM3,1;WM4,2;WM4,4;WM5,1;WM5,3;WM6,2;WM7,1;WM7,3;WM8,2"
+                ]
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 14,
+              "at": "$time",
+              "method": "PUT",
+              "code": "turn-changed",
+              "data": {
+                "path": ["state", "turns"],
+                "value": {
+                  "currentPlayerId": "{{white.id}}",
+                  "round": 1,
+                  "rounds": null
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 15,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{black.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": []
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 16,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{white.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": [
+                  {
+                    "type": "MOVE",
+                    "data": null
+                  },
+                  {
+                    "type": "RESIGN",
+                    "data": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 17,
+              "at": "$time",
+              "method": "PUT",
+              "code": "clock-switched",
+              "data": {
+                "path": ["state", "timer"],
+                "value": {
+                  "status": "RUNNING",
+                  "deadline": "$time",
+                  "pausedAt": null,
+                  "clocks": [
+                    {
+                      "playerId": "{{black.id}}",
+                      "remainingMs": "$time"
+                    },
+                    {
+                      "playerId": "{{white.id}}",
+                      "remainingMs": "$time"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ],
+        "spectator": [
+          {
+            "type": "patch",
+            "data": {
+              "seq": 10,
+              "at": "$time",
+              "method": "PATCH",
+              "code": "piece-moved",
+              "data": {
+                "path": [
+                  "state",
+                  "pieces",
+                  {
+                    "id": "b10"
+                  }
+                ],
+                "value": {
+                  "square": [5, 5]
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 11,
+              "at": "$time",
+              "method": "PUT",
+              "code": "last-move-changed",
+              "data": {
+                "path": ["state", "lastMove"],
+                "value": {
+                  "pieceId": "b10",
+                  "path": [
+                    [6, 6],
+                    [5, 5]
+                  ],
+                  "captured": []
+                }
+              }
+            }
+          },
+          {
+            "type": "patch",
+            "data": {
+              "seq": 12,
+              "at": "$time",
+              "method": "PATCH",
+              "code": "counters-changed",
+              "data": {
+                "path": ["state"],
+                "value": {
+                  "quietMoves": 0,
+                  "materialMoves": 2
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 13,
+              "at": "$time",
+              "method": "PUT",
+              "code": "position-recorded",
+              "data": {
+                "path": ["state", "positionHistory"],
+                "value": [
+                  "W|BM1,7;BM2,6;BM2,8;BM3,7;BM4,6;BM4,8;BM5,5;BM5,7;BM6,8;BM7,7;BM8,6;BM8,8;WM1,1;WM1,3;WM2,2;WM3,1;WM4,2;WM4,4;WM5,1;WM5,3;WM6,2;WM7,1;WM7,3;WM8,2"
+                ]
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 14,
+              "at": "$time",
+              "method": "PUT",
+              "code": "turn-changed",
+              "data": {
+                "path": ["state", "turns"],
+                "value": {
+                  "currentPlayerId": "{{white.id}}",
+                  "round": 1,
+                  "rounds": null
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 15,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{black.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": []
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 16,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{white.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": []
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 17,
+              "at": "$time",
+              "method": "PUT",
+              "code": "clock-switched",
+              "data": {
+                "path": ["state", "timer"],
+                "value": {
+                  "status": "RUNNING",
+                  "deadline": "$time",
+                  "pausedAt": null,
+                  "clocks": [
+                    {
+                      "playerId": "{{black.id}}",
+                      "remainingMs": "$time"
+                    },
+                    {
+                      "playerId": "{{white.id}}",
+                      "remainingMs": "$time"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "title": "d4:f6",
+      "actor": "white",
+      "move": {
+        "path": [
+          [4, 4],
+          [6, 6]
+        ]
+      },
+      "expected": {
+        "black": [
+          {
+            "type": "patch",
+            "data": {
+              "seq": 18,
+              "at": "$time",
+              "method": "PATCH",
+              "code": "piece-moved",
+              "data": {
+                "path": [
+                  "state",
+                  "pieces",
+                  {
+                    "id": "w10"
+                  }
+                ],
+                "value": {
+                  "square": [6, 6]
+                }
+              }
+            }
+          },
+          {
+            "type": "delete",
+            "data": {
+              "seq": 19,
+              "at": "$time",
+              "method": "DELETE",
+              "code": "piece-captured",
+              "data": {
+                "path": [
+                  "state",
+                  "pieces",
+                  {
+                    "id": "b10"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 20,
+              "at": "$time",
+              "method": "PUT",
+              "code": "last-move-changed",
+              "data": {
+                "path": ["state", "lastMove"],
+                "value": {
+                  "pieceId": "w10",
+                  "path": [
+                    [4, 4],
+                    [6, 6]
+                  ],
+                  "captured": [[5, 5]]
+                }
+              }
+            }
+          },
+          {
+            "type": "patch",
+            "data": {
+              "seq": 21,
+              "at": "$time",
+              "method": "PATCH",
+              "code": "counters-changed",
+              "data": {
+                "path": ["state"],
+                "value": {
+                  "quietMoves": 0,
+                  "materialMoves": 0
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 22,
+              "at": "$time",
+              "method": "PUT",
+              "code": "position-recorded",
+              "data": {
+                "path": ["state", "positionHistory"],
+                "value": [
+                  "B|BM1,7;BM2,6;BM2,8;BM3,7;BM4,6;BM4,8;BM5,7;BM6,8;BM7,7;BM8,6;BM8,8;WM1,1;WM1,3;WM2,2;WM3,1;WM4,2;WM5,1;WM5,3;WM6,2;WM6,6;WM7,1;WM7,3;WM8,2"
+                ]
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 23,
+              "at": "$time",
+              "method": "PUT",
+              "code": "turn-changed",
+              "data": {
+                "path": ["state", "turns"],
+                "value": {
+                  "currentPlayerId": "{{black.id}}",
+                  "round": 1,
+                  "rounds": null
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 24,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{black.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": [
+                  {
+                    "type": "MOVE",
+                    "data": null
+                  },
+                  {
+                    "type": "RESIGN",
+                    "data": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 25,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{white.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": []
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 26,
+              "at": "$time",
+              "method": "PUT",
+              "code": "clock-switched",
+              "data": {
+                "path": ["state", "timer"],
+                "value": {
+                  "status": "RUNNING",
+                  "deadline": "$time",
+                  "pausedAt": null,
+                  "clocks": [
+                    {
+                      "playerId": "{{black.id}}",
+                      "remainingMs": "$time"
+                    },
+                    {
+                      "playerId": "{{white.id}}",
+                      "remainingMs": "$time"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ],
+        "white": [
+          {
+            "type": "patch",
+            "data": {
+              "seq": 18,
+              "at": "$time",
+              "method": "PATCH",
+              "code": "piece-moved",
+              "data": {
+                "path": [
+                  "state",
+                  "pieces",
+                  {
+                    "id": "w10"
+                  }
+                ],
+                "value": {
+                  "square": [6, 6]
+                }
+              }
+            }
+          },
+          {
+            "type": "delete",
+            "data": {
+              "seq": 19,
+              "at": "$time",
+              "method": "DELETE",
+              "code": "piece-captured",
+              "data": {
+                "path": [
+                  "state",
+                  "pieces",
+                  {
+                    "id": "b10"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 20,
+              "at": "$time",
+              "method": "PUT",
+              "code": "last-move-changed",
+              "data": {
+                "path": ["state", "lastMove"],
+                "value": {
+                  "pieceId": "w10",
+                  "path": [
+                    [4, 4],
+                    [6, 6]
+                  ],
+                  "captured": [[5, 5]]
+                }
+              }
+            }
+          },
+          {
+            "type": "patch",
+            "data": {
+              "seq": 21,
+              "at": "$time",
+              "method": "PATCH",
+              "code": "counters-changed",
+              "data": {
+                "path": ["state"],
+                "value": {
+                  "quietMoves": 0,
+                  "materialMoves": 0
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 22,
+              "at": "$time",
+              "method": "PUT",
+              "code": "position-recorded",
+              "data": {
+                "path": ["state", "positionHistory"],
+                "value": [
+                  "B|BM1,7;BM2,6;BM2,8;BM3,7;BM4,6;BM4,8;BM5,7;BM6,8;BM7,7;BM8,6;BM8,8;WM1,1;WM1,3;WM2,2;WM3,1;WM4,2;WM5,1;WM5,3;WM6,2;WM6,6;WM7,1;WM7,3;WM8,2"
+                ]
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 23,
+              "at": "$time",
+              "method": "PUT",
+              "code": "turn-changed",
+              "data": {
+                "path": ["state", "turns"],
+                "value": {
+                  "currentPlayerId": "{{black.id}}",
+                  "round": 1,
+                  "rounds": null
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 24,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{black.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": []
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 25,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{white.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": [
+                  {
+                    "type": "RESIGN",
+                    "data": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 26,
+              "at": "$time",
+              "method": "PUT",
+              "code": "clock-switched",
+              "data": {
+                "path": ["state", "timer"],
+                "value": {
+                  "status": "RUNNING",
+                  "deadline": "$time",
+                  "pausedAt": null,
+                  "clocks": [
+                    {
+                      "playerId": "{{black.id}}",
+                      "remainingMs": "$time"
+                    },
+                    {
+                      "playerId": "{{white.id}}",
+                      "remainingMs": "$time"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ],
+        "spectator": [
+          {
+            "type": "patch",
+            "data": {
+              "seq": 18,
+              "at": "$time",
+              "method": "PATCH",
+              "code": "piece-moved",
+              "data": {
+                "path": [
+                  "state",
+                  "pieces",
+                  {
+                    "id": "w10"
+                  }
+                ],
+                "value": {
+                  "square": [6, 6]
+                }
+              }
+            }
+          },
+          {
+            "type": "delete",
+            "data": {
+              "seq": 19,
+              "at": "$time",
+              "method": "DELETE",
+              "code": "piece-captured",
+              "data": {
+                "path": [
+                  "state",
+                  "pieces",
+                  {
+                    "id": "b10"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 20,
+              "at": "$time",
+              "method": "PUT",
+              "code": "last-move-changed",
+              "data": {
+                "path": ["state", "lastMove"],
+                "value": {
+                  "pieceId": "w10",
+                  "path": [
+                    [4, 4],
+                    [6, 6]
+                  ],
+                  "captured": [[5, 5]]
+                }
+              }
+            }
+          },
+          {
+            "type": "patch",
+            "data": {
+              "seq": 21,
+              "at": "$time",
+              "method": "PATCH",
+              "code": "counters-changed",
+              "data": {
+                "path": ["state"],
+                "value": {
+                  "quietMoves": 0,
+                  "materialMoves": 0
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 22,
+              "at": "$time",
+              "method": "PUT",
+              "code": "position-recorded",
+              "data": {
+                "path": ["state", "positionHistory"],
+                "value": [
+                  "B|BM1,7;BM2,6;BM2,8;BM3,7;BM4,6;BM4,8;BM5,7;BM6,8;BM7,7;BM8,6;BM8,8;WM1,1;WM1,3;WM2,2;WM3,1;WM4,2;WM5,1;WM5,3;WM6,2;WM6,6;WM7,1;WM7,3;WM8,2"
+                ]
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 23,
+              "at": "$time",
+              "method": "PUT",
+              "code": "turn-changed",
+              "data": {
+                "path": ["state", "turns"],
+                "value": {
+                  "currentPlayerId": "{{black.id}}",
+                  "round": 1,
+                  "rounds": null
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 24,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{black.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": []
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 25,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{white.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": []
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 26,
+              "at": "$time",
+              "method": "PUT",
+              "code": "clock-switched",
+              "data": {
+                "path": ["state", "timer"],
+                "value": {
+                  "status": "RUNNING",
+                  "deadline": "$time",
+                  "pausedAt": null,
+                  "clocks": [
+                    {
+                      "playerId": "{{black.id}}",
+                      "remainingMs": "$time"
+                    },
+                    {
+                      "playerId": "{{white.id}}",
+                      "remainingMs": "$time"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "title": "g7:e5",
+      "actor": "black",
+      "move": {
+        "path": [
+          [7, 7],
+          [5, 5]
+        ]
+      },
+      "expected": {
+        "black": [
+          {
+            "type": "patch",
+            "data": {
+              "seq": 27,
+              "at": "$time",
+              "method": "PATCH",
+              "code": "piece-moved",
+              "data": {
+                "path": [
+                  "state",
+                  "pieces",
+                  {
+                    "id": "b5"
+                  }
+                ],
+                "value": {
+                  "square": [5, 5]
+                }
+              }
+            }
+          },
+          {
+            "type": "delete",
+            "data": {
+              "seq": 28,
+              "at": "$time",
+              "method": "DELETE",
+              "code": "piece-captured",
+              "data": {
+                "path": [
+                  "state",
+                  "pieces",
+                  {
+                    "id": "w10"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 29,
+              "at": "$time",
+              "method": "PUT",
+              "code": "last-move-changed",
+              "data": {
+                "path": ["state", "lastMove"],
+                "value": {
+                  "pieceId": "b5",
+                  "path": [
+                    [7, 7],
+                    [5, 5]
+                  ],
+                  "captured": [[6, 6]]
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 30,
+              "at": "$time",
+              "method": "PUT",
+              "code": "position-recorded",
+              "data": {
+                "path": ["state", "positionHistory"],
+                "value": [
+                  "W|BM1,7;BM2,6;BM2,8;BM3,7;BM4,6;BM4,8;BM5,5;BM5,7;BM6,8;BM8,6;BM8,8;WM1,1;WM1,3;WM2,2;WM3,1;WM4,2;WM5,1;WM5,3;WM6,2;WM7,1;WM7,3;WM8,2"
+                ]
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 31,
+              "at": "$time",
+              "method": "PUT",
+              "code": "turn-changed",
+              "data": {
+                "path": ["state", "turns"],
+                "value": {
+                  "currentPlayerId": "{{white.id}}",
+                  "round": 1,
+                  "rounds": null
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 32,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{black.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": [
+                  {
+                    "type": "RESIGN",
+                    "data": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 33,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{white.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": []
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 34,
+              "at": "$time",
+              "method": "PUT",
+              "code": "clock-switched",
+              "data": {
+                "path": ["state", "timer"],
+                "value": {
+                  "status": "RUNNING",
+                  "deadline": "$time",
+                  "pausedAt": null,
+                  "clocks": [
+                    {
+                      "playerId": "{{black.id}}",
+                      "remainingMs": "$time"
+                    },
+                    {
+                      "playerId": "{{white.id}}",
+                      "remainingMs": "$time"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ],
+        "white": [
+          {
+            "type": "patch",
+            "data": {
+              "seq": 27,
+              "at": "$time",
+              "method": "PATCH",
+              "code": "piece-moved",
+              "data": {
+                "path": [
+                  "state",
+                  "pieces",
+                  {
+                    "id": "b5"
+                  }
+                ],
+                "value": {
+                  "square": [5, 5]
+                }
+              }
+            }
+          },
+          {
+            "type": "delete",
+            "data": {
+              "seq": 28,
+              "at": "$time",
+              "method": "DELETE",
+              "code": "piece-captured",
+              "data": {
+                "path": [
+                  "state",
+                  "pieces",
+                  {
+                    "id": "w10"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 29,
+              "at": "$time",
+              "method": "PUT",
+              "code": "last-move-changed",
+              "data": {
+                "path": ["state", "lastMove"],
+                "value": {
+                  "pieceId": "b5",
+                  "path": [
+                    [7, 7],
+                    [5, 5]
+                  ],
+                  "captured": [[6, 6]]
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 30,
+              "at": "$time",
+              "method": "PUT",
+              "code": "position-recorded",
+              "data": {
+                "path": ["state", "positionHistory"],
+                "value": [
+                  "W|BM1,7;BM2,6;BM2,8;BM3,7;BM4,6;BM4,8;BM5,5;BM5,7;BM6,8;BM8,6;BM8,8;WM1,1;WM1,3;WM2,2;WM3,1;WM4,2;WM5,1;WM5,3;WM6,2;WM7,1;WM7,3;WM8,2"
+                ]
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 31,
+              "at": "$time",
+              "method": "PUT",
+              "code": "turn-changed",
+              "data": {
+                "path": ["state", "turns"],
+                "value": {
+                  "currentPlayerId": "{{white.id}}",
+                  "round": 1,
+                  "rounds": null
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 32,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{black.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": []
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 33,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{white.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": [
+                  {
+                    "type": "MOVE",
+                    "data": null
+                  },
+                  {
+                    "type": "RESIGN",
+                    "data": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 34,
+              "at": "$time",
+              "method": "PUT",
+              "code": "clock-switched",
+              "data": {
+                "path": ["state", "timer"],
+                "value": {
+                  "status": "RUNNING",
+                  "deadline": "$time",
+                  "pausedAt": null,
+                  "clocks": [
+                    {
+                      "playerId": "{{black.id}}",
+                      "remainingMs": "$time"
+                    },
+                    {
+                      "playerId": "{{white.id}}",
+                      "remainingMs": "$time"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ],
+        "spectator": [
+          {
+            "type": "patch",
+            "data": {
+              "seq": 27,
+              "at": "$time",
+              "method": "PATCH",
+              "code": "piece-moved",
+              "data": {
+                "path": [
+                  "state",
+                  "pieces",
+                  {
+                    "id": "b5"
+                  }
+                ],
+                "value": {
+                  "square": [5, 5]
+                }
+              }
+            }
+          },
+          {
+            "type": "delete",
+            "data": {
+              "seq": 28,
+              "at": "$time",
+              "method": "DELETE",
+              "code": "piece-captured",
+              "data": {
+                "path": [
+                  "state",
+                  "pieces",
+                  {
+                    "id": "w10"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 29,
+              "at": "$time",
+              "method": "PUT",
+              "code": "last-move-changed",
+              "data": {
+                "path": ["state", "lastMove"],
+                "value": {
+                  "pieceId": "b5",
+                  "path": [
+                    [7, 7],
+                    [5, 5]
+                  ],
+                  "captured": [[6, 6]]
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 30,
+              "at": "$time",
+              "method": "PUT",
+              "code": "position-recorded",
+              "data": {
+                "path": ["state", "positionHistory"],
+                "value": [
+                  "W|BM1,7;BM2,6;BM2,8;BM3,7;BM4,6;BM4,8;BM5,5;BM5,7;BM6,8;BM8,6;BM8,8;WM1,1;WM1,3;WM2,2;WM3,1;WM4,2;WM5,1;WM5,3;WM6,2;WM7,1;WM7,3;WM8,2"
+                ]
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 31,
+              "at": "$time",
+              "method": "PUT",
+              "code": "turn-changed",
+              "data": {
+                "path": ["state", "turns"],
+                "value": {
+                  "currentPlayerId": "{{white.id}}",
+                  "round": 1,
+                  "rounds": null
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 32,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{black.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": []
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 33,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{white.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": []
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 34,
+              "at": "$time",
+              "method": "PUT",
+              "code": "clock-switched",
+              "data": {
+                "path": ["state", "timer"],
+                "value": {
+                  "status": "RUNNING",
+                  "deadline": "$time",
+                  "pausedAt": null,
+                  "clocks": [
+                    {
+                      "playerId": "{{black.id}}",
+                      "remainingMs": "$time"
+                    },
+                    {
+                      "playerId": "{{white.id}}",
+                      "remainingMs": "$time"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

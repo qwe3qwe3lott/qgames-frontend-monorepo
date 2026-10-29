@@ -29,3 +29,8 @@ pnpm-debug.log*
 
 # Снапшоты OpenAPI групп portal и admin — вход Orval, снимаются `pnpm api:fetch` (CLAUDE.md §5)
 packages/api/openapi/
+
+# Playwright: отчёты и артефакты прогонов e2e
+e2e/test-results/
+e2e/playwright-report/
+e2e/blob-report/

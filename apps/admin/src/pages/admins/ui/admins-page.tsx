@@ -14,6 +14,8 @@ import {
 
 import {useCurrentAdmin} from '@/entities/admin';
 
+import {testIds} from './admins-page.test-ids';
+
 const TITLE = 'Администраторы';
 
 const CREATED_AT_FORMAT = new Intl.DateTimeFormat('ru-RU', {
@@ -28,7 +30,7 @@ interface AdminRowProps {
 
 function AdminRow({admin, isCurrent}: AdminRowProps) {
   return (
-    <TableRow>
+    <TableRow data-testid={testIds.row} data-login={admin.login}>
       <TableCell className="font-medium">
         {admin.login}
         {isCurrent ? (
@@ -53,14 +55,14 @@ export function AdminsPage() {
 
   if (isPending) {
     return (
-      <PageLayout title={TITLE}>
+      <PageLayout data-testid={testIds.root} title={TITLE}>
         <p className="text-muted-foreground">Загружаем администраторов…</p>
       </PageLayout>
     );
   }
   if (error !== null) {
     return (
-      <PageLayout title={TITLE}>
+      <PageLayout data-testid={testIds.root} title={TITLE}>
         <div className="flex flex-col items-start gap-3" role="alert">
           <p className="text-destructive">{errorMessage(error)}</p>
           <Button
@@ -80,7 +82,7 @@ export function AdminsPage() {
   const currentId = current.status === 'admin' ? current.admin.id : undefined;
 
   return (
-    <PageLayout title={TITLE}>
+    <PageLayout data-testid={testIds.root} title={TITLE}>
       {data.admins.length === 0 ? (
         <p className="text-muted-foreground">Администраторов нет.</p>
       ) : (

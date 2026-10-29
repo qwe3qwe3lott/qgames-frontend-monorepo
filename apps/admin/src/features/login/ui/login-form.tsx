@@ -14,6 +14,7 @@ import {useNavigate} from '@tanstack/react-router';
 import {useForm} from 'react-hook-form';
 
 import {loginSchema, type LoginValues} from '../model/schema';
+import {testIds} from './login-form.test-ids';
 
 const LOGIN_MESSAGES = {
   INVALID_CREDENTIALS: 'Неверный логин или пароль.',
@@ -64,6 +65,7 @@ export function LoginForm({redirect}: LoginFormProps) {
           <FieldLabel htmlFor="login-login">Логин</FieldLabel>
           <Input
             id="login-login"
+            data-testid={testIds.loginInput}
             autoComplete="username"
             aria-invalid={errors.login !== undefined}
             {...form.register('login')}
@@ -74,6 +76,7 @@ export function LoginForm({redirect}: LoginFormProps) {
           <FieldLabel htmlFor="login-password">Пароль</FieldLabel>
           <Input
             id="login-password"
+            data-testid={testIds.passwordInput}
             type="password"
             autoComplete="current-password"
             aria-invalid={errors.password !== undefined}
@@ -82,7 +85,11 @@ export function LoginForm({redirect}: LoginFormProps) {
           <FieldError errors={[errors.password]} />
         </Field>
         <FieldError errors={[errors.root]} />
-        <Button type="submit" disabled={login.isPending}>
+        <Button
+          type="submit"
+          disabled={login.isPending}
+          data-testid={testIds.submitButton}
+        >
           Войти
         </Button>
       </FieldGroup>

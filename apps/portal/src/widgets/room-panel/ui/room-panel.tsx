@@ -19,6 +19,8 @@ import {
 } from '@/features/room-membership';
 import {SessionActions} from '@/features/room-session';
 
+import {testIds} from './room-panel.test-ids';
+
 export interface RoomPanelProps {
   /** Название игры из `GET /api/games/{gameCode}`. */
   gameTitle: string;
@@ -69,7 +71,7 @@ export function RoomPanel({
   const spectators = room.members.filter(m => m.role === 'SPECTATOR');
 
   return (
-    <aside className="flex flex-col gap-4">
+    <aside className="flex flex-col gap-4" data-testid={testIds.root}>
       <RoomInfo
         gameTitle={gameTitle}
         status={ROOM_STATUS_LABELS[room.status]}
@@ -84,24 +86,34 @@ export function RoomPanel({
           </>
         }
       />
-      <PlayerList
-        players={players.map(m => toListItem(m, viewerId, room, membership))}
-        title={`Игроки (${String(players.length)}/${String(room.maxPlayers)})`}
-        action={
-          <ChangeRoleButton room={room} membership={membership} role="PLAYER" />
-        }
-      />
-      <PlayerList
-        players={spectators.map(m => toListItem(m, viewerId, room, membership))}
-        title={`Наблюдатели (${String(membership.spectatorsCount)}/${String(membership.maxSpectators)})`}
-        action={
-          <ChangeRoleButton
-            room={room}
-            membership={membership}
-            role="SPECTATOR"
-          />
-        }
-      />
+      <div data-testid={testIds.players}>
+        <PlayerList
+          players={players.map(m => toListItem(m, viewerId, room, membership))}
+          title={`Игроки (${String(players.length)}/${String(room.maxPlayers)})`}
+          action={
+            <ChangeRoleButton
+              room={room}
+              membership={membership}
+              role="PLAYER"
+            />
+          }
+        />
+      </div>
+      <div data-testid={testIds.spectators}>
+        <PlayerList
+          players={spectators.map(m =>
+            toListItem(m, viewerId, room, membership),
+          )}
+          title={`Наблюдатели (${String(membership.spectatorsCount)}/${String(membership.maxSpectators)})`}
+          action={
+            <ChangeRoleButton
+              room={room}
+              membership={membership}
+              role="SPECTATOR"
+            />
+          }
+        />
+      </div>
     </aside>
   );
 }

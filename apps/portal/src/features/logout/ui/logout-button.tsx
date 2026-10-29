@@ -4,6 +4,7 @@ import {Button} from '@qgames/ui/components/button';
 import {toast} from '@qgames/ui/components/sonner';
 import {useQueryClient} from '@tanstack/react-query';
 import {useNavigate} from '@tanstack/react-router';
+import {testIds} from './logout-button.test-ids';
 
 /**
  * Выход: сессия отзывается, все данные пользователя убираются из кеша.
@@ -37,6 +38,7 @@ export function LogoutButton() {
     <Button
       variant="ghost"
       size="sm"
+      data-testid={testIds.root}
       disabled={logout.isPending}
       onClick={() => {
         logout.mutate();

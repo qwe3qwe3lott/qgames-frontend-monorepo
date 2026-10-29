@@ -51,6 +51,7 @@ import {
   type CheckersSession,
 } from '../state';
 import type {BoardPlayer, BoardProps} from '../types';
+import {testIds} from './board.test-ids';
 import {CheckersGrid} from './checkers-grid';
 
 const UNKNOWN_PLAYER_NAME = 'Игрок';
@@ -110,7 +111,11 @@ function ResignButton({
     <Dialog>
       <WithTooltip hint={hint}>
         <DialogTrigger asChild>
-          <Button variant="outline" disabled={disabled}>
+          <Button
+            variant="outline"
+            disabled={disabled}
+            data-testid={testIds.resignButton}
+          >
             Сдаться
           </Button>
         </DialogTrigger>
@@ -129,7 +134,12 @@ function ResignButton({
             </Button>
           </DialogClose>
           <DialogClose asChild>
-            <Button type="button" variant="destructive" onClick={onResign}>
+            <Button
+              type="button"
+              variant="destructive"
+              data-testid={testIds.resignConfirmButton}
+              onClick={onResign}
+            >
               Сдаться
             </Button>
           </DialogClose>
@@ -272,7 +282,7 @@ function CheckersBoard({
           ? {outcome: 'DRAW'}
           : {outcome: 'WIN', winnerNames: result.winnerIds.map(nameOf)};
     return (
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4" data-testid={testIds.root}>
         <GameOver
           title={cancelled ? 'Партия отменена' : 'Игра окончена'}
           result={cancelled ? undefined : gameResult}
@@ -295,7 +305,7 @@ function CheckersBoard({
   const drawOffered =
     state.drawOfferedBy !== undefined && state.drawOfferedBy !== null;
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4" data-testid={testIds.root}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <TurnIndicator
           playerName={
@@ -324,6 +334,7 @@ function CheckersBoard({
           <span className="text-sm font-medium">Соперник предлагает ничью</span>
           <Button
             size="sm"
+            data-testid={testIds.acceptDrawButton}
             disabled={paused || movePending}
             onClick={() => {
               onMove({type: ACCEPT_DRAW});
@@ -346,6 +357,7 @@ function CheckersBoard({
           <Button
             variant={offerDraw ? 'secondary' : 'outline'}
             aria-pressed={offerDraw}
+            data-testid={testIds.offerDrawButton}
             disabled={paused || movePending}
             onClick={() => {
               setOfferDraw(!offerDraw);
