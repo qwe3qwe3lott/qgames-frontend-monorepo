@@ -2,7 +2,13 @@ import {describe, expect, it} from 'vitest';
 
 import {SessionSnapshotDto} from '@qgames/api/portal/zod';
 
-import {activeTimer, isCoreState, moveOptionsOf, playerClock} from './core';
+import {
+  activeTimer,
+  isCoreState,
+  moveOptionsOf,
+  playerClock,
+  type ActiveTimer,
+} from './core';
 import {sessionFromSnapshot, type SessionData} from './session';
 import {parseSessionDocument} from './validate';
 import {ALICE, BOB, DOCUMENT, META, STATE, TIMER} from './testData';
@@ -61,7 +67,8 @@ describe('activeTimer', () => {
       deadline: TIMER.deadline,
       pausedAt: null,
       clocks: TIMER.clocks,
-      incrementSeconds: 2,
+      bonusType: 'DELAY',
+      bonusSeconds: 2,
     });
   });
 
@@ -97,6 +104,7 @@ describe('playerClock', () => {
   it('у ходящего часы идут до дедлайна', () => {
     expect(timer && playerClock(timer, ALICE, ALICE)).toEqual({
       remainingMs: 30_000,
+      delayMs: 2000,
       deadline: TIMER.deadline,
       paused: false,
       pausedAt: null,
@@ -106,12 +114,24 @@ describe('playerClock', () => {
   it('у остальных — застывший запас', () => {
     expect(timer && playerClock(timer, BOB, ALICE)).toMatchObject({
       remainingMs: 25_000,
+      delayMs: 2000,
       deadline: null,
     });
   });
 
   it('у не-игрока часов нет', () => {
     expect(timer && playerClock(timer, 'stranger', ALICE)).toBeNull();
+  });
+
+  it('при инкременте задержки в отсчёте нет', () => {
+    const increment: ActiveTimer | null = timer && {
+      ...timer,
+      bonusType: 'INCREMENT',
+    };
+    expect(increment && playerClock(increment, ALICE, ALICE)).toMatchObject({
+      remainingMs: 30_000,
+      delayMs: 0,
+    });
   });
 });
 

@@ -6,10 +6,15 @@ const TICK_MS = 250;
 const WARNING_SECONDS = 5;
 
 /** Часы одного игрока (из блока `timer` состояния). */
-export interface ChessClockState {
+export interface ClockState {
   /** Сохранённый запас, мс; у ходящего — на начало его хода. */
   remainingMs: number;
-  /** Дедлайн по часам сервера (ISO 8601), если часы идут у этого игрока; null — стоят. */
+  /** Задержка, мс: тратится в начале хода раньше запаса; 0 — нет (инкремент сюда не входит). */
+  delayMs: number;
+  /**
+   * Дедлайн по часам сервера (ISO 8601): начало хода + запас (+ задержка),
+   * если часы идут у этого игрока; null — стоят.
+   */
   deadline: string | null;
   /** На паузе отсчёт застывает на остатке `deadline − pausedAt`. */
   paused: boolean;
@@ -17,8 +22,8 @@ export interface ChessClockState {
   pausedAt: string | null;
 }
 
-export interface ChessClockProps {
-  clock: ChessClockState;
+export interface ClockProps {
+  clock: ClockState;
   /** Смещение часов: время сервера минус `Date.now()` клиента, мс. */
   clockOffsetMs: number;
   className?: string;
@@ -34,19 +39,17 @@ function formatRemaining(totalSeconds: number): string {
     : `${String(minutes)}:${seconds}`;
 }
 
-/** Добавка за ход «+5 с за ход»; без добавки (0) ничего не показывается. */
-export function ClockIncrement({seconds}: {seconds: number}) {
-  if (seconds <= 0) {
-    return null;
-  }
-  return (
-    <span className="text-sm text-muted-foreground">+{seconds} с за ход</span>
-  );
+function toSeconds(ms: number): number {
+  return Math.max(0, Math.ceil(ms / 1000));
 }
 
-/** Шахматные часы игрока: у ходящего — обратный отсчёт до дедлайна, у остальных — застывший запас. */
-export function ChessClock({clock, clockOffsetMs, className}: ChessClockProps) {
-  const {remainingMs, deadline, paused, pausedAt} = clock;
+/**
+ * Часы игрока: запас и, если есть задержка, вторая зона справа. У
+ * ходящего сначала до нуля идёт задержка, затем запас; у остальных —
+ * застывший запас и полная задержка.
+ */
+export function Clock({clock, clockOffsetMs, className}: ClockProps) {
+  const {remainingMs, delayMs, deadline, paused, pausedAt} = clock;
   const running = deadline !== null;
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -61,33 +64,56 @@ export function ChessClock({clock, clockOffsetMs, className}: ChessClockProps) {
     };
   }, [running, paused]);
 
-  let leftMs = remainingMs;
+  let baseMs = remainingMs;
+  let moveMs = delayMs;
   if (running) {
     const deadlineMs = Date.parse(deadline);
     // На паузе без момента паузы отсчёт застывает на последнем показанном значении.
     const serverNowMs =
       paused && pausedAt !== null ? Date.parse(pausedAt) : now + clockOffsetMs;
     if (!Number.isNaN(deadlineMs) && !Number.isNaN(serverNowMs)) {
-      leftMs = deadlineMs - serverNowMs;
+      const leftMs = Math.max(0, deadlineMs - serverNowMs);
+      baseMs = Math.min(remainingMs, leftMs);
+      moveMs = Math.min(delayMs, leftMs - baseMs);
     }
   }
-  const leftSeconds = Math.max(0, Math.ceil(leftMs / 1000));
+  const baseSeconds = toSeconds(baseMs);
+  const moveSeconds = toSeconds(moveMs);
+  const ticking = running && !paused;
+  const warning = ticking && baseSeconds + moveSeconds <= WARNING_SECONDS;
+  // Идёт зона времени на ход, пока в ней что-то есть, затем — запас.
+  const moveActive = running && moveSeconds > 0;
   return (
     <span
       role="timer"
       aria-label={paused ? 'Осталось времени (пауза)' : 'Осталось времени'}
       className={cn(
-        'rounded-md border px-2 py-0.5 font-mono tabular-nums',
+        'inline-flex items-center rounded-md border font-mono tabular-nums',
         !running && 'text-muted-foreground',
-        running && !paused && 'border-primary',
-        running &&
-          !paused &&
-          leftSeconds <= WARNING_SECONDS &&
-          'border-destructive text-destructive',
+        ticking && 'border-primary',
+        warning && 'border-destructive text-destructive',
         className,
       )}
     >
-      {formatRemaining(leftSeconds)}
+      <span
+        className={cn(
+          'px-2 py-0.5',
+          moveActive && !warning && 'text-muted-foreground',
+        )}
+      >
+        {formatRemaining(baseSeconds)}
+      </span>
+      {delayMs > 0 ? (
+        <span
+          aria-label="Задержка"
+          className={cn(
+            'border-l border-inherit px-2 py-0.5',
+            !moveActive && !warning && 'text-muted-foreground',
+          )}
+        >
+          {formatRemaining(moveSeconds)}
+        </span>
+      ) : null}
     </span>
   );
 }

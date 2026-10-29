@@ -5,7 +5,7 @@ import {useNavigate} from '@tanstack/react-router';
 
 import {GAME_IN_DEVELOPMENT_HINT, type GameEntry} from '@/entities/game';
 import {roomErrorMessage} from '@/entities/room';
-import {WithHint} from '@/shared/ui';
+import {WithHint} from '@qgames/ui/components/WithHint';
 
 import {testIds} from './CreateRoomButton.testIds';
 

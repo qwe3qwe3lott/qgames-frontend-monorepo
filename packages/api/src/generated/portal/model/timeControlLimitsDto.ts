@@ -8,6 +8,6 @@ import type {IntRangeDto} from './intRangeDto';
 
 export interface TimeControlLimitsDto {
   baseSeconds: IntRangeDto;
-  incrementSeconds: IntRangeDto;
+  bonusSeconds: IntRangeDto;
   optional: boolean;
 }

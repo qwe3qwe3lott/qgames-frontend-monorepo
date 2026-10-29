@@ -30,7 +30,12 @@ export const META = {
     settings: {
       gameCode: 'nothing',
       rounds: 3,
-      timeControl: {enabled: true, baseSeconds: 30, incrementSeconds: 2},
+      timeControl: {
+        enabled: true,
+        baseSeconds: 30,
+        bonusType: 'DELAY',
+        bonusSeconds: 2,
+      },
     },
   },
 } as const;

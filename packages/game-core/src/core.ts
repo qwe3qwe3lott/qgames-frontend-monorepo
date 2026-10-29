@@ -1,3 +1,4 @@
+import type {TimeControlDtoBonusType} from '@qgames/api/portal/model';
 import {
   SessionPlayerDto,
   SessionResultDto,
@@ -21,7 +22,7 @@ export type SessionPlayer = SessionPlayerDtoOutput;
 /** Очерёдность: чей ход, раунд, число раундов. */
 export type SessionTurns = SessionTurnsDtoOutput;
 
-/** Шахматные часы партии; пауза — их состояние. */
+/** Часы партии; пауза — их состояние. */
 export type SessionTimer = SessionTimerDtoOutput;
 
 /** Итог партии: победа или ничья, победители, причина игры. */
@@ -70,20 +71,27 @@ export function moveOptionsOf(
 /** Часы идущей партии в виде для UI. */
 export interface ActiveTimer {
   paused: boolean;
-  /** Когда кончится запас ходящего (ISO 8601, часы сервера); null — ход ничей. */
+  /**
+   * Когда кончится время ходящего: начало хода + запас (+ задержка) (ISO
+   * 8601, часы сервера); null — ход ничей.
+   */
   deadline: string | null;
   /** С какого момента пауза (ISO 8601, часы сервера); null — таймер идёт. */
   pausedAt: string | null;
   /** Запас каждого игрока на момент последней смены хода, мс. */
   clocks: readonly {playerId: string; remainingMs: number}[];
-  /** Добавка за ход в секундах; 0 — без добавки. */
-  incrementSeconds: number;
+  /** Вид добавочного времени: инкремент после хода или задержка в его начале. */
+  bonusType: TimeControlDtoBonusType;
+  /** Добавочное время в секундах; 0 — без него. */
+  bonusSeconds: number;
 }
 
 /** Часы одного игрока для показа. */
 export interface PlayerClock {
   /** Сохранённый запас, мс; у ходящего — на начало его хода. */
   remainingMs: number;
+  /** Задержка, мс: тратится в начале хода раньше запаса; 0 — нет (в том числе при инкременте). */
+  delayMs: number;
   /** Дедлайн, если часы идут у этого игрока (он ходит); иначе null. */
   deadline: string | null;
   paused: boolean;
@@ -110,7 +118,8 @@ export function activeTimer(session: SessionData): ActiveTimer | null {
     deadline: timer.deadline ?? null,
     pausedAt: timer.pausedAt ?? null,
     clocks: timer.clocks,
-    incrementSeconds: session.meta.game.settings.timeControl.incrementSeconds,
+    bonusType: session.meta.game.settings.timeControl.bonusType,
+    bonusSeconds: session.meta.game.settings.timeControl.bonusSeconds,
   };
 }
 
@@ -129,6 +138,8 @@ export function playerClock(
   }
   return {
     remainingMs: clock.remainingMs,
+    // Инкремент прибавляет сервер к запасу после хода, в отсчёте участвует только задержка.
+    delayMs: timer.bonusType === 'DELAY' ? timer.bonusSeconds * 1000 : 0,
     deadline: playerId === currentPlayerId ? timer.deadline : null,
     paused: timer.paused,
     pausedAt: timer.pausedAt,

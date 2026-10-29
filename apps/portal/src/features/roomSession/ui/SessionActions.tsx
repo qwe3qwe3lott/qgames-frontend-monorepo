@@ -24,7 +24,7 @@ import {
   type RoomView,
 } from '@/entities/room';
 import {useSession, useSessionAdvance} from '@/entities/session';
-import {WithHint} from '@/shared/ui';
+import {WithHint} from '@qgames/ui/components/WithHint';
 
 import {testIds} from './SessionActions.testIds';
 

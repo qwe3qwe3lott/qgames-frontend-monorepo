@@ -4,15 +4,10 @@ import {
   moveOptionsOf,
   type MoveOption,
 } from '@qgames/game-core';
-import {ClockIncrement} from '@qgames/game-ui/components/ChessClock';
 import {GameOver} from '@qgames/game-ui/components/GameOver';
 import {TurnIndicator} from '@qgames/game-ui/components/TurnIndicator';
 import {Button} from '@qgames/ui/components/Button';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@qgames/ui/components/Tooltip';
+import {WithHint} from '@qgames/ui/components/WithHint';
 
 import {isNothingSession, PASS} from '../state';
 import type {BoardMove, BoardProps} from '../types';
@@ -93,34 +88,17 @@ export function Board({
           totalRounds={rounds ?? undefined}
           playerName={current?.name ?? UNKNOWN_PLAYER_NAME}
         />
-        <div className="flex items-center gap-2">
-          {paused ? (
-            <span
-              role="status"
-              className="rounded-md bg-muted px-2 py-1 text-sm font-medium text-muted-foreground"
-            >
-              Пауза
-            </span>
-          ) : null}
-          {timer === null ? null : (
-            <ClockIncrement seconds={timer.incrementSeconds} />
-          )}
-        </div>
+        {paused ? (
+          <span
+            role="status"
+            className="rounded-md bg-muted px-2 py-1 text-sm font-medium text-muted-foreground"
+          >
+            Пауза
+          </span>
+        ) : null}
       </div>
       <div className="flex items-center gap-3">
-        {paused ? (
-          // Заблокированная кнопка не получает событий мыши: триггер — обёртка.
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="inline-flex" tabIndex={0}>
-                {passButton}
-              </span>
-            </TooltipTrigger>
-            <TooltipContent>{PAUSED_HINT}</TooltipContent>
-          </Tooltip>
-        ) : (
-          passButton
-        )}
+        <WithHint hint={paused ? PAUSED_HINT : null}>{passButton}</WithHint>
         {paused || pass !== undefined ? null : (
           <span className="text-sm text-muted-foreground">
             Ждём хода другого игрока

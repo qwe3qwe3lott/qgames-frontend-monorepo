@@ -8,13 +8,22 @@ import type {
   NothingSimpleSettingsDtoTime,
   RoomSettingsDto,
   TimeControlDto,
+  TimeControlDtoBonusType,
 } from '@qgames/api/portal/model';
 
-/** Есть ли у партии таймер: таймер один — шахматные часы. */
+/** Есть ли у партии таймер: таймер один — часы. */
 export const TIME_CONTROL_LABELS = {
   none: 'Без таймера',
-  clock: 'Шахматные часы',
+  clock: 'Часы',
 } as const;
+
+/** Вид добавочного времени часов (`TimeBonusType`). */
+export const TIME_BONUS_LABELS: Readonly<
+  Record<TimeControlDtoBonusType, string>
+> = {
+  INCREMENT: 'Инкремент',
+  DELAY: 'Задержка',
+};
 
 /** Варианты правил шашек (`CheckersVariant`). */
 export const CHECKERS_VARIANT_LABELS: Readonly<
@@ -96,6 +105,17 @@ export type CheckersRuleFlag = Exclude<
   | 'drawQuietMoves'
 >;
 
+/** Правила хода шашек в порядке показа. */
+export const CHECKERS_RULE_FLAGS = [
+  'captureRequired',
+  'maxCaptureRequired',
+  'menMoveBackward',
+  'menCaptureBackward',
+  'flyingKings',
+  'promoteMidCapture',
+  'removeCapturedAfterMove',
+] as const satisfies readonly CheckersRuleFlag[];
+
 export const CHECKERS_RULE_LABELS: Readonly<Record<CheckersRuleFlag, string>> =
   {
     captureRequired: 'Бить обязательно',
@@ -120,13 +140,19 @@ export function formatSeconds(totalSeconds: number): string {
   return parts.filter(part => part !== null).join(' ');
 }
 
-/** Шахматные часы: «10 мин + 5 с»; без добавки — только запас («30 мин»). */
+/**
+ * Часы: «10 мин + 5 с инкремент», «10 мин + 5 с задержка»; без добавочного
+ * времени — только запас («30 мин»). У пресетов вида нет: они всегда с
+ * инкрементом.
+ */
 export function formatClock({
   baseSeconds,
-  incrementSeconds,
-}: Pick<TimeControlDto, 'baseSeconds' | 'incrementSeconds'>): string {
-  return incrementSeconds > 0
-    ? `${formatSeconds(baseSeconds)} + ${String(incrementSeconds)} с`
+  bonusSeconds,
+  bonusType = 'INCREMENT',
+}: Pick<TimeControlDto, 'baseSeconds' | 'bonusSeconds'> &
+  Partial<Pick<TimeControlDto, 'bonusType'>>): string {
+  return bonusSeconds > 0
+    ? `${formatSeconds(baseSeconds)} + ${String(bonusSeconds)} с ${TIME_BONUS_LABELS[bonusType].toLowerCase()}`
     : formatSeconds(baseSeconds);
 }
 
@@ -180,19 +206,61 @@ function timeRow(settings: RoomSettingsDto): SettingsRow {
   };
 }
 
+/** Выбраны ли продвинутые правила (simple-настроек нет). */
+export function isAdvancedSettings(settings: RoomSettingsDto): boolean {
+  return settings.simple === undefined || settings.simple === null;
+}
+
 /**
- * Строки описания настроек комнаты: настройки игры, время, режим правил и
- * места наблюдателей.
+ * Строки описания настроек комнаты: при простых правилах — настройки игры и
+ * время, при продвинутых их нет (они в `advancedSettingsRows`); места
+ * наблюдателей — всегда.
  */
 export function roomSettingsRows(settings: RoomSettingsDto): SettingsRow[] {
-  const advanced = settings.simple === undefined || settings.simple === null;
   return [
-    gameSettingsRow(settings),
-    timeRow(settings),
-    ...(advanced ? [{label: 'Правила', value: 'Продвинутые'}] : []),
+    ...(isAdvancedSettings(settings)
+      ? []
+      : [gameSettingsRow(settings), timeRow(settings)]),
     {
       label: 'Мест наблюдателей',
       value: String(settings.room.maxSpectators),
     },
   ];
+}
+
+function yesNo(value: boolean): string {
+  return value ? 'Да' : 'Нет';
+}
+
+/** Все продвинутые правила комнаты для просмотра — по `gameCode`. */
+export function advancedSettingsRows(settings: RoomSettingsDto): SettingsRow[] {
+  const {advanced} = settings;
+  switch (advanced.gameCode) {
+    case 'nothing':
+      return [
+        {label: 'Раундов', value: String(advanced.rounds)},
+        timeRow(settings),
+      ];
+    case 'checkers':
+      return [
+        {label: 'Доска', value: formatBoardSize(advanced.boardSize)},
+        {
+          label: 'Первыми ходят',
+          value: CHECKERS_COLOR_LABELS[advanced.firstColor],
+        },
+        ...CHECKERS_RULE_FLAGS.map(flag => ({
+          label: CHECKERS_RULE_LABELS[flag],
+          value: yesNo(advanced[flag]),
+        })),
+        {
+          label: 'Ничья после ходов только дамками без взятий',
+          value: formatDrawQuietMoves(advanced.drawQuietMoves),
+        },
+        {
+          label: 'Правила окончаний',
+          value: CHECKERS_ENDGAME_RULE_LABELS[advanced.endgameRule],
+        },
+        timeRow(settings),
+      ];
+  }
 }

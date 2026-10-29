@@ -20,6 +20,8 @@ export interface RoomInfoProps {
   maxPlayers: number;
   /** Дополнительные строки описания. */
   rows?: readonly RoomInfoRow[];
+  /** Блок под строками описания, например пометка о продвинутых правилах. */
+  details?: ReactNode;
   /** Действия с комнатой (вход, роли, старт партии). */
   actions?: ReactNode;
 }
@@ -32,6 +34,7 @@ export function RoomInfo({
   minPlayers,
   maxPlayers,
   rows = [],
+  details,
   actions,
 }: RoomInfoProps) {
   const playersRange =
@@ -57,6 +60,7 @@ export function RoomInfo({
             </div>
           ))}
         </dl>
+        {details}
         {actions === undefined ? null : (
           <div className="flex flex-wrap gap-2">{actions}</div>
         )}

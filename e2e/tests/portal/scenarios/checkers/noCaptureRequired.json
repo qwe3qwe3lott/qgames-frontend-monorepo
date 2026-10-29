@@ -21,7 +21,8 @@
       "timeControl": {
         "baseSeconds": 480,
         "enabled": false,
-        "incrementSeconds": 4
+        "bonusType": "INCREMENT",
+        "bonusSeconds": 4
       }
     }
   },
@@ -2071,7 +2072,8 @@
                   "timeControl": {
                     "enabled": false,
                     "baseSeconds": 480,
-                    "incrementSeconds": 4
+                    "bonusType": "INCREMENT",
+                    "bonusSeconds": 4
                   },
                   "menMoveBackward": false,
                   "menCaptureBackward": true,
@@ -2367,7 +2369,8 @@
                   "timeControl": {
                     "enabled": false,
                     "baseSeconds": 480,
-                    "incrementSeconds": 4
+                    "bonusType": "INCREMENT",
+                    "bonusSeconds": 4
                   },
                   "menMoveBackward": false,
                   "menCaptureBackward": true,
@@ -2667,7 +2670,8 @@
                   "timeControl": {
                     "enabled": false,
                     "baseSeconds": 480,
-                    "incrementSeconds": 4
+                    "bonusType": "INCREMENT",
+                    "bonusSeconds": 4
                   },
                   "menMoveBackward": false,
                   "menCaptureBackward": true,

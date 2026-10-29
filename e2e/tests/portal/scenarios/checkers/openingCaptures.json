@@ -36,7 +36,8 @@
                   "timeControl": {
                     "enabled": true,
                     "baseSeconds": 480,
-                    "incrementSeconds": 4
+                    "bonusType": "INCREMENT",
+                    "bonusSeconds": 4
                   },
                   "menMoveBackward": false,
                   "menCaptureBackward": true,
@@ -274,7 +275,8 @@
                   "timeControl": {
                     "enabled": true,
                     "baseSeconds": 480,
-                    "incrementSeconds": 4
+                    "bonusType": "INCREMENT",
+                    "bonusSeconds": 4
                   },
                   "menMoveBackward": false,
                   "menCaptureBackward": true,
@@ -516,7 +518,8 @@
                   "timeControl": {
                     "enabled": true,
                     "baseSeconds": 480,
-                    "incrementSeconds": 4
+                    "bonusType": "INCREMENT",
+                    "bonusSeconds": 4
                   },
                   "menMoveBackward": false,
                   "menCaptureBackward": true,

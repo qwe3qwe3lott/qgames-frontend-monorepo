@@ -7,6 +7,8 @@ import {RoomInfo} from '@qgames/game-ui/components/RoomInfo';
 import type {ComponentType} from 'react';
 
 import {
+  AdvancedRulesDialog,
+  isAdvancedSettings,
   memberName,
   ROOM_STATUS_LABELS,
   roomSettingsRows,
@@ -43,21 +45,13 @@ function toListItem(
   room: RoomView,
   membership: Membership,
 ): PlayerListItem {
-  const badges: string[] = [];
-  if (member.id === viewerId) {
-    badges.push('Вы');
-  }
-  if (member.id === room.ownerId) {
-    badges.push('Владелец');
-  }
-  if (member.leaving) {
-    badges.push('отошёл');
-  }
   return {
     id: member.id,
     name: memberName(member),
     avatar: member.avatar,
-    badges,
+    owner: member.id === room.ownerId,
+    self: member.id === viewerId,
+    badges: member.leaving ? ['отошёл'] : [],
     actions: (
       <span className="flex">
         <TransferOwnershipButton
@@ -93,6 +87,9 @@ export function RoomPanel({
         minPlayers={room.minPlayers}
         maxPlayers={room.maxPlayers}
         rows={roomSettingsRows(room.settings)}
+        {...(isAdvancedSettings(room.settings)
+          ? {details: <AdvancedRulesDialog settings={room.settings} />}
+          : {})}
         actions={
           <>
             <SessionActions room={room} membership={membership} />

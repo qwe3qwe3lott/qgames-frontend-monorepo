@@ -39,10 +39,14 @@ const ROOM = {
     advanced: {
       gameCode: 'nothing',
       rounds: 3,
-      timeControl: {enabled: false, baseSeconds: 30, incrementSeconds: 0},
+      timeControl: {
+        enabled: false,
+        baseSeconds: 30,
+        bonusType: 'INCREMENT',
+        bonusSeconds: 0,
+      },
     },
   },
-  serverTime: AT,
 };
 
 /** Сообщение потока через схему контракта — как его отдаёт обёртка SSE. */

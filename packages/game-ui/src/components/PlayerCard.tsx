@@ -8,7 +8,11 @@ export interface PlayerCardProps {
   id: string;
   name: string;
   avatar: PlayerAvatarKind | null;
-  /** Пометки рядом с именем: «Владелец», «Вы», цвет в партии. */
+  /** Владелец комнаты: корона на аватаре. */
+  owner?: boolean;
+  /** Карточка самого пользователя: аватар обведён. */
+  self?: boolean;
+  /** Пометки рядом с именем: «отошёл», цвет в партии. */
   badges?: readonly string[];
   /** Игрок сейчас ходит; карточка подсвечивается. */
   active?: boolean;
@@ -28,6 +32,8 @@ export function PlayerCard({
   id,
   name,
   avatar,
+  owner = false,
+  self = false,
   badges = [],
   active = false,
   note,
@@ -38,16 +44,19 @@ export function PlayerCard({
     <li
       data-testid={testIds.root}
       data-user-id={id}
+      data-owner={owner}
+      data-self={self}
       aria-current={active ? 'true' : undefined}
       className={cn(
         'flex items-center gap-2 rounded-md border px-3 py-2 text-sm',
         active && 'border-primary bg-primary/10',
       )}
     >
-      <PlayerAvatar avatar={avatar} />
+      <PlayerAvatar avatar={avatar} owner={owner} self={self} />
       <div className="flex min-w-0 flex-col">
         <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
           <span className={cn('truncate', active && 'font-medium')}>
+            {self ? <span className="sr-only">Вы: </span> : null}
             {name}
           </span>
           {badges.map(badge => (

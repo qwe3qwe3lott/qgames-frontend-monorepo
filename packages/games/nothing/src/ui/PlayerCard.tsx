@@ -1,5 +1,5 @@
 import {activeTimer, isSessionOver, playerClock} from '@qgames/game-core';
-import {ChessClock} from '@qgames/game-ui/components/ChessClock';
+import {Clock} from '@qgames/game-ui/components/Clock';
 import {PlayerCard as BasePlayerCard} from '@qgames/game-ui/components/PlayerCard';
 
 import {isNothingSession} from '../state';
@@ -28,7 +28,7 @@ export function PlayerCard({session, card}: GamePlayerCardProps) {
         ? {}
         : {
             status: (
-              <ChessClock clock={clock} clockOffsetMs={session.clockOffsetMs} />
+              <Clock clock={clock} clockOffsetMs={session.clockOffsetMs} />
             ),
           })}
     />

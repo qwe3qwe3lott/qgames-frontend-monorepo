@@ -18,7 +18,7 @@ import type {SessionEventPut} from './sessionEventPut';
  * - session-cancelled — PATCH [] {status: CANCELLED}: партию отменил владелец, последнее событие, поток закрывается;
  * - move-options-changed — PUT ["state", "players", {id}, "moveOptions"]: варианты ходов игрока (чужим зрителям — пустой список);
  * - turn-changed — PUT ["state", "turns"]: сменился текущий игрок или раунд;
- * - clock-switched — PUT ["state", "timer"]: шахматные часы после смены очереди (запас ходившего с добавкой, дедлайн следующего);
+ * - clock-switched — PUT ["state", "timer"]: часы после смены очереди (запас ходившего с инкрементом, если он есть, дедлайн следующего);
  * - game-paused — PATCH ["state", "timer"] {status: PAUSED, pausedAt}: пауза;
  * - game-resumed — PATCH ["state", "timer"] {status: RUNNING, deadline, pausedAt: null}: продолжение;
  * - timer-stopped — PUT ["state", "timer"]: часы остановлены перед концом или отменой партии (итоговые остатки);

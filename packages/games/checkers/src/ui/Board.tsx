@@ -1,5 +1,4 @@
 import {activeTimer, isSessionOver, moveOptionsOf} from '@qgames/game-core';
-import {ClockIncrement} from '@qgames/game-ui/components/ChessClock';
 import {
   GameOver,
   type GameOverResult,
@@ -16,12 +15,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@qgames/ui/components/Dialog';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@qgames/ui/components/Tooltip';
-import {useState, type ReactNode} from 'react';
+import {WithHint} from '@qgames/ui/components/WithHint';
+import {useState} from 'react';
 
 import {reasonLabel} from '../lib/labels';
 import {
@@ -63,29 +58,6 @@ interface Selection {
   sent: boolean;
 }
 
-/** Подсказка к заблокированному элементу: триггер — обёртка, disabled-кнопка событий не получает. */
-function WithTooltip({
-  hint,
-  children,
-}: {
-  hint: string | null;
-  children: ReactNode;
-}) {
-  if (hint === null) {
-    return children;
-  }
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <span className="inline-flex" tabIndex={0}>
-          {children}
-        </span>
-      </TooltipTrigger>
-      <TooltipContent>{hint}</TooltipContent>
-    </Tooltip>
-  );
-}
-
 function ResignButton({
   disabled,
   hint,
@@ -97,7 +69,7 @@ function ResignButton({
 }) {
   return (
     <Dialog>
-      <WithTooltip hint={hint}>
+      <WithHint hint={hint}>
         <DialogTrigger asChild>
           <Button
             variant="outline"
@@ -107,7 +79,7 @@ function ResignButton({
             Сдаться
           </Button>
         </DialogTrigger>
-      </WithTooltip>
+      </WithHint>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Сдаться?</DialogTitle>
@@ -278,19 +250,14 @@ function CheckersBoard({
             currentId === null ? UNKNOWN_PLAYER_NAME : nameOf(currentId)
           }
         />
-        <div className="flex items-center gap-2">
-          {paused ? (
-            <span
-              role="status"
-              className="rounded-md bg-muted px-2 py-1 text-sm font-medium text-muted-foreground"
-            >
-              Пауза
-            </span>
-          ) : null}
-          {timer === null ? null : (
-            <ClockIncrement seconds={timer.incrementSeconds} />
-          )}
-        </div>
+        {paused ? (
+          <span
+            role="status"
+            className="rounded-md bg-muted px-2 py-1 text-sm font-medium text-muted-foreground"
+          >
+            Пауза
+          </span>
+        ) : null}
       </div>
       {canAcceptDraw ? (
         <div

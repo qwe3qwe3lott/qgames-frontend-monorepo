@@ -1,6 +1,7 @@
 import {
   CheckersAdvancedSettingsDtoEndgameRule,
   CheckersAdvancedSettingsDtoFirstColor,
+  TimeControlDtoBonusType,
   type CheckersRulePresetDto,
   type CheckersSettingsLimitsDto,
   type GameRulesDto,
@@ -26,6 +27,7 @@ import {Controller, useWatch, type UseFormReturn} from 'react-hook-form';
 import {
   CHECKERS_COLOR_LABELS,
   CHECKERS_ENDGAME_RULE_LABELS,
+  CHECKERS_RULE_FLAGS,
   CHECKERS_RULE_LABELS,
   CHECKERS_TIME_LABELS,
   CHECKERS_VARIANT_LABELS,
@@ -34,8 +36,8 @@ import {
   formatDrawQuietMoves,
   formatSeconds,
   NOTHING_TIME_LABELS,
+  TIME_BONUS_LABELS,
   TIME_CONTROL_LABELS,
-  type CheckersRuleFlag,
 } from '../lib/settingsLabels';
 import type {RoomSettingsValues} from '../model/settings';
 import {testIds} from './RoomSettingsFields.testIds';
@@ -133,7 +135,8 @@ type SegmentedName =
   | 'advanced.firstColor'
   | 'advanced.endgameRule'
   | 'advanced.drawQuietMoves'
-  | 'advanced.timeControl.enabled';
+  | 'advanced.timeControl.enabled'
+  | 'advanced.timeControl.bonusType';
 
 /** Выбор одного значения сегментами; значение вне [options] не принимается. */
 function SegmentedField({
@@ -355,16 +358,6 @@ function CheckersSimpleFields({
   );
 }
 
-const CHECKERS_RULE_FLAGS = [
-  'captureRequired',
-  'maxCaptureRequired',
-  'menMoveBackward',
-  'menCaptureBackward',
-  'flyingKings',
-  'promoteMidCapture',
-  'removeCapturedAfterMove',
-] as const satisfies readonly CheckersRuleFlag[];
-
 /**
  * Пресеты вариантов шашек для advanced: кнопка подставляет правила варианта
  * (доска, первый ход, ничьи, правила хода) в поля. Часы не трогает — у них свои
@@ -412,6 +405,7 @@ function CheckersRulePresets({
 }
 
 const CHECKERS_COLORS = Object.values(CheckersAdvancedSettingsDtoFirstColor);
+const TIME_BONUS_TYPES = Object.values(TimeControlDtoBonusType);
 const CHECKERS_ENDGAME_RULES = Object.values(
   CheckersAdvancedSettingsDtoEndgameRule,
 );
@@ -502,7 +496,7 @@ function CheckersAdvancedFields({
 
 /**
  * Официальные контроли времени шашек, сгруппированные по вариантам: кнопка
- * подставляет запас и добавку в поля часов, значения видны в полях.
+ * подставляет запас и инкремент в поля часов, значения видны в полях.
  */
 function CheckersTimePresets({
   form,
@@ -517,14 +511,12 @@ function CheckersTimePresets({
   if (groups.length === 0) {
     return null;
   }
-  const apply = (baseSeconds: number, incrementSeconds: number) => {
+  // Официальные контроли — с инкрементом: пресет переключает вид на него.
+  const apply = (baseSeconds: number, bonusSeconds: number) => {
     const options = {shouldDirty: true, shouldValidate: true};
     form.setValue('advanced.timeControl.baseSeconds', baseSeconds, options);
-    form.setValue(
-      'advanced.timeControl.incrementSeconds',
-      incrementSeconds,
-      options,
-    );
+    form.setValue('advanced.timeControl.bonusType', 'INCREMENT', options);
+    form.setValue('advanced.timeControl.bonusSeconds', bonusSeconds, options);
   };
   return (
     <div className="flex flex-col gap-2">
@@ -549,7 +541,7 @@ function CheckersTimePresets({
                   data-variant={item.variant}
                   data-value={item.time}
                   onClick={() => {
-                    apply(item.baseSeconds, item.incrementSeconds);
+                    apply(item.baseSeconds, item.bonusSeconds);
                   }}
                 >
                   {CHECKERS_TIME_LABELS[item.time]}
@@ -564,27 +556,25 @@ function CheckersTimePresets({
 }
 
 /**
- * Запас и добавка часов одной строкой: запас — минуты и секунды двумя полями
- * (в форме — секунды целиком), диапазоны и ошибки — под строкой.
+ * Запас и добавочное время одной строкой: запас — минуты и секунды двумя
+ * полями (в форме — секунды целиком), вид добавочного времени — сегментами,
+ * диапазоны и ошибки — под строкой.
  */
 function ClockFields({
   form,
   idPrefix,
   rules,
 }: FormProps & {rules: GameRulesDto}) {
-  const {baseSeconds: baseRange, incrementSeconds: incrementRange} =
-    rules.timeControl;
+  const {baseSeconds: baseRange, bonusSeconds: bonusRange} = rules.timeControl;
   const {error: baseError} = form.getFieldState(
     'advanced.timeControl.baseSeconds',
     form.formState,
   );
-  const {error: incrementError} = form.getFieldState(
-    'advanced.timeControl.incrementSeconds',
+  const {error: bonusError} = form.getFieldState(
+    'advanced.timeControl.bonusSeconds',
     form.formState,
   );
-  const errors = [baseError, incrementError].filter(
-    error => error !== undefined,
-  );
+  const errors = [baseError, bonusError].filter(error => error !== undefined);
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
@@ -649,22 +639,32 @@ function ClockFields({
         />
         <Field
           orientation="horizontal"
-          data-invalid={incrementError !== undefined}
+          data-invalid={bonusError !== undefined}
           className="w-auto gap-2"
         >
-          <Label htmlFor={`${idPrefix}-increment`}>Добавка за ход</Label>
+          <SegmentedField
+            form={form}
+            name="advanced.timeControl.bonusType"
+            legend="Вид добавочного времени"
+            hideLegend
+            options={TIME_BONUS_TYPES.map(type => ({
+              value: type,
+              label: TIME_BONUS_LABELS[type],
+            }))}
+          />
           <Input
-            id={`${idPrefix}-increment`}
+            id={`${idPrefix}-bonus`}
             data-testid={testIds.field}
-            data-field="advanced.timeControl.incrementSeconds"
+            data-field="advanced.timeControl.bonusSeconds"
             type="number"
             inputMode="numeric"
-            min={incrementRange.min}
-            max={incrementRange.max}
+            min={bonusRange.min}
+            max={bonusRange.max}
             step={1}
             className="w-16"
-            aria-invalid={incrementError !== undefined}
-            {...form.register('advanced.timeControl.incrementSeconds', {
+            aria-label="Добавочное время, секунды"
+            aria-invalid={bonusError !== undefined}
+            {...form.register('advanced.timeControl.bonusSeconds', {
               valueAsNumber: true,
             })}
           />
@@ -673,8 +673,8 @@ function ClockFields({
       </div>
       <FieldDescription>
         Запас от {formatSeconds(baseRange.min)} до{' '}
-        {formatSeconds(baseRange.max)}, добавка от {incrementRange.min} до{' '}
-        {incrementRange.max} с (0 — без добавки)
+        {formatSeconds(baseRange.max)}, инкремент или задержка от{' '}
+        {bonusRange.min} до {bonusRange.max} с (0 — без них)
       </FieldDescription>
       <FieldError errors={errors} />
     </div>
@@ -683,7 +683,7 @@ function ClockFields({
 
 /**
  * Часы advanced — рамка «Время»: в шапке без таймера (если игра разрешает) или
- * шахматные часы, внутри — пресеты (у шашек) и поля часов.
+ * часы, внутри — пресеты (у шашек) и поля часов.
  */
 function TimeControlFields({
   form,

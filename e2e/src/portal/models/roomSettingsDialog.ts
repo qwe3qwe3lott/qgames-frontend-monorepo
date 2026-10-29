@@ -135,8 +135,12 @@ export class RoomSettingsDialog extends componentModel(testIds) {
       String(Math.floor(timeControl.baseSeconds / 60)),
     );
     await this.baseSeconds.fill(String(timeControl.baseSeconds % 60));
-    await this.field('advanced.timeControl.incrementSeconds').fill(
-      String(timeControl.incrementSeconds),
+    await this.option(
+      'advanced.timeControl.bonusType',
+      timeControl.bonusType,
+    ).click();
+    await this.field('advanced.timeControl.bonusSeconds').fill(
+      String(timeControl.bonusSeconds),
     );
   }
 }

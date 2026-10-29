@@ -19,7 +19,6 @@ export interface RoomResponse {
   minPlayers: number;
   /** @nullable */
   ownerId?: string | null;
-  serverTime: string;
   session?: SessionResponse | null;
   settings: RoomSettingsDto;
   status: RoomResponseStatus;

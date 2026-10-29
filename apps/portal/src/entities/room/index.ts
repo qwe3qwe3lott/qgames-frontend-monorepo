@@ -9,6 +9,7 @@ export {
 } from './lib/membership';
 export {
   formatSeconds,
+  isAdvancedSettings,
   roomSettingsRows,
   formatClock,
   TIME_CONTROL_LABELS,
@@ -37,6 +38,10 @@ export {
   type RoomView,
   type SessionView,
 } from './model/types';
+export {
+  AdvancedRulesDialog,
+  type AdvancedRulesDialogProps,
+} from './ui/AdvancedRulesDialog';
 export {
   RoomSettingsFields,
   type RoomSettingsFieldsProps,

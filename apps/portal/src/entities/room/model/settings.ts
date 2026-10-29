@@ -12,6 +12,7 @@ import {
   NothingAdvancedSettingsDto,
   NothingSimpleSettingsDto,
   RoomOptionsDto,
+  TimeControlDto,
 } from '@qgames/api/portal/zod';
 import type {Path} from 'react-hook-form';
 import {z} from 'zod';
@@ -26,19 +27,20 @@ function inRange(value: number, range: IntRangeDto): boolean {
 const numberInput = z.number().or(z.nan());
 
 /**
- * Шахматные часы advanced-настроек с границами из `rules.timeControl`. У
+ * Часы advanced-настроек с границами из `rules.timeControl`. У
  * выключенных часов значения не проверяются: поля скрыты, а значения остаются
  * для повторного включения.
  */
 function timeControlSchema(rules: GameRulesDto) {
-  const {optional, baseSeconds, incrementSeconds} = rules.timeControl;
+  const {optional, baseSeconds, bonusSeconds} = rules.timeControl;
   return z
     .object({
       enabled: z
         .boolean()
         .refine(enabled => optional || enabled, 'Игра идёт только с часами'),
       baseSeconds: numberInput,
-      incrementSeconds: numberInput,
+      bonusType: TimeControlDto.shape.bonusType,
+      bonusSeconds: numberInput,
     })
     .superRefine((value, ctx) => {
       if (!value.enabled) {
@@ -51,11 +53,11 @@ function timeControlSchema(rules: GameRulesDto) {
           message: `Запас — от ${formatSeconds(baseSeconds.min)} до ${formatSeconds(baseSeconds.max)}`,
         });
       }
-      if (!inRange(value.incrementSeconds, incrementSeconds)) {
+      if (!inRange(value.bonusSeconds, bonusSeconds)) {
         ctx.addIssue({
           code: 'custom',
-          path: ['incrementSeconds'],
-          message: `Введите целое число от ${String(incrementSeconds.min)} до ${String(incrementSeconds.max)}`,
+          path: ['bonusSeconds'],
+          message: `Введите целое число от ${String(bonusSeconds.min)} до ${String(bonusSeconds.max)}`,
         });
       }
     });
@@ -161,7 +163,8 @@ export const ROOM_SETTINGS_FIELDS = [
   'advanced.drawQuietMoves',
   'advanced.timeControl.enabled',
   'advanced.timeControl.baseSeconds',
-  'advanced.timeControl.incrementSeconds',
+  'advanced.timeControl.bonusType',
+  'advanced.timeControl.bonusSeconds',
 ] as const satisfies readonly Path<RoomSettingsValues>[];
 
 /** Simple-настройки по умолчанию у игры: с ними создаётся комната. */

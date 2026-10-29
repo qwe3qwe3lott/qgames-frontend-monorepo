@@ -8,7 +8,7 @@ import {
   type RoomRole,
   type RoomView,
 } from '@/entities/room';
-import {WithHint} from '@/shared/ui';
+import {WithHint} from '@qgames/ui/components/WithHint';
 import {testIds} from './ChangeRoleButton.testIds';
 
 export interface ChangeRoleButtonProps {

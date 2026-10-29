@@ -9,7 +9,7 @@ import type {CheckersTimePresetDtoVariant} from './checkersTimePresetDtoVariant'
 
 export interface CheckersTimePresetDto {
   baseSeconds: number;
-  incrementSeconds: number;
+  bonusSeconds: number;
   time: CheckersTimePresetDtoTime;
   variant: CheckersTimePresetDtoVariant;
 }

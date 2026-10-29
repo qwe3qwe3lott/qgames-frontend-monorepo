@@ -49,7 +49,7 @@ apps/
   admin/         CSR SPA (Rsbuild + TanStack Router)
 packages/
   config/        @qgames/config: tsconfig-пресеты, фабрика ESLint flat-конфига, stylelint, prettier
-  ui/            @qgames/ui: компоненты shadcn/ui, общая разметка страниц PageLayout, cn(), globals.css (Tailwind 4, тема)
+  ui/            @qgames/ui: компоненты shadcn/ui, общие PageLayout и WithHint, cn(), globals.css (Tailwind 4, тема)
   api/           @qgames/api: Orval-клиенты групп API `portal` и `admin` (типы, queryOptions, хуки, Zod; снапшоты OpenAPI — вход генерации, не коммитятся), fetch-mutator, errorMessage и applyFieldErrors
   game-ui/       @qgames/game-ui: общий игровой UI (аватар, список игроков, описание комнаты, ход, конец партии)
   doc-patch/     @qgames/doc-patch: общий применитель событий-патчей applyPatch (семантика DocumentPatch бэкенда) и сверка seq checkSeq — для потоков партии и комнаты
@@ -108,7 +108,7 @@ src/
   - у кнопок и интерактивных элементов `pointer`, у заблокированных — `not-allowed`. Общее правило лежит в `globals.css`;
   - `disabled:pointer-events-none` не используем: он прячет курсор и подсказку.
 - **Подсказки** к заблокированным элементам (причина, почему действие недоступно) делаются через Tooltip из `@qgames/ui`, а не через `title`:
-  - в портале — через `WithHint` (`@/shared/ui`), триггером служит обёртка, потому что disabled-кнопка не получает событий;
+  - через `WithHint` (`@qgames/ui/components/WithHint`) — в портале и пакетах игр; триггером служит обёртка, потому что disabled-кнопка не получает событий;
   - `TooltipProvider` подключён в `app/App.tsx`.
 - **Снекбар** — `toast` из `@qgames/ui/components/sonner` (Sonner, снизу слева; `<Toaster/>` в `app/App.tsx` обоих приложений). Показывает ошибки действий, которым некуда встать в разметке (кнопки вне форм, ход, выход), и успех действий без редиректа и заметной смены UI (смена пароля, сохранение профиля и настроек). Ошибки форм остаются inline под полями. Новые случаи применения согласуются с пользователем.
 - **Темы** — `ThemeProvider` из `@qgames/ui/components/ThemeProvider` (next-themes, класс на `<html>`), подключён в `app/App.tsx` обоих приложений. Сейчас тема только light (`forcedTheme`), но механизм тем в компонентах (`useTheme`, `dark:`, `.dark`) не выпиливаем.

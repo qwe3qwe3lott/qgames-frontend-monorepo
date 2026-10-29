@@ -128,6 +128,7 @@ export * from './sessionTimerDtoStatus';
 export * from './sessionTurnsDto';
 export * from './setPasswordRequest';
 export * from './timeControlDto';
+export * from './timeControlDtoBonusType';
 export * from './timeControlLimitsDto';
 export * from './transferOwnershipRequest';
 export * from './updateProfileRequest';

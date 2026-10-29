@@ -4,9 +4,11 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
+import type {TimeControlDtoBonusType} from './timeControlDtoBonusType';
 
 export interface TimeControlDto {
   baseSeconds: number;
+  bonusSeconds: number;
+  bonusType: TimeControlDtoBonusType;
   enabled: boolean;
-  incrementSeconds: number;
 }

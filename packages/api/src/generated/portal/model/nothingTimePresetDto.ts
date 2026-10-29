@@ -8,6 +8,6 @@ import type {NothingTimePresetDtoTime} from './nothingTimePresetDtoTime';
 
 export interface NothingTimePresetDto {
   baseSeconds: number;
-  incrementSeconds: number;
+  bonusSeconds: number;
   time: NothingTimePresetDtoTime;
 }
