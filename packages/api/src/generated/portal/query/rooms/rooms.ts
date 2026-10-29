@@ -279,7 +279,7 @@ export const getUpdateRoomSettingsUrl = (
 };
 
 /**
- * Только владелец. Заменяет переданные группы настроек целиком, непереданные (null) не меняет; нужна хотя бы одна группа. room (лимит наблюдателей) меняется в любой момент: понижение лимита вошедших наблюдателей не выводит. simple и advanced взаимоисключающие и меняются только между партиями: simple переводит комнату в simple-режим (advanced выводится из simple), advanced — в advanced-режим. Идущую партию настройки не меняют — у неё свой снимок advanced. Код игры в пути должен совпадать с игрой комнаты. Ошибки настроек отдаются по полям тела (например, room.maxSpectators, simple.rounds, advanced.timeControl.baseSeconds).
+ * Только владелец. Заменяет переданные группы настроек целиком, непереданные (null) не меняет; нужна хотя бы одна группа. room (лимит наблюдателей) меняется в любой момент: понижение лимита вошедших наблюдателей не выводит. simple и advanced взаимоисключающие и меняются только между партиями: simple переводит комнату в simple-режим (advanced выводится из simple), advanced — в advanced-режим. Идущую партию настройки не меняют — у неё свой снимок advanced. Код игры в пути должен совпадать с игрой комнаты. Ошибки настроек отдаются по полям тела (например, room.maxSpectators, simple.rounds, advanced.timeControl.baseSeconds). Ответ без тела: изменение приходит событием settings-changed потока комнаты.
  * @summary Изменить настройки комнаты
  */
 export const updateRoomSettings = async (
@@ -287,7 +287,7 @@ export const updateRoomSettings = async (
   roomId: string,
   updateRoomSettingsRequest: UpdateRoomSettingsRequest,
   options?: Parameters<typeof apiFetch>[1],
-): Promise<RoomResponse> => {
+): Promise<void> => {
   const getHeaders = (
     h?: NonNullable<RequestInit['headers']>,
   ): Record<string, string | readonly string[]> => {
@@ -309,7 +309,7 @@ export const updateRoomSettings = async (
     }
     return headers;
   };
-  return apiFetch<RoomResponse>(getUpdateRoomSettingsUrl(gameCode, roomId), {
+  return apiFetch<void>(getUpdateRoomSettingsUrl(gameCode, roomId), {
     ...options,
     method: 'PUT',
     headers: {
@@ -548,14 +548,14 @@ export const getTransferOwnershipUrl = (roomId: string) => {
 };
 
 /**
- * Владелец назначает владельцем другого присутствующего участника комнаты. Работает в любой момент, в том числе во время партии и на паузе. Отсутствующий игрок партии (leaving = true) владельцем не становится. Передача самому себе ничего не меняет. В ответе комната, участники получают users-changed.
+ * Владелец назначает владельцем другого присутствующего участника комнаты. Работает в любой момент, в том числе во время партии и на паузе. Отсутствующий игрок партии (leaving = true) владельцем не становится. Передача самому себе ничего не меняет. Ответ без тела: изменение приходит событием owner-changed потока комнаты.
  * @summary Передать владение
  */
 export const transferOwnership = async (
   roomId: string,
   transferOwnershipRequest: TransferOwnershipRequest,
   options?: Parameters<typeof apiFetch>[1],
-): Promise<RoomResponse> => {
+): Promise<void> => {
   const getHeaders = (
     h?: NonNullable<RequestInit['headers']>,
   ): Record<string, string | readonly string[]> => {
@@ -577,7 +577,7 @@ export const transferOwnership = async (
     }
     return headers;
   };
-  return apiFetch<RoomResponse>(getTransferOwnershipUrl(roomId), {
+  return apiFetch<void>(getTransferOwnershipUrl(roomId), {
     ...options,
     method: 'PUT',
     headers: {
@@ -669,14 +669,14 @@ export const getChangeRoleUrl = (roomId: string) => {
 };
 
 /**
- * Стать игроком или наблюдателем. Только между партиями; игроком — если есть свободное место, наблюдателем — если наблюдателей меньше лимита комнаты (settings.room.maxSpectators). Владелец тоже может стать наблюдателем, владение при этом сохраняется.
+ * Стать игроком или наблюдателем. Только между партиями; игроком — если есть свободное место, наблюдателем — если наблюдателей меньше лимита комнаты (settings.room.maxSpectators). Владелец тоже может стать наблюдателем, владение при этом сохраняется. Ответ без тела: изменение приходит событием role-changed потока комнаты.
  * @summary Сменить роль
  */
 export const changeRole = async (
   roomId: string,
   changeRoleRequest: ChangeRoleRequest,
   options?: Parameters<typeof apiFetch>[1],
-): Promise<RoomResponse> => {
+): Promise<void> => {
   const getHeaders = (
     h?: NonNullable<RequestInit['headers']>,
   ): Record<string, string | readonly string[]> => {
@@ -698,7 +698,7 @@ export const changeRole = async (
     }
     return headers;
   };
-  return apiFetch<RoomResponse>(getChangeRoleUrl(roomId), {
+  return apiFetch<void>(getChangeRoleUrl(roomId), {
     ...options,
     method: 'PUT',
     headers: {
@@ -789,7 +789,7 @@ export const getCancelSessionUrl = (roomId: string) => {
 };
 
 /**
- * Завершает идущую партию без результата и возвращает комнату в ожидание. Работает и на паузе. Только владелец. Ответ без тела: поток партии получает session-cancelled и закрывается, поток комнаты — session-changed.
+ * Завершает идущую партию без результата и возвращает комнату в ожидание. Работает и на паузе. Только владелец. Ответ без тела: поток партии получает session-cancelled и закрывается, поток комнаты — session-ended.
  * @summary Отменить партию
  */
 export const cancelSession = async (
@@ -879,14 +879,14 @@ export const getStartSessionUrl = (roomId: string) => {
 };
 
 /**
- * Стартует партию с текущими игроками комнаты (места — по порядку входа). Только владелец, число игроков должно укладываться в ограничения игры (minPlayers–maxPlayers). Игра должна быть доступна (опубликована или скрыта из каталога). В ответе комната; по session.id клиент подписывается на поток партии.
+ * Стартует партию с текущими игроками комнаты (места — по порядку входа). Только владелец, число игроков должно укладываться в ограничения игры (minPlayers–maxPlayers). Игра должна быть доступна (опубликована или скрыта из каталога). Ответ без тела: поток комнаты получает session-started, по session.id клиент подписывается на поток партии.
  * @summary Начать партию
  */
 export const startSession = async (
   roomId: string,
   options?: Parameters<typeof apiFetch>[1],
-): Promise<RoomResponse> => {
-  return apiFetch<RoomResponse>(getStartSessionUrl(roomId), {
+): Promise<void> => {
+  return apiFetch<void>(getStartSessionUrl(roomId), {
     ...options,
     method: 'POST',
   });

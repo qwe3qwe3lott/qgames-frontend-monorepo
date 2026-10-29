@@ -227,11 +227,15 @@ export async function runScenario(file: string, actors: Actors): Promise<void> {
   }
   const run = new ScenarioRun(scenario, participants);
 
-  await test.step('Предусловие: участники в комнате, партия начата', async () => {
+  await test.step('Предусловие: настройки выставлены, участники в комнате, партия начата', async () => {
     await host.actor.gameRoomsPage.open(scenario.game);
     await host.actor.gameRoomsPage.createRoomButton.click();
     const roomId = await host.actor.roomPage.roomId();
     run.addId(roomId, '{{roomId}}');
+    // Настройки — до входа остальных: владелец меняет их, пока в комнате один.
+    if (scenario.settings !== undefined) {
+      await host.actor.roomSettingsDialog.apply(scenario.settings);
+    }
     for (const participant of participants) {
       await enterRoom(host.actor, participant, scenario.game, roomId);
     }

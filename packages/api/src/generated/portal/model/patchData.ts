@@ -11,7 +11,7 @@ import type {PathSegment} from './pathSegment';
  * Данные PATCH: путь к объекту и поля для неглубокого слияния
  */
 export interface PatchData {
-  /** Путь от корня документа {status, meta, state}: [] — весь документ, ["state", "timer"], ["state", "players", {"id": "…"}, "moveOptions"] */
+  /** Путь от корня документа потока: [] — весь документ. Партия: ["state", "timer"], ["state", "players", {"id": "…"}, "moveOptions"]; комната: ["members", {"id": "…"}], ["settings"] */
   path: PathSegment[];
   /** Поля, которые заменяют поля объекта по пути (вложенные значения — целиком, null — как значение) */
   value: PatchDataValue;

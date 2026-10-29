@@ -11,12 +11,12 @@ export type RoomRole = 'PLAYER' | 'SPECTATOR';
 export type SessionStatus = 'IN_PROGRESS' | 'FINISHED' | 'CANCELLED';
 
 export interface RoomMemberView {
-  userId: string;
+  /** Id пользователя. */
+  id: string;
   /** null в первые секунды после регистрации, пока профиль не дошёл до игрового сервиса. */
   nickname: string | null;
   avatar: 'CAT' | 'DOG' | null;
   role: RoomRole;
-  owner: boolean;
   /** Игрок идущей партии не подключён: остаётся на своём месте до конца партии. */
   leaving: boolean;
 }
@@ -43,11 +43,10 @@ export interface RoomView {
 
 function toMemberView(member: RoomMemberResponse): RoomMemberView {
   return {
-    userId: member.userId,
+    id: member.id,
     nickname: member.nickname ?? null,
     avatar: member.avatar ?? null,
     role: member.role,
-    owner: member.owner,
     leaving: member.leaving,
   };
 }

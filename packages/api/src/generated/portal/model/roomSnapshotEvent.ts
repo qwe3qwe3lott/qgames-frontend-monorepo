@@ -4,13 +4,13 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
-import type {RoomResponse} from './roomResponse';
+import type {RoomSnapshotDto} from './roomSnapshotDto';
 import type {RoomSnapshotEventType} from './roomSnapshotEventType';
 
 /**
- * Комната целиком для этого зрителя, как в GET комнаты; всегда первое сообщение потока
+ * seq и комната для этого зрителя на seq; всегда первое сообщение потока, в том числе после переподключения
  */
 export interface RoomSnapshotEvent {
-  data: RoomResponse;
+  data: RoomSnapshotDto;
   type: RoomSnapshotEventType;
 }

@@ -62,7 +62,7 @@ function Board({
   const data = useSession(session.id);
   const controls = useMoveControls(room);
   const players: GameBoardPlayer[] = room.members.map(member => ({
-    id: member.userId,
+    id: member.id,
     name: memberName(member),
     avatar: member.avatar,
   }));

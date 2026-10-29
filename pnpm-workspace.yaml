@@ -51,7 +51,8 @@ catalog:
   zod: 4.6.7
   orval: 8.43.0
 
-  # E2E-тесты
+  # Тесты: unit-тесты логики (Vitest), e2e (Playwright)
+  vitest: 5.0.5
   '@playwright/test': 1.64.1
 
   # Стили и UI

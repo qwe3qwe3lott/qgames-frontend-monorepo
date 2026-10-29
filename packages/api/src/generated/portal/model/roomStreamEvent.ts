@@ -4,18 +4,10 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
-import type {RoomDeletedEvent} from './roomDeletedEvent';
-import type {RoomSessionChangedEvent} from './roomSessionChangedEvent';
-import type {RoomSettingsChangedEvent} from './roomSettingsChangedEvent';
+import type {RoomPatchStreamEvent} from './roomPatchStreamEvent';
 import type {RoomSnapshotEvent} from './roomSnapshotEvent';
-import type {RoomUsersChangedEvent} from './roomUsersChangedEvent';
 
 /**
- * Событие потока комнаты: тип — поле event: в SSE, data — JSON в поле data:
+ * Сообщение потока комнаты: тип — поле event: в SSE, data — JSON в поле data:. snapshot — seq и комната (документ потока), put/patch/delete/info — событие-патч документа
  */
-export type RoomStreamEvent =
-  | RoomSnapshotEvent
-  | RoomUsersChangedEvent
-  | RoomSettingsChangedEvent
-  | RoomSessionChangedEvent
-  | RoomDeletedEvent;
+export type RoomStreamEvent = RoomSnapshotEvent | RoomPatchStreamEvent;

@@ -10,11 +10,10 @@ import type {RoomMemberResponseRole} from './roomMemberResponseRole';
 export interface RoomMemberResponse {
   /** @nullable */
   avatar?: RoomMemberResponseAvatar;
+  id: string;
   joinedAt: string;
   leaving: boolean;
   /** @nullable */
   nickname?: string | null;
-  owner: boolean;
   role: RoomMemberResponseRole;
-  userId: string;
 }

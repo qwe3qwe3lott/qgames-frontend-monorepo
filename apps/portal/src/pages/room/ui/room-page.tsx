@@ -4,7 +4,12 @@ import {PageLayout} from '@qgames/ui/components/page-layout';
 import {useState} from 'react';
 
 import type {GameEntry} from '@/entities/game';
-import {membership, roomErrorMessage, toRoomView} from '@/entities/room';
+import {
+  membership,
+  roomErrorMessage,
+  toRoomView,
+  useRoomStream,
+} from '@/entities/room';
 import {useRoomPresence} from '@/features/room-membership';
 import {GameBoard} from '@/widgets/game-board';
 import {RoomPanel} from '@/widgets/room-panel';
@@ -26,45 +31,42 @@ export interface RoomPageProps {
 }
 
 export function RoomPage({game, roomId, viewerId}: RoomPageProps) {
-  // Комнату обновляет её поток событий, партию — поток партии; опроса нет.
-  // Комнату уже загрузил маршрут, а фоновый перезапрос при монтировании мог
-  // завершиться после снапшота потока и затереть его (вошедший не видел себя),
-  // поэтому данные не устаревают сами; invalidateRoom перезапрашивает их явно.
-  const {data, error, isPending} = useGetRoom(roomId, {
-    query: {staleTime: Infinity},
-  });
+  // Комнату строит её поток (снапшот, затем патчи по seq), партию — поток
+  // партии; опроса нет. GET комнаты (его уже загрузил маршрут) комнату не
+  // показывает: он нужен для ошибок и перечитывается только после закрытия
+  // потока сервером (invalidateRoom), поэтому сам не устаревает.
+  const probe = useGetRoom(roomId, {query: {staleTime: Infinity}});
   // Название игры приходит с бэкенда; маршрут комнаты загружает его заранее.
   const title = useGetGame(game.code).data?.title ?? FALLBACK_TITLE;
   // Сервер не впустил: мест нет (NO_SPECTATOR_SEAT). Отказ окончательный —
   // поток больше не открывается, войти можно перезагрузкой страницы.
   const [refused, setRefused] = useState(false);
   // Пока страница открыта и комната доступна, пользователь в ней.
-  const presence = useRoomPresence(roomId, !isFinalError(error) && !refused);
+  const presence = useRoomPresence(
+    roomId,
+    !isFinalError(probe.error) && !refused,
+  );
+  const stream = useRoomStream(roomId);
   const pageData = {'data-testid': testIds.root, 'data-room-id': roomId};
 
-  if (isPending) {
-    return (
-      <PageLayout {...pageData} title={title}>
-        <p className="text-muted-foreground">Загружаем комнату…</p>
-      </PageLayout>
-    );
-  }
-  if (error !== null) {
+  if (probe.error !== null) {
     return (
       <PageLayout {...pageData} title={title}>
         <p className="text-destructive" role="alert">
-          {roomErrorMessage(error)}
+          {roomErrorMessage(probe.error)}
         </p>
       </PageLayout>
     );
   }
-  const room = toRoomView(data);
-  const viewerMembership = membership(room, viewerId);
   // EventSource не видит кода ответа: отказ во входе узнаётся по перечитанной
-  // комнате — пользователь не вошёл, а места для него нет.
-  const full = viewerMembership.member === null && !viewerMembership.canJoin;
-  if (!refused && full && presence.status === 'reconnecting') {
-    setRefused(true);
+  // комнате — пользователь не вошёл, а места для него нет. Только пока поток
+  // не отдал снапшот: вошедшего обрыв связи просто переподключает.
+  if (!refused && stream === undefined && probe.data !== undefined) {
+    const probed = membership(toRoomView(probe.data), viewerId);
+    const full = probed.member === null && !probed.canJoin;
+    if (full && presence.status === 'reconnecting') {
+      setRefused(true);
+    }
   }
   if (refused) {
     return (
@@ -76,6 +78,15 @@ export function RoomPage({game, roomId, viewerId}: RoomPageProps) {
       </PageLayout>
     );
   }
+  if (stream === undefined) {
+    return (
+      <PageLayout {...pageData} title={title}>
+        <p className="text-muted-foreground">Загружаем комнату…</p>
+      </PageLayout>
+    );
+  }
+  const room = toRoomView(stream.room);
+  const viewerMembership = membership(room, viewerId);
 
   return (
     <PageLayout

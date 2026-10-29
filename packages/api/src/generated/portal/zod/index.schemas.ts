@@ -244,20 +244,13 @@ export const DeleteData = zod
     path: zod
       .array(PathSegment)
       .describe(
-        'Путь от корня документа {status, meta, state}: [] — весь документ, ["state", "timer"], ["state", "players", {"id": "…"}, "moveOptions"]',
+        'Путь от корня документа потока: [] — весь документ. Партия: ["state", "timer"], ["state", "players", {"id": "…"}, "moveOptions"]; комната: ["members", {"id": "…"}], ["settings"]',
       ),
   })
   .describe('Данные DELETE: путь к полю объекта или элементу массива');
 
 export type DeleteData = zod.input<typeof DeleteData>;
 export type DeleteDataOutput = zod.output<typeof DeleteData>;
-
-export const EmptyEventDataDto = zod
-  .looseObject({})
-  .describe('Событие без данных: {}');
-
-export type EmptyEventDataDto = zod.input<typeof EmptyEventDataDto>;
-export type EmptyEventDataDtoOutput = zod.output<typeof EmptyEventDataDto>;
 
 export const NothingAdvancedSettingsDto = zod.object({
   gameCode: zod.enum(['nothing']),
@@ -456,7 +449,7 @@ export type GoogleRegisterRequestOutput = zod.output<
 export const InfoData = zod
   .record(zod.string(), zod.unknown())
   .describe(
-    'Данные INFO: произвольный объект для журнала и логов, состояние не меняет',
+    'Данные INFO: произвольный объект для журнала и логов, документ не меняет',
   );
 
 export type InfoData = zod.input<typeof InfoData>;
@@ -509,7 +502,7 @@ export const PatchData = zod
     path: zod
       .array(PathSegment)
       .describe(
-        'Путь от корня документа {status, meta, state}: [] — весь документ, ["state", "timer"], ["state", "players", {"id": "…"}, "moveOptions"]',
+        'Путь от корня документа потока: [] — весь документ. Партия: ["state", "timer"], ["state", "players", {"id": "…"}, "moveOptions"]; комната: ["members", {"id": "…"}], ["settings"]',
       ),
     value: zod
       .record(zod.string(), zod.unknown())
@@ -552,12 +545,12 @@ export const PutData = zod
     path: zod
       .array(PathSegment)
       .describe(
-        'Путь от корня документа {status, meta, state}: [] — весь документ, ["state", "timer"], ["state", "players", {"id": "…"}, "moveOptions"]',
+        'Путь от корня документа потока: [] — весь документ. Партия: ["state", "timer"], ["state", "players", {"id": "…"}, "moveOptions"]; комната: ["members", {"id": "…"}], ["settings"]',
       ),
     value: zod
       .unknown()
       .describe(
-        'Новое значение: любой JSON, в том числе null. Схема — схема состояния игры по пути',
+        'Новое значение: любой JSON, в том числе null. Схема — схема документа по пути',
       ),
   })
   .describe('Данные PUT: путь и новое значение (любой JSON, в том числе null)');
@@ -565,30 +558,123 @@ export const PutData = zod
 export type PutData = zod.input<typeof PutData>;
 export type PutDataOutput = zod.output<typeof PutData>;
 
-export const RoomDeletedEvent = zod
+export const RoomEventDelete = zod
   .object({
-    data: EmptyEventDataDto,
-    type: zod.enum(['room-deleted']),
+    at: zod.iso.datetime({offset: true}),
+    code: zod
+      .string()
+      .describe(
+        'Что произошло (см. описание RoomPatchEvent), документ по коду не меняется',
+      ),
+    data: DeleteData,
+    method: zod.enum(['DELETE']),
+    seq: zod.int(),
   })
-  .describe('Комната удалена; после события сервер закрывает поток');
+  .describe(
+    'DELETE: удалить поле объекта или элемент массива по id (путь должен существовать)',
+  );
 
-export type RoomDeletedEvent = zod.input<typeof RoomDeletedEvent>;
-export type RoomDeletedEventOutput = zod.output<typeof RoomDeletedEvent>;
+export type RoomEventDelete = zod.input<typeof RoomEventDelete>;
+export type RoomEventDeleteOutput = zod.output<typeof RoomEventDelete>;
+
+export const RoomEventInfo = zod
+  .object({
+    at: zod.iso.datetime({offset: true}),
+    code: zod
+      .string()
+      .describe(
+        'Что произошло (см. описание RoomPatchEvent), документ по коду не меняется',
+      ),
+    data: InfoData,
+    method: zod.enum(['INFO']),
+    seq: zod.int(),
+  })
+  .describe(
+    'INFO: документ не меняется, data — данные события (seq всё равно сдвигается)',
+  );
+
+export type RoomEventInfo = zod.input<typeof RoomEventInfo>;
+export type RoomEventInfoOutput = zod.output<typeof RoomEventInfo>;
+
+export const RoomEventPatch = zod
+  .object({
+    at: zod.iso.datetime({offset: true}),
+    code: zod
+      .string()
+      .describe(
+        'Что произошло (см. описание RoomPatchEvent), документ по коду не меняется',
+      ),
+    data: PatchData,
+    method: zod.enum(['PATCH']),
+    seq: zod.int(),
+  })
+  .describe(
+    'PATCH: неглубокое слияние объекта по пути с value (путь должен существовать)',
+  );
+
+export type RoomEventPatch = zod.input<typeof RoomEventPatch>;
+export type RoomEventPatchOutput = zod.output<typeof RoomEventPatch>;
+
+export const RoomEventPut = zod
+  .object({
+    at: zod.iso.datetime({offset: true}),
+    code: zod
+      .string()
+      .describe(
+        'Что произошло (см. описание RoomPatchEvent), документ по коду не меняется',
+      ),
+    data: PutData,
+    method: zod.enum(['PUT']),
+    seq: zod.int(),
+  })
+  .describe(
+    'PUT: заменить или создать значение по пути целиком; {id} в конце пути, которого нет, — добавить элемент в конец массива',
+  );
+
+export type RoomEventPut = zod.input<typeof RoomEventPut>;
+export type RoomEventPutOutput = zod.output<typeof RoomEventPut>;
 
 export const RoomMemberResponse = zod.object({
   avatar: zod
     .union([zod.literal('CAT'), zod.literal('DOG'), zod.literal(null)])
     .nullish(),
+  id: zod.uuid(),
   joinedAt: zod.iso.datetime({offset: true}),
   leaving: zod.boolean(),
   nickname: zod.string().nullish(),
-  owner: zod.boolean(),
   role: zod.enum(['PLAYER', 'SPECTATOR']),
-  userId: zod.uuid(),
 });
 
 export type RoomMemberResponse = zod.input<typeof RoomMemberResponse>;
 export type RoomMemberResponseOutput = zod.output<typeof RoomMemberResponse>;
+
+export const RoomPatchEvent = zod
+  .discriminatedUnion('method', [
+    RoomEventPut,
+    RoomEventPatch,
+    RoomEventDelete,
+    RoomEventInfo,
+  ])
+  .describe(
+    'Событие потока комнаты {seq, at, method, code, data}: одна операция над документом потока (комната). Документ меняется только по method (PUT, PATCH, DELETE; INFO не меняет), code — что произошло. Несуществующий путь у PATCH/DELETE, неподходящий тип или разрыв seq — рассинхронизация, клиент переподключается за свежим снапшотом. Составное изменение — несколько событий подряд (уход владельца — member-left и owner-changed).\n\nКоды (code):\n- member-joined — PUT ["members", {id}] участник: новый участник комнаты (в конец списка);\n- member-left — DELETE ["members", {id}]: участник ушёл из комнаты, в том числе отсутствующий игрок после конца партии;\n- member-leaving — PATCH ["members", {id}] {leaving: true}: игрок идущей партии отключился, место за ним;\n- member-returned — PATCH ["members", {id}] {leaving: false}: отсутствующий игрок партии вернулся;\n- role-changed — PATCH ["members", {id}] {role}: участник стал игроком или наблюдателем;\n- profile-changed — PATCH ["members", {id}] {nickname, avatar}: участник сменил ник или аватар;\n- owner-changed — PATCH [] {ownerId}: сменился владелец (null — присутствующих нет);\n- settings-changed — PUT ["settings"] настройки: настройки комнаты целиком;\n- session-started — PATCH [] {status: IN_GAME, session}: началась партия, клиент подписывается на поток партии session.id;\n- session-ended — PATCH [] {status: WAITING, session}: партия закончилась или отменена (session — её итоговый статус);\n- room-deleted — INFO {}: комната удалена, последнее событие, сервер закрывает поток.',
+  );
+
+export type RoomPatchEvent = zod.input<typeof RoomPatchEvent>;
+export type RoomPatchEventOutput = zod.output<typeof RoomPatchEvent>;
+
+export const RoomPatchStreamEvent = zod
+  .object({
+    data: RoomPatchEvent,
+    type: zod.enum(['delete', 'info', 'patch', 'put']),
+  })
+  .describe(
+    'Событие-патч комнаты; тип сообщения — метод события в нижнем регистре',
+  );
+
+export type RoomPatchStreamEvent = zod.input<typeof RoomPatchStreamEvent>;
+export type RoomPatchStreamEventOutput = zod.output<
+  typeof RoomPatchStreamEvent
+>;
 
 export const SessionResponse = zod.object({
   id: zod.uuid(),
@@ -615,87 +701,30 @@ export const RoomResponse = zod.object({
 export type RoomResponse = zod.input<typeof RoomResponse>;
 export type RoomResponseOutput = zod.output<typeof RoomResponse>;
 
-export const RoomSessionChangedEvent = zod
-  .object({
-    data: EmptyEventDataDto,
-    type: zod.enum(['session-changed']),
-  })
-  .describe(
-    'Партия началась, отменена или закончилась: клиент перечитывает комнату (GET) и подписывается на поток партии. Пауза и продолжение — game-paused и game-resumed потока партии',
-  );
-
-export type RoomSessionChangedEvent = zod.input<typeof RoomSessionChangedEvent>;
-export type RoomSessionChangedEventOutput = zod.output<
-  typeof RoomSessionChangedEvent
->;
-
-export const RoomSettingsChangedDto = zod.object({
-  settings: RoomSettingsDto,
+export const RoomSnapshotDto = zod.object({
+  room: RoomResponse,
+  seq: zod.int(),
 });
 
-export type RoomSettingsChangedDto = zod.input<typeof RoomSettingsChangedDto>;
-export type RoomSettingsChangedDtoOutput = zod.output<
-  typeof RoomSettingsChangedDto
->;
-
-export const RoomSettingsChangedEvent = zod
-  .object({
-    data: RoomSettingsChangedDto,
-    type: zod.enum(['settings-changed']),
-  })
-  .describe('Изменились настройки комнаты');
-
-export type RoomSettingsChangedEvent = zod.input<
-  typeof RoomSettingsChangedEvent
->;
-export type RoomSettingsChangedEventOutput = zod.output<
-  typeof RoomSettingsChangedEvent
->;
+export type RoomSnapshotDto = zod.input<typeof RoomSnapshotDto>;
+export type RoomSnapshotDtoOutput = zod.output<typeof RoomSnapshotDto>;
 
 export const RoomSnapshotEvent = zod
   .object({
-    data: RoomResponse,
+    data: RoomSnapshotDto,
     type: zod.enum(['snapshot']),
   })
   .describe(
-    'Комната целиком для этого зрителя, как в GET комнаты; всегда первое сообщение потока',
+    'seq и комната для этого зрителя на seq; всегда первое сообщение потока, в том числе после переподключения',
   );
 
 export type RoomSnapshotEvent = zod.input<typeof RoomSnapshotEvent>;
 export type RoomSnapshotEventOutput = zod.output<typeof RoomSnapshotEvent>;
 
-export const RoomUsersDto = zod.object({
-  members: zod.array(RoomMemberResponse),
-  ownerId: zod.uuid().nullish(),
-});
-
-export type RoomUsersDto = zod.input<typeof RoomUsersDto>;
-export type RoomUsersDtoOutput = zod.output<typeof RoomUsersDto>;
-
-export const RoomUsersChangedEvent = zod
-  .object({
-    data: RoomUsersDto,
-    type: zod.enum(['users-changed']),
-  })
-  .describe(
-    'Изменился состав участников, их роли, ники, присутствие игроков партии (leaving) или владелец',
-  );
-
-export type RoomUsersChangedEvent = zod.input<typeof RoomUsersChangedEvent>;
-export type RoomUsersChangedEventOutput = zod.output<
-  typeof RoomUsersChangedEvent
->;
-
 export const RoomStreamEvent = zod
-  .discriminatedUnion('type', [
-    RoomSnapshotEvent,
-    RoomUsersChangedEvent,
-    RoomSettingsChangedEvent,
-    RoomSessionChangedEvent,
-    RoomDeletedEvent,
-  ])
+  .discriminatedUnion('type', [RoomSnapshotEvent, RoomPatchStreamEvent])
   .describe(
-    'Событие потока комнаты: тип — поле event: в SSE, data — JSON в поле data:',
+    'Сообщение потока комнаты: тип — поле event: в SSE, data — JSON в поле data:. snapshot — seq и комната (документ потока), put/patch/delete/info — событие-патч документа',
   );
 
 export type RoomStreamEvent = zod.input<typeof RoomStreamEvent>;

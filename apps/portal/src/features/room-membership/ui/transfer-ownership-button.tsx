@@ -11,12 +11,10 @@ import {
   DialogTrigger,
 } from '@qgames/ui/components/dialog';
 import {toast} from '@qgames/ui/components/sonner';
-import {useQueryClient} from '@tanstack/react-query';
 
 import {
   memberName,
   roomErrorMessage,
-  setRoomCache,
   type Membership,
   type RoomMemberView,
   type RoomView,
@@ -39,12 +37,9 @@ export function TransferOwnershipButton({
   membership,
   member,
 }: TransferOwnershipButtonProps) {
-  const queryClient = useQueryClient();
+  // Новый владелец приходит событием owner-changed потока комнаты.
   const transfer = useTransferOwnership({
     mutation: {
-      onSuccess: data => {
-        setRoomCache(queryClient, room.id, data);
-      },
       onError: error => {
         toast.error(roomErrorMessage(error));
       },
@@ -52,7 +47,7 @@ export function TransferOwnershipButton({
   });
   if (
     !membership.isOwner ||
-    member.userId === membership.member?.userId ||
+    member.id === membership.member?.id ||
     member.leaving
   ) {
     return null;
@@ -87,7 +82,7 @@ export function TransferOwnershipButton({
               onClick={() => {
                 transfer.mutate({
                   roomId: room.id,
-                  data: {userId: member.userId},
+                  data: {userId: member.id},
                 });
               }}
             >

@@ -19,7 +19,6 @@ import {
 } from '@qgames/ui/components/dialog';
 import {FieldError, FieldGroup} from '@qgames/ui/components/field';
 import {toast} from '@qgames/ui/components/sonner';
-import {useQueryClient} from '@tanstack/react-query';
 import {useMemo, useState} from 'react';
 import {useForm} from 'react-hook-form';
 
@@ -29,13 +28,13 @@ import {
   roomErrorMessage,
   RoomSettingsFields,
   roomSettingsSchema,
-  setRoomCache,
   toRoomSettingsRequest,
   toRoomSettingsValues,
   type Membership,
   type RoomSettingsValues,
   type RoomView,
 } from '@/entities/room';
+import {testIds} from './room-settings-dialog.test-ids';
 
 const IN_GAME_HINT = 'Правила игры меняются только между партиями';
 
@@ -52,7 +51,6 @@ interface SettingsFormProps {
 }
 
 function SettingsForm({room, inGame, rules, onSaved}: SettingsFormProps) {
-  const queryClient = useQueryClient();
   const schema = useMemo(() => roomSettingsSchema(rules), [rules]);
   const form = useForm<RoomSettingsValues>({
     resolver: zodResolver(schema),
@@ -60,8 +58,8 @@ function SettingsForm({room, inGame, rules, onSaved}: SettingsFormProps) {
   });
   const updateSettings = useUpdateRoomSettings({
     mutation: {
-      onSuccess: data => {
-        setRoomCache(queryClient, room.id, data);
+      // Новые настройки приходят событием settings-changed потока комнаты.
+      onSuccess: () => {
         onSaved();
         toast.success('Настройки комнаты сохранены');
       },
@@ -139,6 +137,7 @@ function SettingsForm({room, inGame, rules, onSaved}: SettingsFormProps) {
           </DialogClose>
           <Button
             type="submit"
+            data-testid={testIds.submitButton}
             disabled={updateSettings.isPending || toAdvanced.isPending}
           >
             Сохранить
@@ -182,9 +181,14 @@ export function RoomSettingsDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">Настройки</Button>
+        <Button variant="outline" data-testid={testIds.openButton}>
+          Настройки
+        </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        data-testid={testIds.root}
+        className="max-h-[90vh] overflow-y-auto"
+      >
         <DialogHeader>
           <DialogTitle>Настройки комнаты</DialogTitle>
           <DialogDescription>

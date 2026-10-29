@@ -9,11 +9,13 @@
     "preview": "rsbuild preview",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "lint:styles": "stylelint \"src/**/*.css\""
+    "lint:styles": "stylelint \"src/**/*.css\"",
+    "test": "vitest run"
   },
   "dependencies": {
     "@hookform/resolvers": "catalog:",
     "@qgames/api": "workspace:*",
+    "@qgames/doc-patch": "workspace:*",
     "@qgames/game-checkers": "workspace:*",
     "@qgames/game-core": "workspace:*",
     "@qgames/game-nothing": "workspace:*",
@@ -38,6 +40,7 @@
     "eslint": "catalog:",
     "stylelint": "catalog:",
     "tailwindcss": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

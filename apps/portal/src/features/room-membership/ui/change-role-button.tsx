@@ -1,11 +1,9 @@
 import {useChangeRole} from '@qgames/api/portal';
 import {Button} from '@qgames/ui/components/button';
 import {toast} from '@qgames/ui/components/sonner';
-import {useQueryClient} from '@tanstack/react-query';
 
 import {
   roomErrorMessage,
-  setRoomCache,
   type Membership,
   type RoomRole,
   type RoomView,
@@ -43,12 +41,9 @@ export function ChangeRoleButton({
   membership,
   role,
 }: ChangeRoleButtonProps) {
-  const queryClient = useQueryClient();
+  // Новая роль приходит событием role-changed потока комнаты.
   const changeRole = useChangeRole({
     mutation: {
-      onSuccess: data => {
-        setRoomCache(queryClient, room.id, data);
-      },
       onError: error => {
         toast.error(roomErrorMessage(error));
       },

@@ -15,6 +15,7 @@
     "format": "prettier --write .",
     "api:fetch": "pnpm --filter @qgames/api api:fetch",
     "api:generate": "pnpm --filter @qgames/api api:generate",
+    "test": "turbo run test --filter=!@qgames/e2e",
     "test:e2e": "pnpm --filter @qgames/e2e test"
   },
   "devDependencies": {

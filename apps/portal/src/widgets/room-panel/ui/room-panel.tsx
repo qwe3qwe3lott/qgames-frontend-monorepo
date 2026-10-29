@@ -36,17 +36,17 @@ function toListItem(
   membership: Membership,
 ): PlayerListItem {
   const badges: string[] = [];
-  if (member.userId === viewerId) {
+  if (member.id === viewerId) {
     badges.push('Вы');
   }
-  if (member.owner) {
+  if (member.id === room.ownerId) {
     badges.push('Владелец');
   }
   if (member.leaving) {
     badges.push('отошёл');
   }
   return {
-    id: member.userId,
+    id: member.id,
     name: memberName(member),
     avatar: member.avatar,
     badges,

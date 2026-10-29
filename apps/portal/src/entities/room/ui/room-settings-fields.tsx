@@ -29,6 +29,7 @@ import {
   type CheckersRuleFlag,
 } from '../lib/settings-labels';
 import type {RoomSettingsValues} from '../model/settings';
+import {testIds} from './room-settings-fields.test-ids';
 
 export interface RoomSettingsFieldsProps {
   form: UseFormReturn<RoomSettingsValues>;
@@ -102,6 +103,9 @@ function RadioField({
                   <RadioGroupItem
                     id={`${id}-${item.value}`}
                     value={item.value}
+                    data-testid={testIds.option}
+                    data-field={name}
+                    data-value={item.value}
                   />
                   {item.label}
                 </Label>
@@ -133,6 +137,8 @@ function RoundsField({
       <FieldLabel htmlFor={id}>Число раундов</FieldLabel>
       <Input
         id={id}
+        data-testid={testIds.field}
+        data-field={name}
         type="number"
         inputMode="numeric"
         min={rounds.min}
@@ -263,6 +269,8 @@ function CheckersAdvancedFields({
               >
                 <Checkbox
                   id={`${idPrefix}-${flag}`}
+                  data-testid={testIds.field}
+                  data-field={`advanced.${flag}`}
                   checked={field.value}
                   onCheckedChange={checked => {
                     field.onChange(checked === true);
@@ -354,6 +362,7 @@ function BaseTimeField({
             <div className="flex items-center gap-2">
               <Input
                 id={`${idPrefix}-base-minutes`}
+                data-testid={testIds.baseMinutes}
                 type="number"
                 inputMode="numeric"
                 min={0}
@@ -369,6 +378,7 @@ function BaseTimeField({
               <span className="text-sm">мин</span>
               <Input
                 id={`${idPrefix}-base-seconds`}
+                data-testid={testIds.baseSeconds}
                 type="number"
                 inputMode="numeric"
                 min={0}
@@ -442,6 +452,8 @@ function TimeControlFields({
             </FieldLabel>
             <Input
               id={`${idPrefix}-increment`}
+              data-testid={testIds.field}
+              data-field="advanced.timeControl.incrementSeconds"
               type="number"
               inputMode="numeric"
               min={incrementSeconds.min}
@@ -527,6 +539,8 @@ function RoomOptionsFields({
       </FieldLabel>
       <Input
         id={`${idPrefix}-max-spectators`}
+        data-testid={testIds.field}
+        data-field="room.maxSpectators"
         type="number"
         inputMode="numeric"
         min={spectators.min}
@@ -562,7 +576,7 @@ export function RoomSettingsFields({
   const {simple} = rules.defaultSettings;
   const simpleAvailable = simple !== undefined && simple !== null;
   return (
-    <>
+    <div data-testid={testIds.root} className="contents">
       <RoomOptionsFields form={form} idPrefix={idPrefix} rules={rules} />
       <fieldset
         disabled={gameLockReason !== null}
@@ -574,6 +588,7 @@ export function RoomSettingsFields({
         >
           <Checkbox
             id={`${idPrefix}-advanced`}
+            data-testid={testIds.advancedCheckbox}
             checked={enabled}
             disabled={advancedPending || (enabled && !simpleAvailable)}
             onCheckedChange={checked => {
@@ -591,6 +606,6 @@ export function RoomSettingsFields({
           <SimpleFields form={form} idPrefix={idPrefix} rules={rules} />
         )}
       </fieldset>
-    </>
+    </div>
   );
 }

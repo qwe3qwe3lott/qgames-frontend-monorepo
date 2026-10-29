@@ -1,21 +1,13 @@
 import {resolveUrl} from '@qgames/api';
-import {getGetRoomQueryKey} from '@qgames/api/portal';
-import type {RoomResponse} from '@qgames/api/portal/model';
-import {
-  RoomStreamEvent,
-  type RoomStreamEventOutput,
-} from '@qgames/api/portal/zod';
-import {useQueryClient, type QueryClient} from '@tanstack/react-query';
+import {RoomStreamEvent} from '@qgames/api/portal/zod';
+import {useQuery, useQueryClient} from '@tanstack/react-query';
 import {useCallback, useEffect, useState} from 'react';
 
-import {createEventStream} from '@/shared/lib';
+import {createEventStream, type EventStream} from '@/shared/lib';
 
 import {invalidateRoom} from '../lib/cache';
-import {
-  memberFromStream,
-  roomFromStream,
-  settingsFromStream,
-} from '../lib/stream-data';
+import {applyRoomStreamMessage, type RoomStreamData} from '../lib/room-stream';
+import {roomStreamQueryOptions} from './query';
 
 /**
  * Адрес потока `GET /api/rooms/{roomId}/events`. Клиент Orval для SSE-ручек не
@@ -31,10 +23,17 @@ const ROOM_EVENT_TYPES = RoomStreamEvent.options.flatMap(
 );
 
 /**
+ * Пауза перед повторной сверкой (дыра в seq или сообщение не по контракту):
+ * первая — сразу, дальше удваивается, пока событие не применится.
+ */
+const RESYNC_BASE_MS = 1000;
+const RESYNC_MAX_MS = 30_000;
+
+/**
  * Состояние потока комнаты: `connecting` — первое подключение, `open` — поток
- * идёт, `reconnecting` — связь потеряна, идёт переподключение, `closed` —
- * поток закрыт насовсем (комната удалена, сессию не обновить или поток
- * выключен).
+ * идёт, `reconnecting` — связь или события потеряны, идёт переподключение за
+ * свежим снапшотом, `closed` — поток закрыт насовсем (комната удалена, сессию
+ * не обновить или поток выключен).
  */
 export type RoomEventsStatus =
   'connecting' | 'open' | 'reconnecting' | 'closed';
@@ -45,61 +44,6 @@ export interface RoomEvents {
   reconnect: () => void;
 }
 
-/** Частичное событие (участники, настройки) меняет поле закешированной комнаты. */
-function patchRoom(
-  queryClient: QueryClient,
-  roomId: string,
-  patch: (room: RoomResponse) => RoomResponse,
-): void {
-  queryClient.setQueryData<RoomResponse>(getGetRoomQueryKey(roomId), room =>
-    room === undefined ? undefined : patch(room),
-  );
-}
-
-/**
- * Применяет событие к кешу `GET /api/rooms/{roomId}`. События несут полное
- * значение, поэтому повтор безопасен. Возвращает false, если поток дальше не
- * нужен.
- */
-function applyRoomEvent(
-  queryClient: QueryClient,
-  roomId: string,
-  event: RoomStreamEventOutput,
-): boolean {
-  switch (event.type) {
-    case 'snapshot':
-      queryClient.setQueryData<RoomResponse>(
-        getGetRoomQueryKey(roomId),
-        roomFromStream(event.data),
-      );
-      return true;
-    case 'users-changed': {
-      const {ownerId, members} = event.data;
-      patchRoom(queryClient, roomId, room => ({
-        ...room,
-        ownerId: ownerId ?? null,
-        members: members.map(memberFromStream),
-      }));
-      return true;
-    }
-    case 'settings-changed': {
-      const {settings} = event.data;
-      patchRoom(queryClient, roomId, room => ({
-        ...room,
-        settings: settingsFromStream(settings),
-      }));
-      return true;
-    }
-    case 'session-changed':
-      void invalidateRoom(queryClient, roomId);
-      return true;
-    case 'room-deleted':
-      // Перечитанная комната ответит ROOM_NOT_FOUND — страница покажет ошибку.
-      void invalidateRoom(queryClient, roomId);
-      return false;
-  }
-}
-
 /** Состояние, сообщённое потоком; `stream` — какой поток его сообщил. */
 interface StreamState {
   stream: string;
@@ -107,8 +51,15 @@ interface StreamState {
 }
 
 /**
- * Поток событий комнаты (`GET /api/rooms/{roomId}/events`): держит кеш комнаты
- * актуальным. Пока поток открыт, пользователь находится в комнате.
+ * Поток событий комнаты (`GET /api/rooms/{roomId}/events`): строит комнату в
+ * кеше `['room-stream', roomId]` — снапшот, затем патчи по порядку seq
+ * (`applyRoomStreamMessage`). Дыра в seq или патч, который не применился, —
+ * рассинхронизация: поток переоткрывается за свежим снапшотом. Пока поток
+ * открыт, пользователь находится в комнате.
+ *
+ * `GET` комнаты (лоадер маршрута) нужен только для ошибок: когда поток закрыт
+ * сервером (комнаты нет, мест нет, комната удалена), он перечитывается, и
+ * страница показывает причину.
  *
  * @param enabled false — поток закрыт (и не открывается).
  */
@@ -126,37 +77,105 @@ export function useRoomEvents(roomId: string, enabled: boolean): RoomEvents {
     if (!enabled) {
       return undefined;
     }
+    const {queryKey} = roomStreamQueryOptions(roomId);
+    // Комната с прошлого визита устарела: до снапшота страница показывает
+    // загрузку, а не прежних участников и партию. Переоткрытие при сверке кеш
+    // не сбрасывает — снапшот заменит его сам.
+    void queryClient.resetQueries({queryKey, exact: true});
+    const url = roomEventsUrl(roomId);
     const report = (status: RoomEventsStatus) => {
       setState({stream: streamKey, status});
     };
-    const stream = createEventStream(roomEventsUrl(roomId), {
-      schema: RoomStreamEvent,
-      types: ROOM_EVENT_TYPES,
-      onOpen: () => {
-        report('open');
-      },
-      onEvent: event => {
-        if (!applyRoomEvent(queryClient, roomId, event)) {
-          stream.close();
-          report('closed');
-        }
-      },
-      onError: ({closed, final}) => {
-        report(final ? 'closed' : 'reconnecting');
-        // Поток закрыт ответом сервера (401, 404, 503): перечитанная комната
-        // покажет причину, а если комнаты нет — страница выключит поток.
-        if (closed) {
-          void invalidateRoom(queryClient, roomId);
-        }
-      },
-      onInvalid: () => {
-        // Сообщение не по контракту — пропускаем и сверяемся с сервером.
-        void invalidateRoom(queryClient, roomId);
-      },
-    });
-    return () => {
-      stream.close();
+    let stream: EventStream | undefined;
+    let resyncTimer: ReturnType<typeof setTimeout> | undefined;
+    let resyncAttempt = 0;
+    let stopped = false;
+
+    const stop = () => {
+      stopped = true;
+      if (resyncTimer !== undefined) {
+        clearTimeout(resyncTimer);
+      }
+      stream?.close();
+      stream = undefined;
     };
+
+    const resync = (reason: string) => {
+      if (import.meta.env.DEV) {
+        console.warn(`[room] рассинхронизация: ${reason}`);
+      }
+      stream?.close();
+      stream = undefined;
+      report('reconnecting');
+      const delay =
+        resyncAttempt === 0
+          ? 0
+          : Math.min(RESYNC_BASE_MS * 2 ** (resyncAttempt - 1), RESYNC_MAX_MS);
+      resyncAttempt += 1;
+      resyncTimer = setTimeout(open, delay);
+    };
+
+    function open(): void {
+      resyncTimer = undefined;
+      if (stopped) {
+        return;
+      }
+      const current = createEventStream(url, {
+        schema: RoomStreamEvent,
+        types: ROOM_EVENT_TYPES,
+        onOpen: () => {
+          report('open');
+        },
+        onEvent: message => {
+          // Сообщения закрытого потока (после сверки) уже не нужны.
+          if (stream !== current) {
+            return;
+          }
+          const result = applyRoomStreamMessage(
+            queryClient.getQueryData<RoomStreamData>(queryKey),
+            message,
+          );
+          switch (result.type) {
+            case 'applied':
+              queryClient.setQueryData(queryKey, result.data);
+              if (message.type !== 'snapshot') {
+                resyncAttempt = 0;
+              }
+              return;
+            case 'skipped':
+              return;
+            case 'resync':
+              resync(result.reason);
+              return;
+            case 'ended':
+              // Перечитанная комната ответит ROOM_NOT_FOUND — страница покажет
+              // ошибку.
+              stop();
+              report('closed');
+              void invalidateRoom(queryClient, roomId);
+              return;
+          }
+        },
+        onError: ({closed, final}) => {
+          report(final ? 'closed' : 'reconnecting');
+          // Поток закрыт ответом сервера (401, 404, 409): EventSource кода не
+          // видит, перечитанная комната покажет причину.
+          if (closed) {
+            void invalidateRoom(queryClient, roomId);
+          }
+        },
+        onInvalid: () => {
+          // Сообщение не по контракту пропущено — комната могла разойтись.
+          if (stream === current) {
+            resync('сообщение не по контракту');
+          }
+        },
+      });
+      stream = current;
+    }
+
+    open();
+    return stop;
   }, [enabled, queryClient, roomId, streamKey]);
 
   let status: RoomEventsStatus = 'closed';
@@ -165,4 +184,9 @@ export function useRoomEvents(roomId: string, enabled: boolean): RoomEvents {
     status = state?.stream === streamKey ? state.status : 'connecting';
   }
   return {status, reconnect};
+}
+
+/** Комната из потока; undefined — снапшота ещё не было. */
+export function useRoomStream(roomId: string): RoomStreamData | undefined {
+  return useQuery(roomStreamQueryOptions(roomId)).data;
 }

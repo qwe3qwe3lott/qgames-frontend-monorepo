@@ -24,7 +24,7 @@ export interface Membership {
 
 /** Что пользователь может делать в комнате. */
 export function membership(room: RoomView, userId: string): Membership {
-  const member = room.members.find(m => m.userId === userId) ?? null;
+  const member = room.members.find(m => m.id === userId) ?? null;
   const playersCount = room.members.filter(m => m.role === 'PLAYER').length;
   const spectatorsCount = room.members.filter(
     m => m.role === 'SPECTATOR',
@@ -35,7 +35,7 @@ export function membership(room: RoomView, userId: string): Membership {
   const hasSpectatorSeat = spectatorsCount < maxSpectators;
   return {
     member,
-    isOwner: member?.owner ?? false,
+    isOwner: member !== null && room.ownerId === userId,
     isPlayer: member?.role === 'PLAYER',
     inGame,
     playersCount,

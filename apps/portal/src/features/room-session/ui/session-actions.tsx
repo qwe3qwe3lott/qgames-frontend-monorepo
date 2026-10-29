@@ -4,7 +4,6 @@ import {
   useResumeSession,
   useStartSession,
 } from '@qgames/api/portal';
-import type {RoomResponse} from '@qgames/api/portal/model';
 import {activeTimer} from '@qgames/game-core';
 import {Button} from '@qgames/ui/components/button';
 import {
@@ -18,11 +17,9 @@ import {
   DialogTrigger,
 } from '@qgames/ui/components/dialog';
 import {toast} from '@qgames/ui/components/sonner';
-import {useQueryClient} from '@tanstack/react-query';
 
 import {
   roomErrorMessage,
-  setRoomCache,
   type Membership,
   type RoomView,
 } from '@/entities/room';
@@ -48,12 +45,9 @@ function showError(error: unknown) {
  * Ошибки действий показываются снекбаром.
  */
 export function SessionActions({room, membership}: SessionActionsProps) {
-  const queryClient = useQueryClient();
+  // Партия приходит событием session-started потока комнаты.
   const start = useStartSession({
     mutation: {
-      onSuccess: (data: RoomResponse) => {
-        setRoomCache(queryClient, room.id, data);
-      },
       onError: showError,
     },
   });

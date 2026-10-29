@@ -1,4 +1,4 @@
-export {invalidateRoom, setRoomCache} from './lib/cache';
+export {invalidateRoom} from './lib/cache';
 export {roomErrorMessage} from './lib/error-messages';
 export {ROOM_STATUS_LABELS} from './lib/labels';
 export {
@@ -24,6 +24,7 @@ export {
 } from './model/settings';
 export {
   useRoomEvents,
+  useRoomStream,
   type RoomEvents,
   type RoomEventsStatus,
 } from './model/use-room-events';

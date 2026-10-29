@@ -18,11 +18,10 @@ export {
   type SessionTurns,
 } from './core';
 export {applySessionEvent, type ApplySessionEventResult} from './patch';
+export {checkSeq, type SeqCheck} from '@qgames/doc-patch';
 export {
-  checkSeq,
   isSessionOver,
   sessionFromSnapshot,
-  type SeqCheck,
   type SessionData,
   type SessionDocument,
   type SessionLogEvent,

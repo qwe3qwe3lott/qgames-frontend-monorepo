@@ -7,6 +7,7 @@ import {HomePage} from './models/home-page';
 import {NothingBoard} from './models/nothing-board';
 import {RoomPage} from './models/room-page';
 import {RoomPanel} from './models/room-panel';
+import {RoomSettingsDialog} from './models/room-settings-dialog';
 import {SessionActions} from './models/session-actions';
 
 /**
@@ -21,6 +22,7 @@ export const portalModels = {
   gameRoomsPage: GameRoomsPage,
   roomPage: RoomPage,
   roomPanel: RoomPanel,
+  roomSettingsDialog: RoomSettingsDialog,
   sessionActions: SessionActions,
   checkersBoard: CheckersBoard,
   nothingBoard: NothingBoard,

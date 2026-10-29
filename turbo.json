@@ -17,6 +17,7 @@
     "lint:styles": {
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/packages/config/**"]
     },
+    "test": {},
     "dev": {
       "cache": false,
       "persistent": true

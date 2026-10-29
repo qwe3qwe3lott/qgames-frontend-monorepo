@@ -10,8 +10,8 @@ import type {PathSegment} from './pathSegment';
  * Данные PUT: путь и новое значение (любой JSON, в том числе null)
  */
 export interface PutData {
-  /** Путь от корня документа {status, meta, state}: [] — весь документ, ["state", "timer"], ["state", "players", {"id": "…"}, "moveOptions"] */
+  /** Путь от корня документа потока: [] — весь документ. Партия: ["state", "timer"], ["state", "players", {"id": "…"}, "moveOptions"]; комната: ["members", {"id": "…"}], ["settings"] */
   path: PathSegment[];
-  /** Новое значение: любой JSON, в том числе null. Схема — схема состояния игры по пути */
+  /** Новое значение: любой JSON, в том числе null. Схема — схема документа по пути */
   value: unknown;
 }

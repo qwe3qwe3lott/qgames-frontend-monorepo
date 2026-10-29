@@ -10,6 +10,6 @@ import type {PathSegment} from './pathSegment';
  * Данные DELETE: путь к полю объекта или элементу массива
  */
 export interface DeleteData {
-  /** Путь от корня документа {status, meta, state}: [] — весь документ, ["state", "timer"], ["state", "players", {"id": "…"}, "moveOptions"] */
+  /** Путь от корня документа потока: [] — весь документ. Партия: ["state", "timer"], ["state", "players", {"id": "…"}, "moveOptions"]; комната: ["members", {"id": "…"}], ["settings"] */
   path: PathSegment[];
 }

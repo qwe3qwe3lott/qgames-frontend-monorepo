@@ -1,3 +1,8 @@
+import {
+  GameAdvancedSettingsDto,
+  GameSimpleSettingsDto,
+  RoomOptionsDto,
+} from '@qgames/api/portal/zod';
 import {z} from 'zod';
 
 /** Кадр потока партии после подстановок: `event:` и JSON из `data:`. */
@@ -30,18 +35,47 @@ const stepSchema = z.strictObject({
 });
 
 /**
+ * Настройки комнаты, которые владелец выставляет кликами до входа остальных:
+ * группы целиком, как в PUT настроек (схемы контракта). simple и advanced —
+ * взаимоисключающие режимы.
+ */
+const settingsSchema = z
+  .strictObject({
+    room: RoomOptionsDto.optional(),
+    simple: GameSimpleSettingsDto.optional(),
+    advanced: GameAdvancedSettingsDto.optional(),
+  })
+  .refine(
+    settings =>
+      settings.simple === undefined || settings.advanced === undefined,
+    {
+      message: 'simple и advanced вместе не задаются',
+    },
+  );
+
+/**
  * Сценарий партии. Порядок `actors` — порядок входа в комнату, он задаёт
  * места; первый актор создаёт комнату и начинает партию.
  */
-export const scenarioSchema = z.strictObject({
-  game: z.string(),
-  /** Seed партии (заголовок X-Qgames-Seed): цвета, раздачи. */
-  seed: z.int(),
-  actors: z.array(actorSchema).min(1),
-  /** Кадры при старте партии (снапшот). */
-  start: z.strictObject({expected: expectedSchema.optional()}).optional(),
-  steps: z.array(stepSchema),
-});
+export const scenarioSchema = z
+  .strictObject({
+    game: z.string(),
+    /** Seed партии (заголовок X-Qgames-Seed): цвета, раздачи. */
+    seed: z.int(),
+    /** Настройки комнаты; без них — настройки игры по умолчанию. */
+    settings: settingsSchema.optional(),
+    actors: z.array(actorSchema).min(1),
+    /** Кадры при старте партии (снапшот). */
+    start: z.strictObject({expected: expectedSchema.optional()}).optional(),
+    steps: z.array(stepSchema),
+  })
+  .refine(
+    scenario =>
+      [scenario.settings?.simple, scenario.settings?.advanced].every(
+        group => group === undefined || group.gameCode === scenario.game,
+      ),
+    {message: 'Код игры в settings не совпадает с game'},
+  );
 
 export type Scenario = z.infer<typeof scenarioSchema>;
 export type ScenarioStep = z.infer<typeof stepSchema>;
