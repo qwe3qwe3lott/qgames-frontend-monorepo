@@ -1,0 +1,44 @@
+# Прод на VPS: web (nginx) — статика портала и админки, TLS, proxy /api в app. Запускает /opt/qgames/bin/deploy.sh
+# (CI по push в ветку deploy) — он скачивает этот файл на нужном коммите в /opt/qgames/frontend/ и выполняет
+# docker compose -p qgames-frontend up -d --wait. IMAGE_TAG пишет deploy.sh в /opt/qgames/frontend/.env.
+# app — compose-проект бэкенда, доступен по общей сети qgames (adr/system/hosting.md).
+
+services:
+  web:
+    image: ghcr.io/qwe3qwe3lott/qgames-web:${IMAGE_TAG:?}
+    # Имя фиксировано: deploy-hook certbot перечитывает сертификат через docker exec qgames-web nginx -s reload.
+    container_name: qgames-web
+    ports:
+      - '443:8443'
+      - '80:8080'
+    environment:
+      PORTAL_SERVER_NAME: qgames.duckdns.org
+      ADMIN_SERVER_NAME: admin.qgames.duckdns.org
+      # app перерезолвится через DNS Docker: пересоздание app не оставляет web со старым IP.
+      API_UPSTREAM: 'app:8080'
+      API_UPSTREAM_RESOLVE: 'true'
+      # Без includeSubDomains: local.qgames.duckdns.org — локальный стенд. max-age увеличить, когда прод устоится.
+      HSTS: 'max-age=86400'
+    volumes:
+      # Let's Encrypt (certbot на хосте): deploy-hook копирует fullchain/privkey в cert.pem/key.pem.
+      - /opt/qgames/certs:/etc/nginx/certs:ro
+      # Webroot HTTP-01 проверки certbot.
+      - /opt/qgames/acme:/var/www/acme:ro
+    networks:
+      - qgames
+    mem_limit: 48m
+    memswap_limit: 48m
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget -q --spider http://127.0.0.1:8080/healthz
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 5s
+
+networks:
+  # Общая сеть с app бэкенда; создаётся при настройке сервера (docker network create qgames).
+  qgames:
+    external: true

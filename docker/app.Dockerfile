@@ -40,7 +40,9 @@ ENV HTTPS_LISTEN=8443 \
     HTTP_LISTEN=8080 \
     PORTAL_SERVER_NAME=qgames.duckdns.org \
     ADMIN_SERVER_NAME=admin.qgames.duckdns.org \
-    API_UPSTREAM=host.docker.internal:8080
+    API_UPSTREAM=host.docker.internal:8080 \
+    API_UPSTREAM_RESOLVE=false \
+    HSTS=""
 # Убираем дефолтные конфиг и страницы образа. Каталог статики принадлежит root, поэтому root — только на этот шаг.
 USER root
 # Каталоги шаблонов и сниппетов создаются заранее: COPY --chmod=644 выставил бы этот режим и новому каталогу.
@@ -49,10 +51,11 @@ RUN rm /etc/nginx/conf.d/default.conf && rm -rf /usr/share/nginx/html/* \
 USER nginx
 # Файлы копируются от root и доступны nginx только на чтение.
 # Шаблон при старте превращается в /etc/nginx/conf.d/web.conf (envsubst в entrypoint образа).
+COPY --chmod=644 docker/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY --chmod=644 docker/nginx/web.conf.template /etc/nginx/templates/web.conf.template
 COPY --chmod=644 docker/nginx/api-proxy.conf docker/nginx/spa.conf /etc/nginx/snippets/
-# Скрипт entrypoint: IPv4-адрес бэкенда для upstream (без exec-бита entrypoint его пропустит).
-COPY --chmod=755 docker/nginx/18-api-upstream-ipv4.envsh /docker-entrypoint.d/
+# Скрипт entrypoint: строка server бэкенда для upstream (без exec-бита entrypoint его пропустит).
+COPY --chmod=755 docker/nginx/18-api-upstream.envsh /docker-entrypoint.d/
 COPY --from=build /workspace/apps/portal/dist /usr/share/nginx/html/portal
 COPY --from=build /workspace/apps/admin/dist /usr/share/nginx/html/admin
 EXPOSE 8080 8443

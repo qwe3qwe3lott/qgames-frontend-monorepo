@@ -25,7 +25,7 @@ services:
     volumes:
       - ./docker/certs:/etc/nginx/certs:ro
     # host.docker.internal на Linux (в Docker Desktop есть и так). Резолвится и в IPv6 — в upstream nginx
-    # берётся только IPv4 (docker/nginx/18-api-upstream-ipv4.envsh).
+    # берётся только IPv4 (docker/nginx/18-api-upstream.envsh).
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     # Без свопа: memswap_limit = mem_limit. Замер без TLS: простой ~14 MiB, 360 SSE 5 мин — пик ~29 MiB.

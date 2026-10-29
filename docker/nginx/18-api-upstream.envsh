@@ -1,0 +1,29 @@
+#!/bin/sh
+# Entrypoint образа nginx выполняет (source) этот файл до 20-envsubst-on-templates.sh
+# и получает API_UPSTREAM_SERVER — строку server в upstream бэкенда (web.conf.template).
+#
+# Два режима:
+# - API_UPSTREAM_RESOLVE=true (прод, бэкенд в общей docker-сети): "<API_UPSTREAM> resolve" — nginx сам
+#   перерезолвит имя через DNS Docker (resolver в шаблоне). Пересоздание app меняет его IP, а web стартует,
+#   даже если app ещё нет (до его появления — 502).
+# - иначе (локальный стенд, host.docker.internal из extra_hosts — его знает только /etc/hosts, не DNS Docker):
+#   один раз берётся IPv4-адрес. host.docker.internal резолвится и в IPv6, подключение по нему из контейнера
+#   падает (Network unreachable) — 502. Upstream из одного сервера nginx никогда не помечает недоступным.
+
+api_host="${API_UPSTREAM%:*}"
+api_port="${API_UPSTREAM##*:}"
+if [ -z "$api_host" ] || [ "$api_host" = "$API_UPSTREAM" ]; then
+    echo "18-api-upstream.envsh: API_UPSTREAM должен быть вида <хост>:<порт>, получено: '$API_UPSTREAM'" >&2
+    exit 1
+fi
+if [ "$API_UPSTREAM_RESOLVE" = "true" ]; then
+    export API_UPSTREAM_SERVER="$API_UPSTREAM resolve"
+else
+    api_ipv4="$(getent ahostsv4 "$api_host" | awk 'NR == 1 { print $1 }')"
+    if [ -z "$api_ipv4" ]; then
+        echo "18-api-upstream.envsh: не удалось получить IPv4-адрес бэкенда '$api_host'" >&2
+        exit 1
+    fi
+    export API_UPSTREAM_SERVER="$api_ipv4:$api_port"
+fi
+echo "18-api-upstream.envsh: upstream бэкенда — $API_UPSTREAM_SERVER ($API_UPSTREAM)"

@@ -5,9 +5,12 @@
 #   HTTPS_LISTEN / HTTP_LISTEN             — порты в контейнере (8443 / 8080; снаружи — 443 / 80);
 #   PORTAL_SERVER_NAME / ADMIN_SERVER_NAME — имена хостов (обязательны: оба сайта на одном порту различаются по имени;
 #     локально — <LOCAL_DOMAIN> и admin.<LOCAL_DOMAIN>, в проде — qgames.duckdns.org и admin.qgames.duckdns.org);
-#   API_UPSTREAM                           — бэкенд (host.docker.internal:8080 — бэкенд в своём compose);
-#     в upstream попадает только его IPv4-адрес (API_UPSTREAM_IPV4, см. 18-api-upstream-ipv4.envsh).
-# Сертификат на оба имени — /etc/nginx/certs/cert.pem и key.pem (том; локально — mkcert из docker/certs/).
+#   API_UPSTREAM                           — бэкенд (локально host.docker.internal:8080, в проде app:8080);
+#   API_UPSTREAM_RESOLVE                   — true в проде: имя бэкенда перерезолвится через DNS Docker; иначе
+#     в upstream попадает только IPv4-адрес (API_UPSTREAM_SERVER, см. 18-api-upstream.envsh);
+#   HSTS                                   — значение Strict-Transport-Security (в проде); пусто — заголовка нет.
+# Сертификат на оба имени — /etc/nginx/certs/cert.pem и key.pem (том; локально — mkcert из docker/certs/,
+# в проде — Let's Encrypt, его HTTP-01 проверка отдаётся из /var/www/acme).
 
 # Заголовки ответа: add_header в location дополняет заголовки server, а не отменяет их (nginx >= 1.29.3).
 add_header_inherit merge;
@@ -15,10 +18,15 @@ server_tokens off;
 # Относительный Location в редиректах nginx: снаружи порт может быть другим.
 absolute_redirect off;
 
-# Keep-alive до бэкенда: соединения переиспользуются. Один сервер (IPv4): nginx не помечает его
+# DNS Docker для server ... resolve (прод): адрес app перечитывается раз в 10 с, только IPv4.
+resolver 127.0.0.11 valid=10s ipv4=on;
+
+# Keep-alive до бэкенда: соединения переиспользуются. Один сервер: nginx не помечает его
 # недоступным после ошибок, max_fails/fail_timeout для единственного сервера не действуют.
+# zone нужна для resolve.
 upstream qgames_api {
-    server ${API_UPSTREAM_IPV4};
+    zone qgames_api 64k;
+    server ${API_UPSTREAM_SERVER};
     keepalive 16;
 }
 
@@ -30,10 +38,16 @@ ssl_protocols TLSv1.2 TLSv1.3;
 ssl_session_cache shared:SSL:1m;
 http2 on;
 
-# HTTP: только редирект на HTTPS и проверка живости для healthcheck compose.
+# HTTP: только редирект на HTTPS, проверка живости для healthcheck compose и HTTP-01 проверка Let's Encrypt
+# (certbot на хосте пишет токены в webroot, смонтированный в /var/www/acme; локально каталога нет — 404).
 server {
     listen ${HTTP_LISTEN} default_server;
     server_name _;
+
+    location ^~ /.well-known/acme-challenge/ {
+        root /var/www/acme;
+        try_files $uri =404;
+    }
 
     location = /healthz {
         access_log off;
@@ -58,6 +72,8 @@ server {
     root /usr/share/nginx/html/portal;
 
     # Заголовки безопасности на всех ответах (always — и на 4xx/5xx, и на ответах бэкенда).
+    # HSTS только в проде и без includeSubDomains: local.qgames.duckdns.org — поддомен прода.
+    add_header Strict-Transport-Security "${HSTS}" always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     add_header X-Frame-Options "DENY" always;
@@ -83,6 +99,7 @@ server {
     server_name ${ADMIN_SERVER_NAME};
     root /usr/share/nginx/html/admin;
 
+    add_header Strict-Transport-Security "${HSTS}" always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     add_header X-Frame-Options "DENY" always;
