@@ -17,6 +17,7 @@ import type {RoomEventPut} from './roomEventPut';
  * - member-left — DELETE ["members", {id}]: участник ушёл из комнаты, в том числе отсутствующий игрок после конца партии;
  * - member-leaving — PATCH ["members", {id}] {leaving: true}: игрок идущей партии отключился, место за ним;
  * - member-returned — PATCH ["members", {id}] {leaving: false}: отсутствующий игрок партии вернулся;
+ * - member-kicked — INFO {userId}: владелец исключил участника, следом идёт member-left или member-leaving (игрок идущей партии). У исключённого это последнее событие: сервер закрывает его потоки комнаты и партии;
  * - role-changed — PATCH ["members", {id}] {role}: участник стал игроком или наблюдателем;
  * - profile-changed — PATCH ["members", {id}] {nickname, avatar}: участник сменил ник или аватар;
  * - owner-changed — PATCH [] {ownerId}: сменился владелец (null — присутствующих нет);

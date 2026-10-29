@@ -543,6 +543,97 @@ export function useGetRoom<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getKickMemberUrl = (roomId: string, userId: string) => {
+  return `/api/rooms/${roomId}/members/${userId}`;
+};
+
+/**
+ * Владелец исключает участника из комнаты в любой момент, в том числе игрока идущей партии. Это не бан: исключённый может войти снова. Игрок идущей партии остаётся её игроком (отсутствующим, leaving = true) до конца партии, на его отсутствие отвечает игра (таймаут хода), при повторном входе он возвращается на своё место. Все подключения исключённого к потоку комнаты закрываются. Исключение неучастника или отсутствующего игрока ничего не меняет. Ответ без тела: изменение приходит событием member-kicked и следом member-left или member-leaving потока комнаты.
+ * @summary Исключить участника
+ */
+export const kickMember = async (
+  roomId: string,
+  userId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<void> => {
+  return apiFetch<void>(getKickMemberUrl(roomId, userId), {
+    ...options,
+    method: 'DELETE',
+  });
+};
+
+export const getKickMemberMutationKey = () => ['kickMember'] as const;
+
+export const getKickMemberMutationOptions = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof kickMember>>,
+    TError,
+    KickMemberMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof kickMember>>,
+  TError,
+  KickMemberMutationVariables,
+  TContext
+> => {
+  const mutationKey = getKickMemberMutationKey();
+  const {mutation: mutationOptions, request: requestOptions} = options
+    ? options.mutation &&
+      'mutationKey' in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+    : {mutation: {mutationKey}, request: undefined};
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof kickMember>>,
+    KickMemberMutationVariables
+  > = props => {
+    const {roomId, userId} = props ?? {};
+
+    return kickMember(roomId, userId, requestOptions);
+  };
+
+  return {mutationFn, ...mutationOptions};
+};
+
+export type KickMemberMutationResult = NonNullable<
+  Awaited<ReturnType<typeof kickMember>>
+>;
+
+export type KickMemberMutationError = ErrorType<ProblemDetail>;
+export type KickMemberMutationVariables = {roomId: string; userId: string};
+
+/**
+ * @summary Исключить участника
+ */
+export const useKickMember = <
+  TError = ErrorType<ProblemDetail>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof kickMember>>,
+      TError,
+      KickMemberMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof kickMember>>,
+  TError,
+  KickMemberMutationVariables,
+  TContext
+> => {
+  return useMutation(getKickMemberMutationOptions(options), queryClient);
+};
 export const getTransferOwnershipUrl = (roomId: string) => {
   return `/api/rooms/${roomId}/owner`;
 };

@@ -17,16 +17,24 @@ export interface RoomStreamData {
 const ROOM_DELETED = 'room-deleted';
 
 /**
+ * Владелец исключил участника `data.userId`; следом идёт member-left или
+ * member-leaving. У исключённого это последнее событие потока.
+ */
+const MEMBER_KICKED = 'member-kicked';
+
+/**
  * Итог применения сообщения: `applied` — новая комната, `skipped` — повтор
  * (seq уже применён), `resync` — событие потеряно, не применилось или дало
  * документ не по контракту (рассинхронизация, нужен свежий снапшот), `ended` —
- * комната удалена, поток больше не нужен.
+ * комната удалена, поток больше не нужен, `kicked` — зрителя исключили из
+ * комнаты, поток закрыт сервером.
  */
 export type RoomStreamResult =
   | {type: 'applied'; data: RoomStreamData}
   | {type: 'skipped'}
   | {type: 'resync'; reason: string}
-  | {type: 'ended'};
+  | {type: 'ended'}
+  | {type: 'kicked'};
 
 /**
  * Применяет сообщение потока комнаты к комнате из потока — чистая функция:
@@ -35,10 +43,12 @@ export type RoomStreamResult =
  * проверяется схемой `RoomResponse` контракта.
  *
  * @param current комната из потока; undefined — снапшота ещё не было.
+ * @param viewerId зритель потока: его исключение заканчивает поток.
  */
 export function applyRoomStreamMessage(
   current: RoomStreamData | undefined,
   message: RoomStreamEventOutput,
+  viewerId: string,
 ): RoomStreamResult {
   if (message.type === 'snapshot') {
     const {seq, room} = message.data;
@@ -47,6 +57,13 @@ export function applyRoomStreamMessage(
   const event = message.data;
   if (event.code === ROOM_DELETED) {
     return {type: 'ended'};
+  }
+  if (
+    event.code === MEMBER_KICKED &&
+    event.method === 'INFO' &&
+    event.data['userId'] === viewerId
+  ) {
+    return {type: 'kicked'};
   }
   if (current === undefined) {
     return {type: 'resync', reason: `#${String(event.seq)} до снапшота`};

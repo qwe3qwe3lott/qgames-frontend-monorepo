@@ -15,6 +15,7 @@ import {
 import {RoomSettingsDialog} from '@/features/editRoomSettings';
 import {
   ChangeRoleButton,
+  KickMemberButton,
   TransferOwnershipButton,
 } from '@/features/roomMembership';
 import {SessionActions} from '@/features/roomSession';
@@ -51,11 +52,14 @@ function toListItem(
     avatar: member.avatar,
     badges,
     extra: (
-      <TransferOwnershipButton
-        room={room}
-        membership={membership}
-        member={member}
-      />
+      <span className="flex">
+        <TransferOwnershipButton
+          room={room}
+          membership={membership}
+          member={member}
+        />
+        <KickMemberButton room={room} membership={membership} member={member} />
+      </span>
     ),
   };
 }

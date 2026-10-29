@@ -1,4 +1,5 @@
-import {resolveUrl} from '@qgames/api';
+import {isApiError, resolveUrl} from '@qgames/api';
+import {getGetRoomQueryOptions} from '@qgames/api/portal';
 import type {RoomResponseGameCode} from '@qgames/api/portal/model';
 import {
   SessionStreamEvent,
@@ -55,10 +56,11 @@ const RESYNC_MAX_MS = 30_000;
  * Состояние потока партии: `connecting` — первое подключение, `open` — поток
  * идёт, `reconnecting` — связь или события потеряны, идёт переподключение за
  * свежим снапшотом, `closed` — поток закрыт насовсем (партия закончилась или
- * сессию не обновить).
+ * сессию не обновить), `denied` — сервер не пускает в партию (комнаты или
+ * партии нет, пользователь больше не участник комнаты), попыток больше нет.
  */
 export type SessionEventsStatus =
-  'connecting' | 'open' | 'reconnecting' | 'closed';
+  'connecting' | 'open' | 'reconnecting' | 'closed' | 'denied';
 
 /**
  * Итог применения сообщения: `applied` — кеш обновлён, `skipped` — повтор
@@ -158,6 +160,8 @@ export interface SessionEventsParams {
   gameCode: RoomResponseGameCode;
   roomId: string;
   sessionId: string;
+  /** Пользователь страницы: участник ли он ещё комнаты. */
+  viewerId: string;
   /** Что игра объявляет о состоянии: guard игровых полей. */
   rules: GameStateRules;
 }
@@ -174,15 +178,21 @@ interface StreamState {
  * (`useSession`). Дыра в seq или сообщение не по контракту — переподключение
  * за свежим снапшотом, повторы отбрасываются. Конец партии (в том числе
  * снапшот уже завершённой) закрывает поток.
+ *
+ * Поток, закрытый сервером (ответ не 200 или поток завершён), `EventSource`
+ * не объясняет: хук перечитывает `GET` комнаты. Комнаты нет (4xx), партия не
+ * её или зритель больше не участник — попытки прекращаются (`denied`),
+ * иначе обёртка переподключается как обычно.
  */
 export function useSessionEvents({
   gameCode,
   roomId,
   sessionId,
+  viewerId,
   rules,
 }: SessionEventsParams): SessionEventsStatus {
   const queryClient = useQueryClient();
-  const streamKey = `${gameCode}/${roomId}/${sessionId}`;
+  const streamKey = `${gameCode}/${roomId}/${sessionId}/${viewerId}`;
   const [state, setState] = useState<StreamState | null>(null);
 
   useEffect(() => {
@@ -202,6 +212,27 @@ export function useSessionEvents({
       }
       stream?.close();
       stream = undefined;
+    };
+
+    // Причина закрытия потока сервером — по перечитанной комнате.
+    const verify = async () => {
+      let denied = false;
+      try {
+        const room = await queryClient.query({
+          ...getGetRoomQueryOptions(roomId),
+          staleTime: 0,
+        });
+        denied =
+          !room.members.some(member => member.id === viewerId) ||
+          room.session?.id !== sessionId;
+      } catch (error) {
+        // Сеть и 5xx — не отказ: обёртка переподключается дальше.
+        denied = isApiError(error) && error.status >= 400 && error.status < 500;
+      }
+      if (denied && !stopped) {
+        stop();
+        report('denied');
+      }
     };
 
     const resync = () => {
@@ -256,8 +287,11 @@ export function useSessionEvents({
               return;
           }
         },
-        onError: ({final}) => {
+        onError: ({closed, final}) => {
           report(final ? 'closed' : 'reconnecting');
+          if (closed && !final) {
+            void verify();
+          }
         },
         onInvalid: () => {
           // Сообщение не по контракту пропущено — состояние могло разойтись.
@@ -271,7 +305,7 @@ export function useSessionEvents({
 
     open();
     return stop;
-  }, [gameCode, queryClient, roomId, rules, sessionId, streamKey]);
+  }, [gameCode, queryClient, roomId, rules, sessionId, streamKey, viewerId]);
 
   // Новый поток ещё ничего не сообщил — он подключается.
   return state?.stream === streamKey ? state.status : 'connecting';

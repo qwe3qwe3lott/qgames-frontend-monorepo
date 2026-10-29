@@ -71,7 +71,7 @@ const joined = (seq: number) =>
 function fold(messages: RoomStreamEventOutput[]): RoomStreamData {
   let data: RoomStreamData | undefined;
   for (const item of messages) {
-    const result = applyRoomStreamMessage(data, item);
+    const result = applyRoomStreamMessage(data, item, ALICE);
     if (result.type !== 'applied') {
       throw new Error(`сообщение не применилось: ${result.type}`);
     }
@@ -139,7 +139,9 @@ describe('applyRoomStreamMessage', () => {
   it('повтор уже применённого события пропускается', () => {
     const data = fold([snapshot(4), joined(5)]);
 
-    expect(applyRoomStreamMessage(data, joined(5))).toEqual({type: 'skipped'});
+    expect(applyRoomStreamMessage(data, joined(5), ALICE)).toEqual({
+      type: 'skipped',
+    });
   });
 
   it.each<[string, RoomStreamData | undefined, RoomStreamEventOutput]>([
@@ -159,7 +161,7 @@ describe('applyRoomStreamMessage', () => {
       patchEvent(5, 'PATCH', 'owner-changed', {path: [], value: {ownerId: 7}}),
     ],
   ])('рассинхронизация: %s', (_, current, event) => {
-    expect(applyRoomStreamMessage(current, event).type).toBe('resync');
+    expect(applyRoomStreamMessage(current, event, ALICE).type).toBe('resync');
   });
 
   it('удаление комнаты заканчивает поток', () => {
@@ -167,7 +169,32 @@ describe('applyRoomStreamMessage', () => {
       applyRoomStreamMessage(
         fold([snapshot(4)]),
         patchEvent(5, 'INFO', 'room-deleted', {}),
+        ALICE,
       ),
     ).toEqual({type: 'ended'});
+  });
+
+  it('исключение зрителя заканчивает поток', () => {
+    const data = fold([snapshot(4), joined(5)]);
+
+    expect(
+      applyRoomStreamMessage(
+        data,
+        patchEvent(6, 'INFO', 'member-kicked', {userId: BOB}),
+        BOB,
+      ),
+    ).toEqual({type: 'kicked'});
+  });
+
+  it('исключение другого участника применяется как обычное событие', () => {
+    const data = fold([
+      snapshot(4),
+      joined(5),
+      patchEvent(6, 'INFO', 'member-kicked', {userId: BOB}),
+      patchEvent(7, 'DELETE', 'member-left', {path: ['members', {id: BOB}]}),
+    ]);
+
+    expect(data.seq).toBe(7);
+    expect(data.room.members.map(m => m.id)).toEqual([ALICE]);
   });
 });

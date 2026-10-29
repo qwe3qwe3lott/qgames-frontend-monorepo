@@ -11,6 +11,12 @@ import {
   DialogTrigger,
 } from '@qgames/ui/components/Dialog';
 import {toast} from '@qgames/ui/components/Sonner';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@qgames/ui/components/Tooltip';
+import {Crown} from 'lucide-react';
 
 import {
   memberName,
@@ -56,11 +62,21 @@ export function TransferOwnershipButton({
 
   return (
     <Dialog>
-      <DialogTrigger asChild>
-        <Button size="sm" variant="ghost" disabled={transfer.isPending}>
-          Передать владение
-        </Button>
-      </DialogTrigger>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <DialogTrigger asChild>
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              aria-label="Передать владение"
+              disabled={transfer.isPending}
+            >
+              <Crown />
+            </Button>
+          </DialogTrigger>
+        </TooltipTrigger>
+        <TooltipContent>Передать владение</TooltipContent>
+      </Tooltip>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Передать владение комнатой?</DialogTitle>

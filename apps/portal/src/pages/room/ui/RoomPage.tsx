@@ -1,7 +1,8 @@
 import {isApiError} from '@qgames/api';
 import {useGetGame, useGetRoom} from '@qgames/api/portal';
 import {PageLayout} from '@qgames/ui/components/PageLayout';
-import {useState} from 'react';
+import {useNavigate} from '@tanstack/react-router';
+import {useEffect, useState} from 'react';
 
 import type {GameEntry} from '@/entities/game';
 import {
@@ -44,8 +45,23 @@ export function RoomPage({game, roomId, viewerId}: RoomPageProps) {
   // Пока страница открыта и комната доступна, пользователь в ней.
   const presence = useRoomPresence(
     roomId,
+    viewerId,
     !isFinalError(probe.error) && !refused,
   );
+  const navigate = useNavigate();
+  // Владелец исключил пользователя: уводим на страницу игры, она покажет
+  // причину. Это не бан — войти снова можно по ссылке на комнату.
+  const kicked = presence.status === 'kicked';
+  useEffect(() => {
+    if (kicked) {
+      void navigate({
+        to: '/games/$gameCode/rooms',
+        params: {gameCode: game.code},
+        search: {kicked: true},
+        replace: true,
+      });
+    }
+  }, [kicked, navigate, game.code]);
   const stream = useRoomStream(roomId);
   const pageData = {'data-testid': testIds.root, 'data-room-id': roomId};
 

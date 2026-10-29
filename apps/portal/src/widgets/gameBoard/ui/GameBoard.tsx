@@ -57,6 +57,7 @@ function Board({
     gameCode: room.gameCode,
     roomId: room.id,
     sessionId: session.id,
+    viewerId,
     rules: module,
   });
   const data = useSession(session.id);
@@ -71,6 +72,12 @@ function Board({
       {status === 'reconnecting' ? (
         <p className="text-sm text-destructive" role="alert">
           Нет связи с партией — переподключаемся…
+        </p>
+      ) : null}
+      {status === 'denied' ? (
+        <p className="text-sm text-destructive" role="alert">
+          Партия недоступна: её уже нет или вы больше не участник комнаты.
+          Обновите страницу, чтобы попробовать снова.
         </p>
       ) : null}
       {data === undefined ? (

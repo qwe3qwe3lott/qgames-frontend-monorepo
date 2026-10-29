@@ -33,10 +33,11 @@ const RESYNC_MAX_MS = 30_000;
  * Состояние потока комнаты: `connecting` — первое подключение, `open` — поток
  * идёт, `reconnecting` — связь или события потеряны, идёт переподключение за
  * свежим снапшотом, `closed` — поток закрыт насовсем (комната удалена, сессию
- * не обновить или поток выключен).
+ * не обновить или поток выключен), `kicked` — владелец исключил пользователя
+ * из комнаты, поток закрыт сервером и сам не переоткрывается.
  */
 export type RoomEventsStatus =
-  'connecting' | 'open' | 'reconnecting' | 'closed';
+  'connecting' | 'open' | 'reconnecting' | 'closed' | 'kicked';
 
 export interface RoomEvents {
   status: RoomEventsStatus;
@@ -61,9 +62,14 @@ interface StreamState {
  * сервером (комнаты нет, мест нет, комната удалена), он перечитывается, и
  * страница показывает причину.
  *
+ * @param viewerId пользователь страницы: его исключение закрывает поток.
  * @param enabled false — поток закрыт (и не открывается).
  */
-export function useRoomEvents(roomId: string, enabled: boolean): RoomEvents {
+export function useRoomEvents(
+  roomId: string,
+  viewerId: string,
+  enabled: boolean,
+): RoomEvents {
   const queryClient = useQueryClient();
   // Смена номера переоткрывает поток.
   const [generation, setGeneration] = useState(0);
@@ -134,6 +140,7 @@ export function useRoomEvents(roomId: string, enabled: boolean): RoomEvents {
           const result = applyRoomStreamMessage(
             queryClient.getQueryData<RoomStreamData>(queryKey),
             message,
+            viewerId,
           );
           switch (result.type) {
             case 'applied':
@@ -153,6 +160,10 @@ export function useRoomEvents(roomId: string, enabled: boolean): RoomEvents {
               stop();
               report('closed');
               void invalidateRoom(queryClient, roomId);
+              return;
+            case 'kicked':
+              stop();
+              report('kicked');
               return;
           }
         },
@@ -176,7 +187,7 @@ export function useRoomEvents(roomId: string, enabled: boolean): RoomEvents {
 
     open();
     return stop;
-  }, [enabled, queryClient, roomId, streamKey]);
+  }, [enabled, queryClient, roomId, streamKey, viewerId]);
 
   let status: RoomEventsStatus = 'closed';
   if (enabled) {

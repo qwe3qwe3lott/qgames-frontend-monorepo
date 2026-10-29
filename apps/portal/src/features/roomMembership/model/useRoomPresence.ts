@@ -13,13 +13,15 @@ export interface RoomPresence {
  * партии возвращается на своё место), закрытие последнего подключения
  * пользователя — выход на сервере. Явных входа и выхода нет.
  *
+ * @param viewerId пользователь страницы.
  * @param enabled false — поток не нужен (комнаты нет или она недоступна).
  */
 export function useRoomPresence(
   roomId: string,
+  viewerId: string,
   enabled: boolean,
 ): RoomPresence {
-  const {status, reconnect} = useRoomEvents(roomId, enabled);
+  const {status, reconnect} = useRoomEvents(roomId, viewerId, enabled);
 
   // Страница вернулась из bfcache: соединение там уже не живо — открываем
   // поток заново, снапшот обновит комнату.
