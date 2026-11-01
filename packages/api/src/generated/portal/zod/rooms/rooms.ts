@@ -19,9 +19,7 @@ import {
  * @summary Создать комнату
  */
 export const CreateRoomParams = zod.object({
-  gameCode: zod
-    .enum(['nothing', 'carcassonne', 'checkers'])
-    .describe('Код игры'),
+  gameCode: zod.enum(['nothing', 'croissant', 'checkers']).describe('Код игры'),
 });
 
 export const CreateRoomResponse = RoomResponse;
@@ -31,9 +29,7 @@ export const CreateRoomResponse = RoomResponse;
  * @summary Сделать ход
  */
 export const MakeMoveParams = zod.object({
-  gameCode: zod
-    .enum(['nothing', 'carcassonne', 'checkers'])
-    .describe('Код игры'),
+  gameCode: zod.enum(['nothing', 'croissant', 'checkers']).describe('Код игры'),
   roomId: zod.uuid(),
 });
 
@@ -52,9 +48,7 @@ export const MakeMoveResponse = zod.void();
  * @summary Поток событий партии
  */
 export const SessionEventsParams = zod.object({
-  gameCode: zod
-    .enum(['nothing', 'carcassonne', 'checkers'])
-    .describe('Код игры'),
+  gameCode: zod.enum(['nothing', 'croissant', 'checkers']).describe('Код игры'),
   roomId: zod.uuid(),
   sessionId: zod.uuid(),
 });
@@ -66,9 +60,7 @@ export const SessionEventsResponse = zod.unknown();
  * @summary Изменить настройки комнаты
  */
 export const UpdateRoomSettingsParams = zod.object({
-  gameCode: zod
-    .enum(['nothing', 'carcassonne', 'checkers'])
-    .describe('Код игры'),
+  gameCode: zod.enum(['nothing', 'croissant', 'checkers']).describe('Код игры'),
   roomId: zod.uuid(),
 });
 

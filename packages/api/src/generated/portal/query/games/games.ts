@@ -184,7 +184,7 @@ export function useListGames<
 }
 
 export const getGetGameUrl = (
-  gameCode: 'nothing' | 'carcassonne' | 'checkers',
+  gameCode: 'nothing' | 'croissant' | 'checkers',
 ) => {
   return `/api/games/${gameCode}`;
 };
@@ -194,7 +194,7 @@ export const getGetGameUrl = (
  * @summary Игра
  */
 export const getGame = async (
-  gameCode: 'nothing' | 'carcassonne' | 'checkers',
+  gameCode: 'nothing' | 'croissant' | 'checkers',
   options?: Parameters<typeof apiFetch>[1],
 ): Promise<GameDetailsResponse> => {
   return apiFetch<GameDetailsResponse>(getGetGameUrl(gameCode), {
@@ -204,7 +204,7 @@ export const getGame = async (
 };
 
 export const getGetGameQueryKey = (
-  gameCode: 'nothing' | 'carcassonne' | 'checkers',
+  gameCode: 'nothing' | 'croissant' | 'checkers',
 ) => {
   return [`/api/games/${gameCode}`] as const;
 };
@@ -213,7 +213,7 @@ export const getGetGameQueryOptions = <
   TData = Awaited<ReturnType<typeof getGame>>,
   TError = ErrorType<ProblemDetail>,
 >(
-  gameCode: 'nothing' | 'carcassonne' | 'checkers',
+  gameCode: 'nothing' | 'croissant' | 'checkers',
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof getGame>>, TError, TData>
@@ -248,7 +248,7 @@ export function useGetGame<
   TData = Awaited<ReturnType<typeof getGame>>,
   TError = ErrorType<ProblemDetail>,
 >(
-  gameCode: 'nothing' | 'carcassonne' | 'checkers',
+  gameCode: 'nothing' | 'croissant' | 'checkers',
   options: {
     query: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof getGame>>, TError, TData>
@@ -271,7 +271,7 @@ export function useGetGame<
   TData = Awaited<ReturnType<typeof getGame>>,
   TError = ErrorType<ProblemDetail>,
 >(
-  gameCode: 'nothing' | 'carcassonne' | 'checkers',
+  gameCode: 'nothing' | 'croissant' | 'checkers',
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof getGame>>, TError, TData>
@@ -292,7 +292,7 @@ export function useGetGame<
   TData = Awaited<ReturnType<typeof getGame>>,
   TError = ErrorType<ProblemDetail>,
 >(
-  gameCode: 'nothing' | 'carcassonne' | 'checkers',
+  gameCode: 'nothing' | 'croissant' | 'checkers',
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof getGame>>, TError, TData>
@@ -309,7 +309,7 @@ export function useGetGame<
   TData = Awaited<ReturnType<typeof getGame>>,
   TError = ErrorType<ProblemDetail>,
 >(
-  gameCode: 'nothing' | 'carcassonne' | 'checkers',
+  gameCode: 'nothing' | 'croissant' | 'checkers',
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof getGame>>, TError, TData>
@@ -331,7 +331,7 @@ export function useGetGame<
 }
 
 export const getToAdvancedSettingsUrl = (
-  gameCode: 'nothing' | 'carcassonne' | 'checkers',
+  gameCode: 'nothing' | 'croissant' | 'checkers',
 ) => {
   return `/api/games/${gameCode}/advanced-settings`;
 };
@@ -341,7 +341,7 @@ export const getToAdvancedSettingsUrl = (
  * @summary Перевести simple-настройки в advanced
  */
 export const toAdvancedSettings = async (
-  gameCode: 'nothing' | 'carcassonne' | 'checkers',
+  gameCode: 'nothing' | 'croissant' | 'checkers',
   gameSimpleSettingsDto: GameSimpleSettingsDto,
   options?: Parameters<typeof apiFetch>[1],
 ): Promise<GameAdvancedSettingsDto> => {
@@ -424,7 +424,7 @@ export type ToAdvancedSettingsMutationResult = NonNullable<
 export type ToAdvancedSettingsMutationBody = GameSimpleSettingsDto;
 export type ToAdvancedSettingsMutationError = ErrorType<ProblemDetail>;
 export type ToAdvancedSettingsMutationVariables = {
-  gameCode: 'nothing' | 'carcassonne' | 'checkers';
+  gameCode: 'nothing' | 'croissant' | 'checkers';
   data: GameSimpleSettingsDto;
 };
 

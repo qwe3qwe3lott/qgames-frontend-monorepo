@@ -24,9 +24,7 @@ export const ListGamesResponse = GameListResponse;
  * @summary Игра
  */
 export const GetGameParams = zod.object({
-  gameCode: zod
-    .enum(['nothing', 'carcassonne', 'checkers'])
-    .describe('Код игры'),
+  gameCode: zod.enum(['nothing', 'croissant', 'checkers']).describe('Код игры'),
 });
 
 export const GetGameResponse = GameDetailsResponse;
@@ -36,9 +34,7 @@ export const GetGameResponse = GameDetailsResponse;
  * @summary Перевести simple-настройки в advanced
  */
 export const ToAdvancedSettingsParams = zod.object({
-  gameCode: zod
-    .enum(['nothing', 'carcassonne', 'checkers'])
-    .describe('Код игры'),
+  gameCode: zod.enum(['nothing', 'croissant', 'checkers']).describe('Код игры'),
 });
 
 export const ToAdvancedSettingsBody = GameSimpleSettingsDto;

@@ -413,7 +413,7 @@ export type GameRulesDto = zod.input<typeof GameRulesDto>;
 export type GameRulesDtoOutput = zod.output<typeof GameRulesDto>;
 
 export const GameDetailsResponse = zod.object({
-  code: zod.enum(['nothing', 'carcassonne', 'checkers']),
+  code: zod.enum(['nothing', 'croissant', 'checkers']),
   description: zod.string(),
   rules: GameRulesDto,
   title: zod.string(),
@@ -423,7 +423,7 @@ export type GameDetailsResponse = zod.input<typeof GameDetailsResponse>;
 export type GameDetailsResponseOutput = zod.output<typeof GameDetailsResponse>;
 
 export const GameSummaryDto = zod.object({
-  code: zod.enum(['nothing', 'carcassonne', 'checkers']),
+  code: zod.enum(['nothing', 'croissant', 'checkers']),
   description: zod.string(),
   title: zod.string(),
 });
@@ -713,7 +713,7 @@ export type SessionResponseOutput = zod.output<typeof SessionResponse>;
 
 export const RoomResponse = zod.object({
   createdAt: zod.iso.datetime({offset: true}),
-  gameCode: zod.enum(['nothing', 'carcassonne', 'checkers']),
+  gameCode: zod.enum(['nothing', 'croissant', 'checkers']),
   id: zod.uuid(),
   maxPlayers: zod.int(),
   members: zod.array(RoomMemberResponse),
@@ -842,7 +842,7 @@ export type SessionEventPut = zod.input<typeof SessionEventPut>;
 export type SessionEventPutOutput = zod.output<typeof SessionEventPut>;
 
 export const SessionGameDto = zod.object({
-  code: zod.enum(['nothing', 'carcassonne', 'checkers']),
+  code: zod.enum(['nothing', 'croissant', 'checkers']),
   settings: GameAdvancedSettingsDto,
 });
 

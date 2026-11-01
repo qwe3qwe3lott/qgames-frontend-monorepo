@@ -53,7 +53,7 @@ const withQueryKey = <T extends object, K>(
 };
 
 export const getCreateRoomUrl = (
-  gameCode: 'nothing' | 'carcassonne' | 'checkers',
+  gameCode: 'nothing' | 'croissant' | 'checkers',
 ) => {
   return `/api/games/${gameCode}/rooms`;
 };
@@ -63,7 +63,7 @@ export const getCreateRoomUrl = (
  * @summary Создать комнату
  */
 export const createRoom = async (
-  gameCode: 'nothing' | 'carcassonne' | 'checkers',
+  gameCode: 'nothing' | 'croissant' | 'checkers',
   options?: Parameters<typeof apiFetch>[1],
 ): Promise<RoomResponse> => {
   return apiFetch<RoomResponse>(getCreateRoomUrl(gameCode), {
@@ -118,7 +118,7 @@ export type CreateRoomMutationResult = NonNullable<
 
 export type CreateRoomMutationError = ErrorType<ProblemDetail>;
 export type CreateRoomMutationVariables = {
-  gameCode: 'nothing' | 'carcassonne' | 'checkers';
+  gameCode: 'nothing' | 'croissant' | 'checkers';
 };
 
 /**
@@ -147,7 +147,7 @@ export const useCreateRoom = <
   return useMutation(getCreateRoomMutationOptions(options), queryClient);
 };
 export const getMakeMoveUrl = (
-  gameCode: 'nothing' | 'carcassonne' | 'checkers',
+  gameCode: 'nothing' | 'croissant' | 'checkers',
   roomId: string,
 ) => {
   return `/api/games/${gameCode}/rooms/${roomId}/moves`;
@@ -158,7 +158,7 @@ export const getMakeMoveUrl = (
  * @summary Сделать ход
  */
 export const makeMove = async (
-  gameCode: 'nothing' | 'carcassonne' | 'checkers',
+  gameCode: 'nothing' | 'croissant' | 'checkers',
   roomId: string,
   moveRequest: MoveRequest,
   options?: Parameters<typeof apiFetch>[1],
@@ -241,7 +241,7 @@ export type MakeMoveMutationResult = NonNullable<
 export type MakeMoveMutationBody = MoveRequest;
 export type MakeMoveMutationError = ErrorType<ProblemDetail>;
 export type MakeMoveMutationVariables = {
-  gameCode: 'nothing' | 'carcassonne' | 'checkers';
+  gameCode: 'nothing' | 'croissant' | 'checkers';
   roomId: string;
   data: MoveRequest;
 };
@@ -272,7 +272,7 @@ export const useMakeMove = <
   return useMutation(getMakeMoveMutationOptions(options), queryClient);
 };
 export const getUpdateRoomSettingsUrl = (
-  gameCode: 'nothing' | 'carcassonne' | 'checkers',
+  gameCode: 'nothing' | 'croissant' | 'checkers',
   roomId: string,
 ) => {
   return `/api/games/${gameCode}/rooms/${roomId}/settings`;
@@ -283,7 +283,7 @@ export const getUpdateRoomSettingsUrl = (
  * @summary Изменить настройки комнаты
  */
 export const updateRoomSettings = async (
-  gameCode: 'nothing' | 'carcassonne' | 'checkers',
+  gameCode: 'nothing' | 'croissant' | 'checkers',
   roomId: string,
   updateRoomSettingsRequest: UpdateRoomSettingsRequest,
   options?: Parameters<typeof apiFetch>[1],
@@ -367,7 +367,7 @@ export type UpdateRoomSettingsMutationResult = NonNullable<
 export type UpdateRoomSettingsMutationBody = UpdateRoomSettingsRequest;
 export type UpdateRoomSettingsMutationError = ErrorType<ProblemDetail>;
 export type UpdateRoomSettingsMutationVariables = {
-  gameCode: 'nothing' | 'carcassonne' | 'checkers';
+  gameCode: 'nothing' | 'croissant' | 'checkers';
   roomId: string;
   data: UpdateRoomSettingsRequest;
 };
