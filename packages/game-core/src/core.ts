@@ -29,12 +29,15 @@ export type SessionTimer = SessionTimerDtoOutput;
 export type SessionResult = SessionResultDtoOutput;
 
 /**
- * Блоки core в состоянии любой игры (как на бэкенде): игроки, очерёдность,
- * часы (null — партия без таймера) и итог (null — итога нет: партия идёт или
- * отменена). Игра — надстройка над core: механику, которая ей не нужна, она
- * просто не использует.
+ * Блоки core в состоянии любой игры (как на бэкенде): стадия партии, игроки,
+ * очерёдность, часы (null — стадия без таймера) и итог (null — итога нет:
+ * партия идёт или отменена). Игра — надстройка над core: механику, которая ей
+ * не нужна, она просто не использует. Состояние — всегда состояние текущей
+ * стадии: смена стадии заменяет его целиком.
  */
 export interface CoreState {
+  /** Текущая стадия партии (у игры из одной стадии — `play`). */
+  stage: string;
   players: readonly SessionPlayer[];
   turns: SessionTurns;
   timer?: SessionTimer | null | undefined;
@@ -53,6 +56,7 @@ export function isCoreState(
   state: SessionState,
 ): state is SessionState & CoreState {
   return (
+    typeof state['stage'] === 'string' &&
     PlayersSchema.safeParse(state['players']).success &&
     SessionTurnsDto.safeParse(state['turns']).success &&
     TimerSchema.safeParse(state['timer']).success &&
@@ -70,10 +74,16 @@ export function moveOptionsOf(
 
 /** Часы идущей партии в виде для UI. */
 export interface ActiveTimer {
+  /**
+   * `PLAYERS` — часы игроков (у каждого свой запас), `STAGE` — общий
+   * отсчёт стадии, где ходят сразу несколько игроков (`clocks` пуст).
+   */
+  kind: SessionTimer['kind'];
   paused: boolean;
   /**
-   * Когда кончится время ходящего: начало хода + запас (+ задержка) (ISO
-   * 8601, часы сервера); null — ход ничей.
+   * Когда кончится время: у часов игроков — время ходящего (начало хода +
+   * запас + задержка), у отсчёта стадии — время стадии (ISO 8601, часы
+   * сервера); null — ход ничей.
    */
   deadline: string | null;
   /** С какого момента пауза (ISO 8601, часы сервера); null — таймер идёт. */
@@ -114,6 +124,7 @@ export function activeTimer(session: SessionData): ActiveTimer | null {
     return null;
   }
   return {
+    kind: timer.kind,
     paused: timer.status === 'PAUSED',
     deadline: timer.deadline ?? null,
     pausedAt: timer.pausedAt ?? null,
@@ -141,6 +152,24 @@ export function playerClock(
     // Инкремент прибавляет сервер к запасу после хода, в отсчёте участвует только задержка.
     delayMs: timer.bonusType === 'DELAY' ? timer.bonusSeconds * 1000 : 0,
     deadline: playerId === currentPlayerId ? timer.deadline : null,
+    paused: timer.paused,
+    pausedAt: timer.pausedAt,
+  };
+}
+
+/**
+ * Общий отсчёт стадии для показа (`kind = STAGE`): тот же вид, что у часов
+ * игрока, запас не ограничивает — остаток считается только по дедлайну. null —
+ * это часы игроков или отсчёт без дедлайна.
+ */
+export function stageClock(timer: ActiveTimer): PlayerClock | null {
+  if (timer.kind !== 'STAGE' || timer.deadline === null) {
+    return null;
+  }
+  return {
+    remainingMs: Number.MAX_SAFE_INTEGER,
+    delayMs: 0,
+    deadline: timer.deadline,
     paused: timer.paused,
     pausedAt: timer.pausedAt,
   };

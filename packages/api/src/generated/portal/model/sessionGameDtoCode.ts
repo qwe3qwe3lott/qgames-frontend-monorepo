@@ -10,6 +10,6 @@ export type SessionGameDtoCode =
 
 export const SessionGameDtoCode = {
   nothing: 'nothing',
-  carcassonne: 'carcassonne',
+  croissant: 'croissant',
   checkers: 'checkers',
 } as const;

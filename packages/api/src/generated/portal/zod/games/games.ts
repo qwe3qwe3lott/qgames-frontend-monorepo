@@ -20,13 +20,11 @@ import {
 export const ListGamesResponse = GameListResponse;
 
 /**
- * Название, описание и статус публикации игры, а также параметры правил (rules): число игроков, границы лимита наблюдателей, границы часов, границы настроек игры и пресеты времени, настройки по умолчанию. По ним строятся карточка игры и форма настроек комнаты. Скрытая игра доступна по прямой ссылке. Доступна без аутентификации.
+ * Название, описание и статус публикации игры, а также параметры правил (rules): число игроков, границы лимита наблюдателей, границы часов, границы настроек игры и пресеты времени, настройки по умолчанию. По ним строятся карточка игры и форма настроек комнаты. В assets — статичные данные игры для отрисовки партии (у «Круассана» — каталог тайлов): состояние партии ссылается на них по кодам. Скрытая игра доступна по прямой ссылке. Доступна без аутентификации.
  * @summary Игра
  */
 export const GetGameParams = zod.object({
-  gameCode: zod
-    .enum(['nothing', 'carcassonne', 'checkers'])
-    .describe('Код игры'),
+  gameCode: zod.enum(['nothing', 'croissant', 'checkers']).describe('Код игры'),
 });
 
 export const GetGameResponse = GameDetailsResponse;
@@ -36,9 +34,7 @@ export const GetGameResponse = GameDetailsResponse;
  * @summary Перевести simple-настройки в advanced
  */
 export const ToAdvancedSettingsParams = zod.object({
-  gameCode: zod
-    .enum(['nothing', 'carcassonne', 'checkers'])
-    .describe('Код игры'),
+  gameCode: zod.enum(['nothing', 'croissant', 'checkers']).describe('Код игры'),
 });
 
 export const ToAdvancedSettingsBody = GameSimpleSettingsDto;

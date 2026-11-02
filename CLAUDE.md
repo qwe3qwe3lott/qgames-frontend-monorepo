@@ -171,7 +171,7 @@ Node.js 24 LTS, pnpm 12, Turborepo 2, TypeScript 6.0, React 19, Rsbuild 2 (Rspac
 
 ```bash
 pnpm install                 # зависимости (только корневой node_modules)
-pnpm dev                     # все приложения в dev-режиме
+pnpm dev                     # все приложения в dev-режиме (pnpm --parallel, не turbo)
 pnpm --filter @qgames/portal dev   # одно приложение
 pnpm build                   # сборка всего
 pnpm typecheck               # проверка типов

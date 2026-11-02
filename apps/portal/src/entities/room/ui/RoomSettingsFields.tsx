@@ -1,9 +1,11 @@
 import {
   CheckersAdvancedSettingsDtoEndgameRule,
   CheckersAdvancedSettingsDtoFirstColor,
+  CheckersSimpleSettingsDtoColorAssignment,
   TimeControlDtoBonusType,
   type CheckersRulePresetDto,
   type CheckersSettingsLimitsDto,
+  type CroissantSettingsLimitsDto,
   type GameRulesDto,
   type NothingSettingsLimitsDto,
 } from '@qgames/api/portal/model';
@@ -25,12 +27,14 @@ import type {ReactNode} from 'react';
 import {Controller, useWatch, type UseFormReturn} from 'react-hook-form';
 
 import {
+  CHECKERS_COLOR_ASSIGNMENT_LABELS,
   CHECKERS_COLOR_LABELS,
   CHECKERS_ENDGAME_RULE_LABELS,
   CHECKERS_RULE_FLAGS,
   CHECKERS_RULE_LABELS,
   CHECKERS_TIME_LABELS,
   CHECKERS_VARIANT_LABELS,
+  CROISSANT_TIME_LABELS,
   formatBoardSize,
   formatClock,
   formatDrawQuietMoves,
@@ -131,7 +135,9 @@ function Segments({
 type SegmentedName =
   | 'simple.variant'
   | 'simple.time'
+  | 'simple.colorAssignment'
   | 'advanced.boardSize'
+  | 'advanced.colorAssignment'
   | 'advanced.firstColor'
   | 'advanced.endgameRule'
   | 'advanced.drawQuietMoves'
@@ -285,6 +291,64 @@ function RoundsField({
   );
 }
 
+/** Simple «Круассана»: только пресет времени — правила у игры одни. */
+function CroissantSimpleFields({
+  form,
+  limits,
+}: Pick<FormProps, 'form'> & {limits: CroissantSettingsLimitsDto}) {
+  const options: Option[] = [
+    {value: 'NONE', label: CROISSANT_TIME_LABELS.NONE},
+    ...limits.timePresets.map(item => ({
+      value: item.time,
+      label: CROISSANT_TIME_LABELS[item.time],
+      hint: formatClock(item),
+    })),
+  ];
+  return (
+    <SegmentedField
+      form={form}
+      name="simple.time"
+      legend="Время"
+      options={options}
+    />
+  );
+}
+
+/** Число кондитеров у игрока в advanced «Круассана». */
+function CroissantConfectionersField({
+  form,
+  idPrefix,
+  limits,
+}: FormProps & {limits: CroissantSettingsLimitsDto}) {
+  const {confectioners} = limits;
+  const name = 'advanced.confectioners' as const;
+  const {error} = form.getFieldState(name, form.formState);
+  const id = `${idPrefix}-advanced-confectioners`;
+  return (
+    <Field data-invalid={error !== undefined}>
+      <FieldLabel htmlFor={id}>Кондитеров у игрока</FieldLabel>
+      <Input
+        id={id}
+        data-testid={testIds.field}
+        data-field={name}
+        type="number"
+        inputMode="numeric"
+        min={confectioners.min}
+        max={confectioners.max}
+        step={1}
+        className="max-w-24"
+        aria-invalid={error !== undefined}
+        {...form.register(name, {valueAsNumber: true})}
+      />
+      <FieldDescription>
+        От {confectioners.min} до {confectioners.max}: сколько фишек кондитеров
+        получает каждый пекарь
+      </FieldDescription>
+      <FieldError errors={[error]} />
+    </Field>
+  );
+}
+
 function variantOptions(limits: CheckersSettingsLimitsDto): Option[] {
   return limits.variants.map(item => ({
     value: item,
@@ -324,7 +388,21 @@ function NothingSimpleFields({
   );
 }
 
-/** Simple шашек: вариант правил и официальный контроль времени варианта. */
+const CHECKERS_COLOR_ASSIGNMENTS = Object.values(
+  CheckersSimpleSettingsDtoColorAssignment,
+);
+
+/** Распределение цветов шашек: случайно или кто первый выберет в начале партии. */
+const CHECKERS_COLOR_ASSIGNMENT_OPTIONS: Option[] =
+  CHECKERS_COLOR_ASSIGNMENTS.map(item => ({
+    value: item,
+    label: CHECKERS_COLOR_ASSIGNMENT_LABELS[item],
+  }));
+
+/**
+ * Simple шашек: вариант правил, распределение цветов и официальный контроль
+ * времени варианта.
+ */
 function CheckersSimpleFields({
   form,
   limits,
@@ -347,6 +425,12 @@ function CheckersSimpleFields({
         name="simple.variant"
         legend="Вариант правил"
         options={variantOptions(limits)}
+      />
+      <SegmentedField
+        form={form}
+        name="simple.colorAssignment"
+        legend="Цвета"
+        options={CHECKERS_COLOR_ASSIGNMENT_OPTIONS}
       />
       <SegmentedField
         form={form}
@@ -412,7 +496,8 @@ const CHECKERS_ENDGAME_RULES = Object.values(
 
 /**
  * Advanced шашек — одна рамка, которую заполняет пресет варианта: доска, первый
- * ход, правила хода галочками и правила ничьих.
+ * ход, правила хода галочками и правила ничьих; распределение цветов пресет не
+ * трогает.
  */
 function CheckersAdvancedFields({
   form,
@@ -440,6 +525,12 @@ function CheckersAdvancedFields({
             value: color,
             label: CHECKERS_COLOR_LABELS[color],
           }))}
+        />
+        <SegmentedField
+          form={form}
+          name="advanced.colorAssignment"
+          legend="Цвета"
+          options={CHECKERS_COLOR_ASSIGNMENT_OPTIONS}
         />
       </div>
       <FieldSet className="gap-2">
@@ -737,6 +828,8 @@ function SimpleFields({
       );
     case 'checkers':
       return <CheckersSimpleFields form={form} limits={limits} />;
+    case 'croissant':
+      return <CroissantSimpleFields form={form} limits={limits} />;
   }
 }
 
@@ -754,6 +847,12 @@ function AdvancedFields({
           form={form}
           idPrefix={idPrefix}
           name="advanced.rounds"
+          limits={limits}
+        />
+      ) : limits.gameCode === 'croissant' ? (
+        <CroissantConfectionersField
+          form={form}
+          idPrefix={idPrefix}
           limits={limits}
         />
       ) : (

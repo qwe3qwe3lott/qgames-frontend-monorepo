@@ -2,8 +2,10 @@ import type {
   CheckersAdvancedSettingsDto,
   CheckersAdvancedSettingsDtoEndgameRule,
   CheckersAdvancedSettingsDtoFirstColor,
+  CheckersSimpleSettingsDtoColorAssignment,
   CheckersSimpleSettingsDtoTime,
   CheckersSimpleSettingsDtoVariant,
+  CroissantSimpleSettingsDtoTime,
   GameSimpleSettingsDto,
   NothingSimpleSettingsDtoTime,
   RoomSettingsDto,
@@ -34,6 +36,14 @@ export const CHECKERS_VARIANT_LABELS: Readonly<
   ENGLISH: 'Английские',
 };
 
+/** Распределение цветов шашек (`CheckersColorAssignment`). */
+export const CHECKERS_COLOR_ASSIGNMENT_LABELS: Readonly<
+  Record<CheckersSimpleSettingsDtoColorAssignment, string>
+> = {
+  RANDOM: 'Случайно',
+  FIRST_PICK: 'Кто первый выберет',
+};
+
 /** Пресеты времени шашек (`CheckersTime`). */
 export const CHECKERS_TIME_LABELS: Readonly<
   Record<CheckersSimpleSettingsDtoTime, string>
@@ -50,6 +60,16 @@ export const NOTHING_TIME_LABELS: Readonly<
 > = {
   NONE: TIME_CONTROL_LABELS.none,
   CLASSIC: 'Классика',
+};
+
+/** Пресеты времени «Круассана» (`CroissantTime`). */
+export const CROISSANT_TIME_LABELS: Readonly<
+  Record<CroissantSimpleSettingsDtoTime, string>
+> = {
+  NONE: TIME_CONTROL_LABELS.none,
+  CLASSIC: 'Классика',
+  RAPID: 'Быстрые',
+  BLITZ: 'Блиц',
 };
 
 /** Цвет, который ходит первым (`CheckersColor`). */
@@ -103,6 +123,7 @@ export type CheckersRuleFlag = Exclude<
   | 'firstColor'
   | 'endgameRule'
   | 'drawQuietMoves'
+  | 'colorAssignment'
 >;
 
 /** Правила хода шашек в порядке показа. */
@@ -176,6 +197,11 @@ function gameSettingsRow({simple, advanced}: RoomSettingsDto): SettingsRow {
             value: CHECKERS_VARIANT_LABELS[simple.variant],
           }
         : {label: 'Доска', value: formatBoardSize(advanced.boardSize)};
+    case 'croissant':
+      return {
+        label: 'Кондитеров у игрока',
+        value: String(advanced.confectioners),
+      };
   }
 }
 
@@ -186,6 +212,8 @@ function presetLabel(simple: GameSimpleSettingsDto): string {
       return NOTHING_TIME_LABELS[simple.time];
     case 'checkers':
       return CHECKERS_TIME_LABELS[simple.time];
+    case 'croissant':
+      return CROISSANT_TIME_LABELS[simple.time];
   }
 }
 
@@ -211,16 +239,32 @@ export function isAdvancedSettings(settings: RoomSettingsDto): boolean {
   return settings.simple === undefined || settings.simple === null;
 }
 
+/** Как распределяются цвета (у шашек); у игр без цветов строки нет. */
+function colorsRows({advanced}: RoomSettingsDto): SettingsRow[] {
+  return advanced.gameCode === 'checkers'
+    ? [
+        {
+          label: 'Цвета',
+          value: CHECKERS_COLOR_ASSIGNMENT_LABELS[advanced.colorAssignment],
+        },
+      ]
+    : [];
+}
+
 /**
- * Строки описания настроек комнаты: при простых правилах — настройки игры и
- * время, при продвинутых их нет (они в `advancedSettingsRows`); места
- * наблюдателей — всегда.
+ * Строки описания настроек комнаты: при простых правилах — настройки игры,
+ * распределение цветов и время, при продвинутых их нет (они в
+ * `advancedSettingsRows`); места наблюдателей — всегда.
  */
 export function roomSettingsRows(settings: RoomSettingsDto): SettingsRow[] {
   return [
     ...(isAdvancedSettings(settings)
       ? []
-      : [gameSettingsRow(settings), timeRow(settings)]),
+      : [
+          gameSettingsRow(settings),
+          ...colorsRows(settings),
+          timeRow(settings),
+        ]),
     {
       label: 'Мест наблюдателей',
       value: String(settings.room.maxSpectators),
@@ -248,6 +292,7 @@ export function advancedSettingsRows(settings: RoomSettingsDto): SettingsRow[] {
           label: 'Первыми ходят',
           value: CHECKERS_COLOR_LABELS[advanced.firstColor],
         },
+        ...colorsRows(settings),
         ...CHECKERS_RULE_FLAGS.map(flag => ({
           label: CHECKERS_RULE_LABELS[flag],
           value: yesNo(advanced[flag]),
@@ -259,6 +304,14 @@ export function advancedSettingsRows(settings: RoomSettingsDto): SettingsRow[] {
         {
           label: 'Правила окончаний',
           value: CHECKERS_ENDGAME_RULE_LABELS[advanced.endgameRule],
+        },
+        timeRow(settings),
+      ];
+    case 'croissant':
+      return [
+        {
+          label: 'Кондитеров у игрока',
+          value: String(advanced.confectioners),
         },
         timeRow(settings),
       ];

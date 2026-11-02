@@ -4,6 +4,7 @@ export const ALICE = '0190a000-0000-7000-8000-000000000001';
 export const BOB = '0190a000-0000-7000-8000-000000000002';
 
 export const TIMER = {
+  kind: 'PLAYERS',
   status: 'RUNNING',
   deadline: '2026-10-21T10:00:30Z',
   pausedAt: null,
@@ -14,6 +15,7 @@ export const TIMER = {
 } as const;
 
 export const STATE = {
+  stage: 'play',
   players: [
     {id: ALICE, moveOptions: [{type: 'PASS'}]},
     {id: BOB, moveOptions: []},

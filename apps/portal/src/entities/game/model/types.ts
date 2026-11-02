@@ -1,3 +1,4 @@
+import type {GameAssetsDto} from '@qgames/api/portal/model';
 import type {GameStateRules, SessionData} from '@qgames/game-core';
 import type {PlayerCardProps} from '@qgames/game-ui/components/PlayerCard';
 import type {ComponentType} from 'react';
@@ -29,6 +30,12 @@ export interface GameBoardProps {
   viewerId: string;
   onMove: (move: GameMove) => void;
   movePending: boolean;
+  /**
+   * Статичные данные игры из её карточки (`GET /api/games/{gameCode}`,
+   * например каталог тайлов): одни на все партии, поэтому в состояние не
+   * входят. null — у игры их нет.
+   */
+  assets: GameAssetsDto | null;
 }
 
 export interface GamePlayerCardProps {
@@ -51,4 +58,11 @@ export interface GameModule extends GameStateRules {
   Board: ComponentType<GameBoardProps>;
   /** Нет — в списке игроков базовая карточка. */
   PlayerCard?: ComponentType<GamePlayerCardProps>;
+  /**
+   * Причины отказа хода (`reason` у 422 `MOVE_REJECTED`), которые значат
+   * «действие опоздало, состояние уже сменилось» (например, соперник первым
+   * выбрал цвет): снекбар по ним не показывается, новое состояние придёт
+   * потоком.
+   */
+  staleMoveReasons?: readonly string[];
 }

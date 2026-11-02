@@ -5,12 +5,14 @@
  * OpenAPI spec version: v0
  */
 import type {PlayerClockDto} from './playerClockDto';
+import type {SessionTimerDtoKind} from './sessionTimerDtoKind';
 import type {SessionTimerDtoStatus} from './sessionTimerDtoStatus';
 
 export interface SessionTimerDto {
   clocks: PlayerClockDto[];
   /** @nullable */
   deadline?: string | null;
+  kind: SessionTimerDtoKind;
   /** @nullable */
   pausedAt?: string | null;
   status: SessionTimerDtoStatus;

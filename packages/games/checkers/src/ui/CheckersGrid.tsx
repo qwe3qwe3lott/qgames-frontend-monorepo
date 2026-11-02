@@ -16,6 +16,11 @@ export interface CheckersGridProps {
   pieces: readonly CheckersPiece[];
   /** Чей цвет внизу доски: у чёрных доска перевёрнута. */
   bottomColor: CheckersColor;
+  /**
+   * Поворот доски зрителем, градусы (кратно 180): локальный вид поверх `bottomColor`. Растёт с каждым кликом, поэтому
+   * доска всегда крутится в одну сторону.
+   */
+  turn: number;
   /** Клетки последнего хода (путь). */
   lastMovePath: readonly Square[];
   /** Шашки, которыми можно ходить; при обязательном взятии — подсвечены. */
@@ -54,6 +59,7 @@ export function CheckersGrid({
   boardSize,
   pieces,
   bottomColor,
+  turn,
   lastMovePath,
   movableIds,
   mustCapture,
@@ -78,10 +84,11 @@ export function CheckersGrid({
       role="group"
       aria-label="Доска"
       data-testid={testIds.root}
-      className="grid w-full max-w-[min(100%,32rem)] overflow-hidden rounded-md border"
-      // Число столбцов приходит из правил партии — классом не выразить.
+      className="grid w-full max-w-[min(100%,32rem)] overflow-hidden rounded-md border transition-transform duration-300"
+      // Число столбцов приходит из правил партии, поворот — от зрителя: классом не выразить.
       style={{
         gridTemplateColumns: `repeat(${String(boardSize)}, minmax(0, 1fr))`,
+        transform: `rotate(${String(turn)}deg)`,
       }}
     >
       {rows.map(y =>
@@ -134,7 +141,10 @@ export function CheckersGrid({
                       : 'border-neutral-700 bg-neutral-900 text-amber-400',
                     selected && 'ring-4 ring-sky-400',
                     highlightCapture && !selected && 'ring-4 ring-orange-400',
+                    'transition-transform duration-300',
                   )}
+                  // Шашка поворачивается обратно: корона дамки не встаёт вверх ногами.
+                  style={{transform: `rotate(${String(-turn)}deg)`}}
                 >
                   {piece.kind === 'KING' ? (
                     <Crown className="size-1/2" aria-hidden />

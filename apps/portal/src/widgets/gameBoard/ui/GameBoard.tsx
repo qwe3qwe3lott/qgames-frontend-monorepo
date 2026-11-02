@@ -1,3 +1,4 @@
+import {useGetGame} from '@qgames/api/portal';
 import {Suspense, use} from 'react';
 
 import {
@@ -12,6 +13,7 @@ import {useSession, useSessionEvents} from '@/entities/session';
 import {useMoveControls} from '@/features/makeMove';
 
 import {ChunkErrorBoundary} from './ChunkErrorBoundary';
+import {StageCountdown} from './StageCountdown';
 
 export interface GameBoardProps {
   game: GameEntry;
@@ -40,7 +42,9 @@ function Board({
     rules: module,
   });
   const data = useSession(session.id);
-  const controls = useMoveControls(room);
+  // Карточка игры уже в кеше: маршрут комнаты ждёт её в loader.
+  const assets = useGetGame(room.gameCode).data?.assets ?? null;
+  const controls = useMoveControls(room, module.staleMoveReasons);
   const players: GameBoardPlayer[] = room.members.map(member => ({
     id: member.id,
     name: memberName(member),
@@ -62,12 +66,16 @@ function Board({
       {data === undefined ? (
         <p className="text-muted-foreground">Загружаем партию…</p>
       ) : (
-        <module.Board
-          session={data}
-          players={players}
-          viewerId={viewerId}
-          {...controls}
-        />
+        <>
+          <StageCountdown session={data} />
+          <module.Board
+            session={data}
+            players={players}
+            viewerId={viewerId}
+            assets={assets}
+            {...controls}
+          />
+        </>
       )}
     </>
   );

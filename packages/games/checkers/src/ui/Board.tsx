@@ -16,6 +16,7 @@ import {
   DialogTrigger,
 } from '@qgames/ui/components/Dialog';
 import {WithHint} from '@qgames/ui/components/WithHint';
+import {ArrowDownUp} from 'lucide-react';
 import {useState} from 'react';
 
 import {reasonLabel} from '../lib/labels';
@@ -28,6 +29,7 @@ import {
 } from '../lib/path';
 import {
   ACCEPT_DRAW,
+  isCheckersColorPickSession,
   isCheckersSession,
   MOVE,
   RESIGN,
@@ -36,6 +38,7 @@ import {
 import type {BoardProps} from '../types';
 import {testIds} from './Board.testIds';
 import {CheckersGrid} from './CheckersGrid';
+import {ColorPick} from './ColorPick';
 
 const UNKNOWN_PLAYER_NAME = 'Игрок';
 const PAUSED_HINT = 'Партия на паузе';
@@ -123,6 +126,8 @@ function CheckersBoard({
   const [selection, setSelection] = useState<Selection | null>(null);
   // Предложить ничью вместе со следующим ходом; сбрасывается, когда ход отправлен.
   const [offerDraw, setOfferDraw] = useState(false);
+  // Сколько раз зритель перевернул доску: локальный вид, в партию не уходит и не запоминается.
+  const [flips, setFlips] = useState(0);
   const {state} = session;
   const rules = session.meta.advancedRules;
   const byId = new Map(players.map(player => [player.id, player]));
@@ -201,6 +206,7 @@ function CheckersBoard({
       boardSize={rules.boardSize}
       pieces={state.pieces}
       bottomColor={viewerColor ?? 'WHITE'}
+      turn={flips * 180}
       lastMovePath={lastMovePath}
       movableIds={movable.pieceIds}
       mustCapture={movable.capture}
@@ -210,6 +216,22 @@ function CheckersBoard({
       interactive={canMove}
       onSquareClick={onSquareClick}
     />
+  );
+
+  const flipButton = (
+    <WithHint hint="Перевернуть доску">
+      <Button
+        size="icon-sm"
+        variant="ghost"
+        aria-label="Перевернуть доску"
+        data-testid={testIds.flipBoard}
+        onClick={() => {
+          setFlips(value => value + 1);
+        }}
+      >
+        <ArrowDownUp />
+      </Button>
+    </WithHint>
   );
 
   if (over) {
@@ -232,6 +254,7 @@ function CheckersBoard({
               : reasonLabel(result.reason)
           }
         />
+        <div className="flex justify-end">{flipButton}</div>
         {grid}
       </div>
     );
@@ -250,14 +273,17 @@ function CheckersBoard({
             currentId === null ? UNKNOWN_PLAYER_NAME : nameOf(currentId)
           }
         />
-        {paused ? (
-          <span
-            role="status"
-            className="rounded-md bg-muted px-2 py-1 text-sm font-medium text-muted-foreground"
-          >
-            Пауза
-          </span>
-        ) : null}
+        <div className="flex items-center gap-2">
+          {paused ? (
+            <span
+              role="status"
+              className="rounded-md bg-muted px-2 py-1 text-sm font-medium text-muted-foreground"
+            >
+              Пауза
+            </span>
+          ) : null}
+          {flipButton}
+        </div>
       </div>
       {canAcceptDraw ? (
         <div
@@ -326,12 +352,16 @@ function CheckersBoard({
 }
 
 /**
- * Доска шашек. Правила знает сервер: варианты действий — из `moveOptions`
- * игрока, путь собирается по подсказкам из флагов `meta.advancedRules` и
- * отправляется целиком (`{type: MOVE, data: {path, offerDraw?}}`); ничья
- * предлагается вместе с ходом и принимается ходом `ACCEPT_DRAW`.
+ * Доска шашек по стадии партии: выбор цвета (`ColorPick`) или игра. Правила
+ * знает сервер: варианты действий — из `moveOptions` игрока, путь собирается
+ * по подсказкам из флагов `meta.advancedRules` и отправляется целиком
+ * (`{type: MOVE, data: {path, offerDraw?}}`); ничья предлагается вместе с
+ * ходом и принимается ходом `ACCEPT_DRAW`.
  */
 export function Board({session, ...props}: BoardProps) {
+  if (isCheckersColorPickSession(session)) {
+    return <ColorPick session={session} {...props} />;
+  }
   if (!isCheckersSession(session)) {
     return (
       <p className="text-destructive">Не удалось прочитать состояние партии</p>

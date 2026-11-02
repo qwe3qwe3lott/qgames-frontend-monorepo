@@ -10,6 +10,6 @@ export type GameDetailsResponseCode =
 
 export const GameDetailsResponseCode = {
   nothing: 'nothing',
-  carcassonne: 'carcassonne',
+  croissant: 'croissant',
   checkers: 'checkers',
 } as const;

@@ -7,6 +7,7 @@
 import type {CheckersLastMoveDto} from './checkersLastMoveDto';
 import type {CheckersPieceDto} from './checkersPieceDto';
 import type {CheckersPlayerDto} from './checkersPlayerDto';
+import type {CheckersSessionStateDtoStage} from './checkersSessionStateDtoStage';
 import type {SessionResultDto} from './sessionResultDto';
 import type {SessionTimerDto} from './sessionTimerDto';
 import type {SessionTurnsDto} from './sessionTurnsDto';
@@ -22,6 +23,7 @@ export interface CheckersSessionStateDto {
   /** Сколько ходов подряд (обеих сторон в сумме) сделано только дамками без взятий; на пороге варианта (русские 30, международные 50, английские 80) партия заканчивается ничьей (DRAW_RULE) */
   quietMoves: number;
   result?: SessionResultDto | null;
+  stage: CheckersSessionStateDtoStage;
   timer?: SessionTimerDto | null;
   turns: SessionTurnsDto;
 }

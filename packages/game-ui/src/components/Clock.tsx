@@ -47,8 +47,20 @@ function toSeconds(ms: number): number {
  * Часы игрока: запас и, если есть задержка, вторая зона справа. У
  * ходящего сначала до нуля идёт задержка, затем запас; у остальных —
  * застывший запас и полная задержка.
+ *
+ * Отсчёт монтируется заново при каждом новом дедлайне (смена хода,
+ * снятие с паузы) и при постановке на паузу: пока часы стоят, интервал
+ * не обновляет `now`, и без перемонтирования первый кадр после пуска
+ * считался бы от застывшего `now` — запас был бы завышен на время стоянки.
  */
-export function Clock({clock, clockOffsetMs, className}: ClockProps) {
+export function Clock(props: ClockProps) {
+  const {deadline, paused} = props.clock;
+  return (
+    <ClockFace key={`${deadline ?? 'stopped'}|${String(paused)}`} {...props} />
+  );
+}
+
+function ClockFace({clock, clockOffsetMs, className}: ClockProps) {
   const {remainingMs, delayMs, deadline, paused, pausedAt} = clock;
   const running = deadline !== null;
   const [now, setNow] = useState(() => Date.now());

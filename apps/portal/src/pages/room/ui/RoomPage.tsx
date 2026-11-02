@@ -1,6 +1,7 @@
 import {isApiError} from '@qgames/api';
 import {useGetGame, useGetRoom} from '@qgames/api/portal';
 import {PageLayout} from '@qgames/ui/components/PageLayout';
+import {cn} from '@qgames/ui/lib/utils';
 import {useNavigate} from '@tanstack/react-router';
 import {useEffect, useState} from 'react';
 
@@ -113,10 +114,14 @@ export function RoomPage({game, roomId, viewerId}: RoomPageProps) {
   }
   const room = toRoomView(stream.room);
   const viewerMembership = membership(room, viewerId);
+  // Растущее поле (тайлы) во время партии получает всю ширину страницы и
+  // высоту экрана за вычетом шапки; без партии раскладка обычная.
+  const wide = game.layout === 'wide' && room.session !== null;
 
   return (
     <PageLayout
       {...pageData}
+      className={cn(wide && 'max-w-none')}
       title={title}
       description="Отправьте ссылку на эту страницу друзьям, чтобы они вошли в комнату."
     >
@@ -134,7 +139,14 @@ export function RoomPage({game, roomId, viewerId}: RoomPageProps) {
             viewerId={viewerId}
             playerCard={SessionPlayerCard}
           />
-          <section className="flex flex-col gap-4 rounded-lg border p-6">
+          <section
+            className={cn(
+              'flex flex-col rounded-lg border',
+              wide
+                ? 'h-[calc(100dvh-14rem)] min-h-[30rem] gap-2 p-2'
+                : 'gap-4 p-6',
+            )}
+          >
             <GameBoard game={game} room={room} viewerId={viewerId} />
           </section>
         </div>

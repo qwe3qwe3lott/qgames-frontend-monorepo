@@ -1,3 +1,4 @@
+import {isApiError} from '@qgames/api';
 import {useMakeMove} from '@qgames/api/portal';
 import type {MoveRequest} from '@qgames/api/portal/model';
 import {toast} from '@qgames/ui/components/Sonner';
@@ -16,9 +17,13 @@ export interface MoveControls {
  * ходов и таймер приходят событиями потока партии. Ошибки — по `code`
  * (`SESSION_PAUSED`, `MOVE_REJECTED` и др.), показываются снекбаром. После 204 ход считается
  * отправляемым, пока событие потока не сдвинет seq партии: иначе кнопка
- * ненадолго оживает и повторный клик получает `NOT_YOUR_TURN`.
+ * ненадолго оживает и повторный клик получает `NOT_YOUR_TURN`. Опоздавшее
+ * действие ([staleReasons] игры) снекбаром не показывается.
  */
-export function useMoveControls(room: RoomView): MoveControls {
+export function useMoveControls(
+  room: RoomView,
+  staleReasons: readonly string[] = [],
+): MoveControls {
   const advance = useSessionAdvance(room.session?.id ?? null);
   const makeMove = useMakeMove({
     mutation: {
@@ -27,7 +32,14 @@ export function useMoveControls(room: RoomView): MoveControls {
       },
       onError: error => {
         advance.clear();
-        toast.error(roomErrorMessage(error));
+        const stale =
+          isApiError(error) &&
+          error.code === 'MOVE_REJECTED' &&
+          error.reason !== undefined &&
+          staleReasons.includes(error.reason);
+        if (!stale) {
+          toast.error(roomErrorMessage(error));
+        }
       },
     },
   });

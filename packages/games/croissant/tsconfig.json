@@ -1,0 +1,4 @@
+{
+  "extends": "@qgames/config/tsconfig/react.json",
+  "include": ["src", "*.config.js"]
+}

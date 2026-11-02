@@ -5,10 +5,13 @@
  * OpenAPI spec version: v0
  */
 import type {CheckersAdvancedSettingsDto} from './checkersAdvancedSettingsDto';
+import type {CroissantAdvancedSettingsDto} from './croissantAdvancedSettingsDto';
 import type {NothingAdvancedSettingsDto} from './nothingAdvancedSettingsDto';
 
 /**
  * Advanced-настройки конкретной игры, вид — по полю gameCode
  */
 export type GameAdvancedSettingsDto =
-  NothingAdvancedSettingsDto | CheckersAdvancedSettingsDto;
+  | NothingAdvancedSettingsDto
+  | CheckersAdvancedSettingsDto
+  | CroissantAdvancedSettingsDto;

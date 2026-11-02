@@ -18,6 +18,8 @@ import type {SessionEventPut} from './sessionEventPut';
  * - session-cancelled — PATCH [] {status: CANCELLED}: партию отменил владелец, последнее событие, поток закрывается;
  * - move-options-changed — PUT ["state", "players", {id}, "moveOptions"]: варианты ходов игрока (чужим зрителям — пустой список);
  * - turn-changed — PUT ["state", "turns"]: сменился текущий игрок или раунд;
+ * - stage-changed — PUT ["state"]: партия перешла к другой стадии, состояние заменено целиком (часов нет, варианты ходов пусты — их ставят следующие события);
+ * - timer-started — PUT ["state", "timer"]: часы новой стадии (после stage-changed);
  * - clock-switched — PUT ["state", "timer"]: часы после смены очереди (запас ходившего с инкрементом, если он есть, дедлайн следующего);
  * - game-paused — PATCH ["state", "timer"] {status: PAUSED, pausedAt}: пауза;
  * - game-resumed — PATCH ["state", "timer"] {status: RUNNING, deadline, pausedAt: null}: продолжение;
@@ -33,7 +35,24 @@ import type {SessionEventPut} from './sessionEventPut';
  * - draw-offer-changed (шашки) — PATCH ["state"] {drawOfferedBy}: ничья предложена ходом или снята ходом соперника;
  * - draw-accepted (шашки) — INFO {playerId}: игрок принял ничью;
  * - player-resigned (шашки) — INFO {playerId}: игрок сдался;
- * - move-timed-out (шашки) — INFO {playerId}: время хода игрока вышло (поражение).
+ * - move-timed-out (шашки) — INFO {playerId}: время хода игрока вышло (поражение);
+ * - color-picked (шашки) — INFO {playerId, color}: игрок первым выбрал цвет, следом stage-changed к игре;
+ * - color-pick-timed-out (шашки) — INFO {}: отсчёт выбора цвета истёк, цвета случайно, следом stage-changed.
+ * - tile-placed (Круассан) — PUT ["state", "board", {id}] {id, x, y, tile, rotation}: тайл выложен;
+ * - spot-updated (Круассан) — PUT ["state", "spots", {id}]: участок сети создан или изменился (слияние, завершение);
+ * - spot-removed (Круассан) — DELETE ["state", "spots", {id}]: участок вошёл в другой при слиянии;
+ * - spot-completed (Круассан) — INFO {spotId, type, crumbs}: пекарня, тропа или сыроварня завершены;
+ * - tile-pending (Круассан) — PUT ["state", "pending"]: тайл ждёт кондитера;
+ * - tile-pending-cleared (Круассан) — DELETE ["state", "pending"]: шаг кондитера закончен;
+ * - confectioner-placed (Круассан) — PUT ["state", "spots", {id}] и PATCH ["state", "players", {id}]: кондитер поставлен;
+ * - confectioner-skipped (Круассан) — INFO {playerId}: шаг кондитера пропущен;
+ * - confectioners-returned (Круассан) — PATCH ["state", "players", {id}] {confectioners}: кондитеры вернулись с завершённого участка;
+ * - crumbs-changed (Круассан) — PATCH ["state", "players", {id}] {crumbs}: изменились «Золотые крошки»;
+ * - tile-drawn (Круассан) — PATCH ["state"] {currentTile, deckPos}: открыт следующий тайл;
+ * - tile-exhausted (Круассан) — PATCH ["state"] {currentTile: null, deckPos}: колода кончилась;
+ * - tile-discarded (Круассан) — INFO {tile, playerId}: тайл некуда положить, ушёл в сброс;
+ * - game-scored (Круассан) — INFO {crumbs}: итоговый подсчёт;
+ * - move-timed-out (Круассан) — INFO {playerId, x, y, rotation}: время вышло, тайл выложен автоматически.
  */
 export type SessionPatchEvent =
   SessionEventPut | SessionEventPatch | SessionEventDelete | SessionEventInfo;

@@ -18,6 +18,7 @@
     "@qgames/doc-patch": "workspace:*",
     "@qgames/game-checkers": "workspace:*",
     "@qgames/game-core": "workspace:*",
+    "@qgames/game-croissant": "workspace:*",
     "@qgames/game-nothing": "workspace:*",
     "@qgames/game-ui": "workspace:*",
     "@qgames/ui": "workspace:*",

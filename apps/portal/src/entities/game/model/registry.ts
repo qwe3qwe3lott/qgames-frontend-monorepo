@@ -7,7 +7,7 @@ import type {GameModule} from './types';
  * `import()` пакета игры. Название, описание и правила приходят с бэкенда
  * (`GET /api/games`, `GET /api/games/{код}`).
  */
-export const GAME_CODES = ['nothing', 'carcassonne', 'checkers'] as const;
+export const GAME_CODES = ['nothing', 'croissant', 'checkers'] as const;
 
 export type GameCode = (typeof GAME_CODES)[number];
 
@@ -21,6 +21,13 @@ export interface GameEntry {
   code: GameCode;
   /** Нет — пакета игры ещё нет: доска не рисуется, комнату создать нельзя. */
   load?: GameLoader;
+  /**
+   * Раскладка страницы комнаты во время партии. `wide` — для растущего поля
+   * (тайлы): страница без ограничения ширины, доска занимает остаток экрана по
+   * ширине и высоте. Нет — компактная раскладка (шашки). Задаётся в реестре, а
+   * не в модуле игры: страница строится до загрузки чанка.
+   */
+  layout?: 'wide';
 }
 
 export const GAMES: Readonly<Record<GameCode, GameEntry>> = {
@@ -29,7 +36,12 @@ export const GAMES: Readonly<Record<GameCode, GameEntry>> = {
     load: () =>
       import('@qgames/game-nothing').then(module => module.nothingGame),
   },
-  carcassonne: {code: 'carcassonne'},
+  croissant: {
+    code: 'croissant',
+    layout: 'wide',
+    load: () =>
+      import('@qgames/game-croissant').then(module => module.croissantGame),
+  },
   checkers: {
     code: 'checkers',
     load: () =>

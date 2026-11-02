@@ -4,10 +4,16 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
+import type {CheckersColorPickStateDto} from './checkersColorPickStateDto';
 import type {CheckersSessionStateDto} from './checkersSessionStateDto';
+import type {CroissantSessionStateDto} from './croissantSessionStateDto';
 import type {NothingSessionStateDto} from './nothingSessionStateDto';
 
 /**
- * Состояние партии конкретной игры: блоки core (players, timer, turns, result) и поля игры. Игра — meta.game.code снапшота; этой схемой клиент проверяет состояние после каждого события
+ * Состояние текущей стадии партии конкретной игры: блоки core (stage, players, timer, turns, result) и поля игры. Игра — meta.game.code снапшота, стадия — state.stage; этой схемой клиент проверяет состояние после каждого события. Смена стадии (stage-changed) заменяет состояние целиком
  */
-export type SessionStateDto = NothingSessionStateDto | CheckersSessionStateDto;
+export type SessionStateDto =
+  | NothingSessionStateDto
+  | CheckersSessionStateDto
+  | CheckersColorPickStateDto
+  | CroissantSessionStateDto;
