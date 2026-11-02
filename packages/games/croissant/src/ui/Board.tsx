@@ -173,7 +173,6 @@ function CroissantBoard({
   const {state} = session;
   const spots = state.spots;
   const [selection, setSelection] = useState<Selection | null>(null);
-  const [hoveredSpotId, setHoveredSpotId] = useState<string | null>(null);
   const [draft, setDraft] = useState<ConfectionerDraft | null>(null);
   const transformRef = useRef<ReactZoomPanPinchRef>(null);
   // Положение слоя в начале жеста и признак «это было перетаскивание»: клик по клетке после панорамы не выбирает её.
@@ -391,8 +390,6 @@ function CroissantBoard({
                   rotation={tile.rotation}
                   size={TILE_SIZE}
                   spots={spotsByTile.get(tile.id) ?? []}
-                  highlightedSpotId={hoveredSpotId}
-                  onHoverSpot={setHoveredSpotId}
                   choice={
                     tile.id === pending?.tileId ? confectionerChoice : undefined
                   }
@@ -440,8 +437,6 @@ function CroissantBoard({
                       rotation={current.rotation}
                       size={TILE_SIZE}
                       spots={[]}
-                      highlightedSpotId={null}
-                      onHoverSpot={() => undefined}
                     />
                     {/* Пунктир внутри клетки: тайл ещё не выложен; контур не выходит за клетку и не сдвигает превью. */}
                     <span className="absolute inset-0 border-2 border-dashed border-foreground/70" />
@@ -588,8 +583,6 @@ function CroissantBoard({
                       rotation={current?.rotation ?? 0}
                       size={PREVIEW_SIZE}
                       spots={[]}
-                      highlightedSpotId={null}
-                      onHoverSpot={() => undefined}
                     />
                   </span>
                 )}

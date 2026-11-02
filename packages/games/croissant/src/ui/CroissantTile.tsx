@@ -1,5 +1,5 @@
 import type {CroissantSpotDtoOutput} from '@qgames/api/portal/zod';
-import type {KeyboardEvent} from 'react';
+import {useState, type KeyboardEvent} from 'react';
 
 import {SPOT_LABELS} from '../lib/labels';
 import {PALETTE} from '../lib/palette';
@@ -7,6 +7,7 @@ import {
   partKey,
   partOutline,
   renderTile,
+  signAnchors,
   spotAnchor,
   tileRegions,
   type EdgeKind,
@@ -32,6 +33,9 @@ const SIDE_POINTS: Readonly<
   S: [1, 1, 0, 1],
   W: [0, 1, 0, 0],
 };
+
+/** Сторона квадрата вывески в долях плитки. */
+const SIGN_SIZE = 0.1;
 
 /** Заливка части тайла на выборе кондитера: доступна, под курсором или выбрана. */
 const CHOICE_OPACITY = {idle: 0.12, active: 0.4} as const;
@@ -64,10 +68,8 @@ interface CroissantTileProps {
   readonly tileId: string;
   readonly rotation: number;
   readonly size: number;
-  /** Участки тайла: по ним ставятся кондитеры и подсвечивается выбранный участок. */
+  /** Участки тайла: по ним ставятся кондитеры. */
   readonly spots: readonly CroissantSpotDtoOutput[];
-  readonly highlightedSpotId: string | null;
-  readonly onHoverSpot: (spotId: string | null) => void;
   /** Выбор участка для кондитера — только у тайла, который ходящий только что выложил. */
   readonly choice?: ConfectionerChoice | undefined;
 }
@@ -93,14 +95,11 @@ export function CroissantTile({
   rotation,
   size,
   spots,
-  highlightedSpotId,
-  onHoverSpot,
   choice,
 }: CroissantTileProps) {
   const tile = renderTile(shape, rotation);
   const half = size / 2;
   const sides: readonly Side[] = ['N', 'E', 'S', 'W'];
-  const highlighted = spots.some(spot => spot.id === highlightedSpotId);
 
   return (
     <svg
@@ -149,15 +148,16 @@ export function CroissantTile({
           strokeWidth={1}
         />
       ) : null}
-      {tile.signs > 0 ? (
+      {signAnchors(shape, rotation, size).map((sign, index) => (
         <rect
-          x={size * 0.44}
-          y={size * 0.06}
-          width={size * 0.12}
-          height={size * 0.12}
+          key={`sign-${String(index)}`}
+          x={sign.x - (size * SIGN_SIZE) / 2}
+          y={sign.y - (size * SIGN_SIZE) / 2}
+          width={size * SIGN_SIZE}
+          height={size * SIGN_SIZE}
           fill={PALETTE.sign}
         />
-      ) : null}
+      ))}
       {spots.map(spot =>
         // Фишка стоит на тайле, куда её поставили, а не на каждом тайле участка.
         spot.confectioners.map((confectioner, index) => {
@@ -191,23 +191,8 @@ export function CroissantTile({
           rotation={rotation}
           size={size}
           choice={choice}
-          highlightedSpotId={highlightedSpotId}
-          onHoverSpot={onHoverSpot}
         />
       )}
-      {highlighted ? (
-        <rect
-          x={1}
-          y={1}
-          width={size - 2}
-          height={size - 2}
-          fill="none"
-          stroke={PALETTE.highlight}
-          strokeWidth={3}
-          rx={4}
-          pointerEvents="none"
-        />
-      ) : null}
       <rect
         x={0.5}
         y={0.5}
@@ -227,27 +212,19 @@ interface ChoiceLayerProps {
   readonly rotation: number;
   readonly size: number;
   readonly choice: ConfectionerChoice;
-  readonly highlightedSpotId: string | null;
-  readonly onHoverSpot: (spotId: string | null) => void;
 }
 
 /**
  * Слой выбора участка: доступные части тайла с пунктирным контуром и лёгкой заливкой. Участок под курсором и
- * выбранный залиты сильнее. Клик по части выбирает её участок, повторный клик или клик по фишке снимает выбор.
+ * выбранный залиты сильнее; наведение подсвечивает только этот тайл, другие тайлы участка не трогаются. Клик по части выбирает её участок, повторный клик или клик по фишке снимает выбор.
  */
-function ChoiceLayer({
-  shape,
-  rotation,
-  size,
-  choice,
-  highlightedSpotId,
-  onHoverSpot,
-}: ChoiceLayerProps) {
+function ChoiceLayer({shape, rotation, size, choice}: ChoiceLayerProps) {
+  const [hoveredSpotId, setHoveredSpotId] = useState<string | null>(null);
   const regions = tileRegions(shape, rotation, size);
   const spotOf = (part: TilePart | null): string | null =>
     part === null ? null : (choice.spots.get(partKey(part)) ?? null);
   const opacityOf = (spotId: string): number =>
-    spotId === highlightedSpotId || spotId === choice.selectedSpotId
+    spotId === hoveredSpotId || spotId === choice.selectedSpotId
       ? CHOICE_OPACITY.active
       : CHOICE_OPACITY.idle;
   /** Общие свойства кликабельной части: выбор, наведение, клавиатура, подпись и test id. */
@@ -266,10 +243,10 @@ function ChoiceLayer({
       onClick: toggle,
       onKeyDown: onActivate(toggle),
       onMouseEnter: () => {
-        onHoverSpot(spotId);
+        setHoveredSpotId(spotId);
       },
       onMouseLeave: () => {
-        onHoverSpot(null);
+        setHoveredSpotId(null);
       },
     };
   };

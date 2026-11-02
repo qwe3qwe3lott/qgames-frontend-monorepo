@@ -6,6 +6,7 @@ import {
   partOutline,
   renderTile,
   sideOf,
+  signAnchors,
   spotAnchor,
   tileRegions,
   type HalfEdge,
@@ -103,14 +104,6 @@ describe('renderTile', () => {
   it('turns the trail ends with the rotation', () => {
     expect(renderTile(TRAIL_STRAIGHT, 0).trails).toEqual(['N', 'S']);
     expect(renderTile(TRAIL_STRAIGHT, 90).trails).toEqual(['E', 'W']);
-  });
-
-  it('counts the signs of the bakeries', () => {
-    const signed: TileShape = {
-      ...BAKERY_ONE,
-      bakeries: [{sides: ['N', 'E'], sign: true}],
-    };
-    expect(renderTile(signed, 0).signs).toBe(1);
   });
 });
 
@@ -214,6 +207,28 @@ describe('spotAnchor', () => {
       x: 50,
       y: 50,
     });
+  });
+});
+
+describe('signAnchors', () => {
+  const BAKERY_CORNER: TileShape = {
+    ...BAKERY_ONE,
+    code: 'bakery-corner',
+    edges: ['BAKERY', 'BAKERY', 'PASTURE', 'PASTURE'],
+    bakeries: [{sides: ['N', 'E'], sign: true}],
+  };
+
+  it('puts the sign at the bakery side without rotation', () => {
+    expect(signAnchors(BAKERY_CORNER, 0, 100)).toEqual([{x: 50, y: 8}]);
+  });
+
+  it('turns the sign with the bakery', () => {
+    // 90°: пекарня на сторонах E и S, вывеска — у E, а не на лугу сверху.
+    expect(signAnchors(BAKERY_CORNER, 90, 100)).toEqual([{x: 92, y: 50}]);
+  });
+
+  it('has no signs for a bakery without one', () => {
+    expect(signAnchors(BAKERY_ONE, 0, 100)).toEqual([]);
   });
 });
 

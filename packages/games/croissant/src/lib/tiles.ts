@@ -42,7 +42,6 @@ export interface RenderTile {
   readonly edges: Readonly<Record<Side, EdgeKind>>;
   readonly trails: readonly Side[];
   readonly dairy: boolean;
-  readonly signs: number;
 }
 
 /** Сторона в каталоге (базовая ориентация) по абсолютной стороне при повороте `rotation` градусов. */
@@ -77,7 +76,6 @@ export function renderTile(tile: TileShape, rotation: number): RenderTile {
     edges,
     trails,
     dairy: tile.dairy,
-    signs: tile.bakeries.filter(bakery => bakery.sign).length,
   };
 }
 
@@ -338,6 +336,34 @@ export function spotAnchor(
     ? {x: half, y: half}
     : nearSide(sideOf(local, rotation));
 }
+
+/**
+ * Точки вывесок: у каждой пекарни с вывеской — у середины её первой стороны, ближе к краю, чем фишка кондитера.
+ * Вывеска поворачивается вместе с пекарней и всегда лежит в ней, а не на лугу.
+ */
+export function signAnchors(
+  tile: TileShape,
+  rotation: number,
+  size: number,
+): readonly Point[] {
+  const half = size / 2;
+  return tile.bakeries.flatMap(bakery => {
+    const local = bakery.sides[0];
+    if (!bakery.sign || local === undefined) {
+      return [];
+    }
+    const middle = sideMidpoint(sideOf(local, rotation), size);
+    return [
+      {
+        x: half + (middle.x - half) * SIGN_OFFSET,
+        y: half + (middle.y - half) * SIGN_OFFSET,
+      },
+    ];
+  });
+}
+
+/** Смещение вывески от центра к краю стороны: 0.84 — около 0.08 плитки от края. */
+const SIGN_OFFSET = 0.84;
 
 /** Ключ клетки: `x:y` — так же, как id тайла в состоянии. */
 export function cellKey(x: number, y: number): string {
