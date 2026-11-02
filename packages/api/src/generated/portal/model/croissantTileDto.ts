@@ -14,6 +14,7 @@ export interface CroissantTileDto {
   code: string;
   dairy: boolean;
   edges: CroissantTileDtoEdgesItem[];
+  garden: boolean;
   pastures: CroissantPastureDto[];
   title: string;
   trails: CroissantTrailDto[];

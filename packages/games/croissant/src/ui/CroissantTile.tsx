@@ -3,39 +3,9 @@ import {useState, type KeyboardEvent} from 'react';
 
 import {SPOT_LABELS} from '../lib/labels';
 import {PALETTE} from '../lib/palette';
-import {
-  partKey,
-  partOutline,
-  renderTile,
-  signAnchors,
-  spotAnchor,
-  tileRegions,
-  type EdgeKind,
-  type Side,
-  type TilePart,
-  type TileShape,
-} from '../lib/tiles';
+import {SIGN_SIZE, tileGeometry} from '../lib/tileGeometry';
+import {partKey, type TilePart, type TileShape} from '../lib/tiles';
 import {testIds} from './CroissantTile.testIds';
-
-/** Цвет стороны тайла: пекарня — тёплый камень, остальное — луг (тропа рисуется линией поверх луга). */
-const EDGE_FILL: Readonly<Record<EdgeKind, string>> = {
-  BAKERY: PALETTE.bakery,
-  TRAIL: PALETTE.pasture,
-  PASTURE: PALETTE.pasture,
-};
-
-/** Углы стороны квадрата в SVG (ось Y вниз): от левого верхнего по часовой стрелке. */
-const SIDE_POINTS: Readonly<
-  Record<Side, readonly [number, number, number, number]>
-> = {
-  N: [0, 0, 1, 0],
-  E: [1, 0, 1, 1],
-  S: [1, 1, 0, 1],
-  W: [0, 1, 0, 0],
-};
-
-/** Сторона квадрата вывески в долях плитки. */
-const SIGN_SIZE = 0.1;
 
 /** Заливка части тайла на выборе кондитера: доступна, под курсором или выбрана. */
 const CHOICE_OPACITY = {idle: 0.12, active: 0.4} as const;
@@ -85,9 +55,9 @@ function onActivate(action: () => void) {
 }
 
 /**
- * Плитка квартала: секторы сторон по типу (пекарня, тропа, луг), линии мучных троп, сыроварня в центре, вывеска и
- * фишки кондитеров. Рисуется только по данным состояния: каталог тайлов прислал сервер. На шаге кондитера поверх —
- * части тайла, которые можно выбрать, и полупрозрачная фишка на выбранной.
+ * Плитка квартала: луг, пекарни и мучные тропы по модели тайла (`tileGeometry`), сыроварня или сад в центре, вывески и
+ * фишки кондитеров. Рисуется в базовой ориентации каталога и поворачивается группой. На шаге кондитера поверх — части
+ * тайла, которые можно выбрать, и полупрозрачная фишка на выбранной.
  */
 export function CroissantTile({
   shape,
@@ -97,9 +67,8 @@ export function CroissantTile({
   spots,
   choice,
 }: CroissantTileProps) {
-  const tile = renderTile(shape, rotation);
+  const geometry = tileGeometry(shape, size);
   const half = size / 2;
-  const sides: readonly Side[] = ['N', 'E', 'S', 'W'];
 
   return (
     <svg
@@ -110,89 +79,93 @@ export function CroissantTile({
       aria-label={shape.title}
       className="block"
     >
-      <rect width={size} height={size} fill={PALETTE.pasture} />
-      {sides.map(side => {
-        const [x1, y1, x2, y2] = SIDE_POINTS[side];
-        return (
-          <polygon
-            key={side}
-            points={`${String(half)},${String(half)} ${String(x1 * size)},${String(y1 * size)} ${String(x2 * size)},${String(y2 * size)}`}
-            fill={EDGE_FILL[tile.edges[side]]}
-          />
-        );
-      })}
-      {tile.trails.map(side => {
-        const [x1, y1, x2, y2] = SIDE_POINTS[side];
-        const midX = ((x1 + x2) / 2) * size;
-        const midY = ((y1 + y2) / 2) * size;
-        return (
-          <line
-            key={`trail-${side}`}
-            x1={half}
-            y1={half}
-            x2={midX}
-            y2={midY}
+      <g
+        transform={`rotate(${String(rotation)} ${String(half)} ${String(half)})`}
+      >
+        <rect width={size} height={size} fill={PALETTE.pasture} />
+        {geometry.faces
+          .filter(face => face.part.kind === 'BAKERY')
+          .map(face => (
+            <path
+              key={partKey(face.part)}
+              d={face.d}
+              fill={PALETTE.bakery}
+              stroke={PALETTE.bakeryLine}
+              strokeWidth={1}
+              strokeLinejoin="round"
+            />
+          ))}
+        {geometry.trails.map(trail => (
+          <path
+            key={partKey(trail.part)}
+            d={trail.d}
+            fill="none"
             stroke={PALETTE.trailLine}
             strokeWidth={size * 0.08}
             strokeLinecap="round"
+            strokeLinejoin="round"
           />
-        );
-      })}
-      {tile.dairy ? (
-        <circle
-          cx={half}
-          cy={half}
-          r={size * 0.16}
-          fill={PALETTE.dairy}
-          stroke={PALETTE.dairyLine}
-          strokeWidth={1}
-        />
-      ) : null}
-      {signAnchors(shape, rotation, size).map((sign, index) => (
-        <rect
-          key={`sign-${String(index)}`}
-          x={sign.x - (size * SIGN_SIZE) / 2}
-          y={sign.y - (size * SIGN_SIZE) / 2}
-          width={size * SIGN_SIZE}
-          height={size * SIGN_SIZE}
-          fill={PALETTE.sign}
-        />
-      ))}
-      {spots.map(spot =>
-        // Фишка стоит на тайле, куда её поставили, а не на каждом тайле участка.
-        spot.confectioners.map((confectioner, index) => {
-          if (confectioner.tileId !== tileId) {
-            return null;
-          }
-          const member = spot.members.find(item => item.tileId === tileId);
-          const anchor = spotAnchor(
-            shape,
-            rotation,
-            spot.type,
-            member?.index ?? 0,
-            size,
-          );
-          return (
-            <circle
-              key={`${spot.id}-${confectioner.playerId}-${String(index)}`}
-              cx={anchor.x}
-              cy={anchor.y}
-              r={size * 0.09}
-              fill={confectionerColor(confectioner.playerId)}
-              stroke="white"
-              strokeWidth={1.2}
-            />
-          );
-        }),
-      )}
-      {choice === undefined ? null : (
-        <ChoiceLayer
-          shape={shape}
-          rotation={rotation}
-          size={size}
-          choice={choice}
-        />
-      )}
+        ))}
+        {geometry.dairy === null ? null : (
+          <circle
+            cx={geometry.dairy.center.x}
+            cy={geometry.dairy.center.y}
+            r={geometry.dairy.r}
+            fill={PALETTE.dairy}
+            stroke={PALETTE.dairyLine}
+            strokeWidth={1}
+          />
+        )}
+        {geometry.garden === null ? null : (
+          <circle
+            cx={geometry.garden.center.x}
+            cy={geometry.garden.center.y}
+            r={geometry.garden.r}
+            fill={PALETTE.garden}
+            stroke={PALETTE.gardenLine}
+            strokeWidth={1}
+          />
+        )}
+        {geometry.signs.map((sign, index) => (
+          <rect
+            key={`sign-${String(index)}`}
+            x={sign.x - (size * SIGN_SIZE) / 2}
+            y={sign.y - (size * SIGN_SIZE) / 2}
+            width={size * SIGN_SIZE}
+            height={size * SIGN_SIZE}
+            fill={PALETTE.sign}
+          />
+        ))}
+        {spots.map(spot =>
+          // Фишка стоит на тайле, куда её поставили, а не на каждом тайле участка.
+          spot.confectioners.map((confectioner, index) => {
+            if (confectioner.tileId !== tileId) {
+              return null;
+            }
+            const member = spot.members.find(item => item.tileId === tileId);
+            const anchor = geometry.anchors.get(
+              partKey({kind: spot.type, index: member?.index ?? 0}),
+            );
+            if (anchor === undefined) {
+              return null;
+            }
+            return (
+              <circle
+                key={`${spot.id}-${confectioner.playerId}-${String(index)}`}
+                cx={anchor.x}
+                cy={anchor.y}
+                r={size * 0.09}
+                fill={confectionerColor(confectioner.playerId)}
+                stroke="white"
+                strokeWidth={1.2}
+              />
+            );
+          }),
+        )}
+        {choice === undefined ? null : (
+          <ChoiceLayer shape={shape} size={size} choice={choice} />
+        )}
+      </g>
       <rect
         x={0.5}
         y={0.5}
@@ -209,20 +182,20 @@ export function CroissantTile({
 
 interface ChoiceLayerProps {
   readonly shape: TileShape;
-  readonly rotation: number;
   readonly size: number;
   readonly choice: ConfectionerChoice;
 }
 
 /**
  * Слой выбора участка: доступные части тайла с пунктирным контуром и лёгкой заливкой. Участок под курсором и
- * выбранный залиты сильнее; наведение подсвечивает только этот тайл, другие тайлы участка не трогаются. Клик по части выбирает её участок, повторный клик или клик по фишке снимает выбор.
+ * выбранный залиты сильнее; наведение подсвечивает только этот тайл, другие тайлы участка не трогаются. Клик по части
+ * выбирает её участок, повторный клик или клик по фишке снимает выбор.
  */
-function ChoiceLayer({shape, rotation, size, choice}: ChoiceLayerProps) {
+function ChoiceLayer({shape, size, choice}: ChoiceLayerProps) {
   const [hoveredSpotId, setHoveredSpotId] = useState<string | null>(null);
-  const regions = tileRegions(shape, rotation, size);
-  const spotOf = (part: TilePart | null): string | null =>
-    part === null ? null : (choice.spots.get(partKey(part)) ?? null);
+  const geometry = tileGeometry(shape, size);
+  const spotOf = (part: TilePart): string | null =>
+    choice.spots.get(partKey(part)) ?? null;
   const opacityOf = (spotId: string): number =>
     spotId === hoveredSpotId || spotId === choice.selectedSpotId
       ? CHOICE_OPACITY.active
@@ -251,107 +224,75 @@ function ChoiceLayer({shape, rotation, size, choice}: ChoiceLayerProps) {
     };
   };
 
-  // Части тайла по участкам: у пекарни на двух сторонах или у луга — несколько треугольников, контур общий.
-  const parts = new Map<string, TilePart>();
-  regions.areas.forEach(area => {
-    if (area.owner !== null && spotOf(area.owner) !== null) {
-      parts.set(partKey(area.owner), area.owner);
-    }
-  });
-
+  const dairyPart: TilePart = {kind: 'DAIRY', index: 0};
+  const dairySpot = geometry.dairy === null ? null : spotOf(dairyPart);
   const selectedPart = [
-    ...regions.areas.map(area => area.owner),
-    ...regions.trails,
-    ...(regions.dairy === null ? [] : [{kind: 'DAIRY' as const, index: 0}]),
+    ...geometry.faces.map(face => face.part),
+    ...geometry.trails.map(trail => trail.part),
+    ...(geometry.dairy === null ? [] : [dairyPart]),
   ].find(
-    (part): part is TilePart =>
-      part !== null &&
-      choice.selectedSpotId !== null &&
-      spotOf(part) === choice.selectedSpotId,
+    part =>
+      choice.selectedSpotId !== null && spotOf(part) === choice.selectedSpotId,
   );
   const draft =
     selectedPart === undefined
-      ? null
-      : spotAnchor(
-          shape,
-          rotation,
-          selectedPart.kind,
-          selectedPart.index,
-          size,
-        );
-
-  const dairySpot =
-    regions.dairy === null ? null : spotOf({kind: 'DAIRY', index: 0});
+      ? undefined
+      : geometry.anchors.get(partKey(selectedPart));
 
   return (
     <g>
-      {regions.areas.map(area => {
-        const spotId = spotOf(area.owner);
-        if (area.owner === null || spotId === null) {
-          return null;
-        }
-        const points = area.points
-          .map(point => `${String(point.x)},${String(point.y)}`)
-          .join(' ');
-        return (
-          <polygon
-            key={`area-${area.edge.dir}${String(area.edge.half)}`}
-            points={points}
-            fill={PALETTE.highlight}
-            fillOpacity={opacityOf(spotId)}
-            {...partProps(area.owner, spotId)}
-          />
-        );
-      })}
-      {[...parts.values()].flatMap(part =>
-        partOutline(regions.areas, part).map(([from, to], index) => (
-          <line
-            key={`outline-${partKey(part)}-${String(index)}`}
-            x1={from.x}
-            y1={from.y}
-            x2={to.x}
-            y2={to.y}
-            stroke={PALETTE.highlight}
-            strokeWidth={1.5}
-            strokeDasharray="4 3"
-            pointerEvents="none"
-          />
-        )),
-      )}
-      {regions.trails.map((trail, index) => {
-        const spotId = spotOf(trail);
+      {geometry.faces.map(face => {
+        const spotId = spotOf(face.part);
         if (spotId === null) {
           return null;
         }
         return (
-          <line
-            key={`trail-choice-${String(index)}`}
-            x1={trail.from.x}
-            y1={trail.from.y}
-            x2={trail.to.x}
-            y2={trail.to.y}
+          <path
+            key={`face-${partKey(face.part)}`}
+            d={face.d}
+            fill={PALETTE.highlight}
+            fillOpacity={opacityOf(spotId)}
+            stroke={PALETTE.highlight}
+            strokeWidth={1.5}
+            strokeDasharray="4 3"
+            strokeLinejoin="round"
+            {...partProps(face.part, spotId)}
+          />
+        );
+      })}
+      {geometry.trails.map(trail => {
+        const spotId = spotOf(trail.part);
+        if (spotId === null) {
+          return null;
+        }
+        return (
+          <path
+            key={`trail-${partKey(trail.part)}`}
+            d={trail.d}
+            fill="none"
             stroke={PALETTE.highlight}
             strokeOpacity={opacityOf(spotId) + 0.15}
             strokeWidth={size * 0.2}
             strokeLinecap="round"
-            {...partProps(trail, spotId)}
+            strokeLinejoin="round"
+            {...partProps(trail.part, spotId)}
           />
         );
       })}
-      {regions.dairy === null || dairySpot === null ? null : (
+      {geometry.dairy === null || dairySpot === null ? null : (
         <circle
-          cx={regions.dairy.x}
-          cy={regions.dairy.y}
-          r={size * 0.2}
+          cx={geometry.dairy.center.x}
+          cy={geometry.dairy.center.y}
+          r={geometry.dairy.r * 1.25}
           fill={PALETTE.highlight}
           fillOpacity={opacityOf(dairySpot) + 0.1}
           stroke={PALETTE.highlight}
           strokeWidth={1.5}
           strokeDasharray="4 3"
-          {...partProps({kind: 'DAIRY', index: 0}, dairySpot)}
+          {...partProps(dairyPart, dairySpot)}
         />
       )}
-      {draft === null ? null : (
+      {draft === undefined ? null : (
         <circle
           cx={draft.x}
           cy={draft.y}

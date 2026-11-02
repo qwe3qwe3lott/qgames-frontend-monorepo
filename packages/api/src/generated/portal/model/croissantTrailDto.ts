@@ -7,5 +7,9 @@
 import type {CroissantTrailDtoSidesItem} from './croissantTrailDtoSidesItem';
 
 export interface CroissantTrailDto {
+  /** @nullable */
+  bakery?: number | null;
+  dairy: boolean;
+  garden: boolean;
   sides: CroissantTrailDtoSidesItem[];
 }
