@@ -16,10 +16,10 @@ import {
 } from '../lib/tiles';
 import {testIds} from './CroissantTile.testIds';
 
-/** Цвет стороны тайла: пекарня — тёплый камень, тропа — мука, луг — зелень. */
+/** Цвет стороны тайла: пекарня — тёплый камень, остальное — луг (тропа рисуется линией поверх луга). */
 const EDGE_FILL: Readonly<Record<EdgeKind, string>> = {
   BAKERY: PALETTE.bakery,
-  TRAIL: PALETTE.trail,
+  TRAIL: PALETTE.pasture,
   PASTURE: PALETTE.pasture,
 };
 
@@ -181,12 +181,6 @@ export function CroissantTile({
               fill={confectionerColor(confectioner.playerId)}
               stroke="white"
               strokeWidth={1.2}
-              onMouseEnter={() => {
-                onHoverSpot(spot.id);
-              }}
-              onMouseLeave={() => {
-                onHoverSpot(null);
-              }}
             />
           );
         }),

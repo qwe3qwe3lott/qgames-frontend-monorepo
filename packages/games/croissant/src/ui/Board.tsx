@@ -314,14 +314,19 @@ function CroissantBoard({
     });
   };
 
+  /** Вариант выкладки выбранной клетки: по нему — допустимые повороты. */
+  const currentPlacement =
+    current === null
+      ? undefined
+      : placements.find(item => item.x === current.x && item.y === current.y);
+  /** Повернуть тайл можно, только если в этой клетке он подходит больше чем в одном положении. */
+  const canRotate = (currentPlacement?.rotations.length ?? 0) > 1;
+
   const rotate = (step: number): void => {
     if (current === null) {
       return;
     }
-    const placement = placements.find(
-      item => item.x === current.x && item.y === current.y,
-    );
-    const allowed = placement?.rotations ?? [current.rotation];
+    const allowed = currentPlacement?.rotations ?? [current.rotation];
     const index = allowed.indexOf(current.rotation);
     const next =
       allowed[(index + step + allowed.length) % allowed.length] ??
@@ -419,8 +424,8 @@ function CroissantBoard({
                 }}
                 className={
                   isSelected
-                    ? 'absolute rounded-sm border-2 border-primary bg-primary/20'
-                    : 'absolute rounded-sm border-2 border-dashed border-primary/50 hover:border-primary'
+                    ? 'absolute'
+                    : 'absolute bg-foreground/15 hover:bg-foreground/30'
                 }
                 style={{left, top, width: TILE_SIZE, height: TILE_SIZE}}
               >
@@ -438,6 +443,8 @@ function CroissantBoard({
                       highlightedSpotId={null}
                       onHoverSpot={() => undefined}
                     />
+                    {/* Пунктир внутри клетки: тайл ещё не выложен; контур не выходит за клетку и не сдвигает превью. */}
+                    <span className="absolute inset-0 border-2 border-dashed border-foreground/70" />
                   </span>
                 ) : null}
               </button>
@@ -589,32 +596,36 @@ function CroissantBoard({
                 <span className="text-sm">
                   {current === null
                     ? `Тайл «${currentShape?.title ?? '—'}». ${hint ?? ''}`
-                    : `Тайл «${currentShape?.title ?? '—'}» в клетку ${String(current.x)}, ${String(current.y)}`}
+                    : `«${currentShape?.title ?? '—'}»`}
                 </span>
                 {current === null ? null : (
                   <div className="flex flex-wrap gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      data-testid={testIds.rotateLeft}
-                      disabled={movePending}
-                      onClick={() => {
-                        rotate(-1);
-                      }}
-                    >
-                      Повернуть влево
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      data-testid={testIds.rotateRight}
-                      disabled={movePending}
-                      onClick={() => {
-                        rotate(1);
-                      }}
-                    >
-                      Повернуть вправо
-                    </Button>
+                    {canRotate ? (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          data-testid={testIds.rotateLeft}
+                          disabled={movePending}
+                          onClick={() => {
+                            rotate(-1);
+                          }}
+                        >
+                          Повернуть влево
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          data-testid={testIds.rotateRight}
+                          disabled={movePending}
+                          onClick={() => {
+                            rotate(1);
+                          }}
+                        >
+                          Повернуть вправо
+                        </Button>
+                      </>
+                    ) : null}
                     <Button
                       size="sm"
                       data-testid={testIds.placeTile}
