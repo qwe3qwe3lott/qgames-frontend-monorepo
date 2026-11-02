@@ -288,6 +288,218 @@ export type CheckersSimpleSettingsDtoOutput = zod.output<
   typeof CheckersSimpleSettingsDto
 >;
 
+export const CroissantAdvancedSettingsDto = zod.object({
+  confectioners: zod.int(),
+  gameCode: zod.enum(['croissant']),
+  timeControl: TimeControlDto,
+});
+
+export type CroissantAdvancedSettingsDto = zod.input<
+  typeof CroissantAdvancedSettingsDto
+>;
+export type CroissantAdvancedSettingsDtoOutput = zod.output<
+  typeof CroissantAdvancedSettingsDto
+>;
+
+export const CroissantBakeryDto = zod.object({
+  sides: zod.array(zod.enum(['N', 'E', 'S', 'W'])),
+  sign: zod.boolean(),
+});
+
+export type CroissantBakeryDto = zod.input<typeof CroissantBakeryDto>;
+export type CroissantBakeryDtoOutput = zod.output<typeof CroissantBakeryDto>;
+
+export const CroissantHalfEdgeDto = zod.object({
+  dir: zod.enum(['N', 'E', 'S', 'W']),
+  half: zod.int(),
+});
+
+export type CroissantHalfEdgeDto = zod.input<typeof CroissantHalfEdgeDto>;
+export type CroissantHalfEdgeDtoOutput = zod.output<
+  typeof CroissantHalfEdgeDto
+>;
+
+export const CroissantPastureDto = zod.object({
+  bakeries: zod.array(zod.int()),
+  halves: zod.array(CroissantHalfEdgeDto),
+});
+
+export type CroissantPastureDto = zod.input<typeof CroissantPastureDto>;
+export type CroissantPastureDtoOutput = zod.output<typeof CroissantPastureDto>;
+
+export const CroissantTrailDto = zod.object({
+  sides: zod.array(zod.enum(['N', 'E', 'S', 'W'])),
+});
+
+export type CroissantTrailDto = zod.input<typeof CroissantTrailDto>;
+export type CroissantTrailDtoOutput = zod.output<typeof CroissantTrailDto>;
+
+export const CroissantTileDto = zod.object({
+  bakeries: zod.array(CroissantBakeryDto),
+  code: zod.string(),
+  dairy: zod.boolean(),
+  edges: zod.array(zod.enum(['BAKERY', 'TRAIL', 'PASTURE'])),
+  pastures: zod.array(CroissantPastureDto),
+  title: zod.string(),
+  trails: zod.array(CroissantTrailDto),
+});
+
+export type CroissantTileDto = zod.input<typeof CroissantTileDto>;
+export type CroissantTileDtoOutput = zod.output<typeof CroissantTileDto>;
+
+export const CroissantAssetsDto = zod.object({
+  gameCode: zod.enum(['croissant']),
+  tiles: zod.array(CroissantTileDto),
+});
+
+export type CroissantAssetsDto = zod.input<typeof CroissantAssetsDto>;
+export type CroissantAssetsDtoOutput = zod.output<typeof CroissantAssetsDto>;
+
+export const CroissantConfectionerDto = zod.object({
+  playerId: zod.uuid(),
+  tileId: zod.string(),
+});
+
+export type CroissantConfectionerDto = zod.input<
+  typeof CroissantConfectionerDto
+>;
+export type CroissantConfectionerDtoOutput = zod.output<
+  typeof CroissantConfectionerDto
+>;
+
+export const CroissantMoveDataDto = zod.object({
+  rotation: zod.int().nullish(),
+  spotId: zod.string().nullish(),
+  x: zod.int().nullish(),
+  y: zod.int().nullish(),
+});
+
+export type CroissantMoveDataDto = zod.input<typeof CroissantMoveDataDto>;
+export type CroissantMoveDataDtoOutput = zod.output<
+  typeof CroissantMoveDataDto
+>;
+
+export const CroissantPendingDto = zod.object({
+  completed: zod.array(zod.string()),
+  spots: zod.array(zod.string()),
+  tileId: zod.string(),
+});
+
+export type CroissantPendingDto = zod.input<typeof CroissantPendingDto>;
+export type CroissantPendingDtoOutput = zod.output<typeof CroissantPendingDto>;
+
+export const CroissantPlacedTileDto = zod.object({
+  id: zod.string(),
+  rotation: zod.int(),
+  tile: zod.string(),
+  x: zod.int(),
+  y: zod.int(),
+});
+
+export type CroissantPlacedTileDto = zod.input<typeof CroissantPlacedTileDto>;
+export type CroissantPlacedTileDtoOutput = zod.output<
+  typeof CroissantPlacedTileDto
+>;
+
+export const CroissantPlayerDto = zod.object({
+  confectioners: zod.int(),
+  crumbs: zod.int(),
+  id: zod.uuid(),
+  moveOptions: zod.array(MoveOptionDto),
+});
+
+export type CroissantPlayerDto = zod.input<typeof CroissantPlayerDto>;
+export type CroissantPlayerDtoOutput = zod.output<typeof CroissantPlayerDto>;
+
+export const CroissantSpotMemberDto = zod.object({
+  index: zod.int(),
+  tileId: zod.string(),
+});
+
+export type CroissantSpotMemberDto = zod.input<typeof CroissantSpotMemberDto>;
+export type CroissantSpotMemberDtoOutput = zod.output<
+  typeof CroissantSpotMemberDto
+>;
+
+export const CroissantSpotDto = zod.object({
+  bakeries: zod.array(zod.string()),
+  complete: zod.boolean(),
+  confectioners: zod.array(CroissantConfectionerDto),
+  id: zod.string(),
+  members: zod.array(CroissantSpotMemberDto),
+  open: zod.int(),
+  signs: zod.int(),
+  type: zod.enum(['BAKERY', 'TRAIL', 'DAIRY', 'PASTURE']),
+});
+
+export type CroissantSpotDto = zod.input<typeof CroissantSpotDto>;
+export type CroissantSpotDtoOutput = zod.output<typeof CroissantSpotDto>;
+
+export const CroissantSessionStateDto = zod.object({
+  board: zod.array(CroissantPlacedTileDto),
+  currentTile: zod.string().nullish(),
+  deckPos: zod.int(),
+  deckSize: zod.int(),
+  pending: zod.union([CroissantPendingDto, zod.null()]).optional(),
+  players: zod.array(CroissantPlayerDto),
+  result: zod.union([SessionResultDto, zod.null()]).optional(),
+  spots: zod.array(CroissantSpotDto),
+  stage: zod.enum(['play']),
+  timer: zod.union([SessionTimerDto, zod.null()]).optional(),
+  turns: SessionTurnsDto,
+});
+
+export type CroissantSessionStateDto = zod.input<
+  typeof CroissantSessionStateDto
+>;
+export type CroissantSessionStateDtoOutput = zod.output<
+  typeof CroissantSessionStateDto
+>;
+
+export const IntRangeDto = zod.object({
+  max: zod.int(),
+  min: zod.int(),
+});
+
+export type IntRangeDto = zod.input<typeof IntRangeDto>;
+export type IntRangeDtoOutput = zod.output<typeof IntRangeDto>;
+
+export const CroissantTimePresetDto = zod.object({
+  baseSeconds: zod.int(),
+  bonusSeconds: zod.int(),
+  time: zod.enum(['NONE', 'CLASSIC', 'RAPID', 'BLITZ']),
+});
+
+export type CroissantTimePresetDto = zod.input<typeof CroissantTimePresetDto>;
+export type CroissantTimePresetDtoOutput = zod.output<
+  typeof CroissantTimePresetDto
+>;
+
+export const CroissantSettingsLimitsDto = zod.object({
+  confectioners: IntRangeDto,
+  gameCode: zod.enum(['croissant']),
+  timePresets: zod.array(CroissantTimePresetDto),
+});
+
+export type CroissantSettingsLimitsDto = zod.input<
+  typeof CroissantSettingsLimitsDto
+>;
+export type CroissantSettingsLimitsDtoOutput = zod.output<
+  typeof CroissantSettingsLimitsDto
+>;
+
+export const CroissantSimpleSettingsDto = zod.object({
+  gameCode: zod.enum(['croissant']),
+  time: zod.enum(['NONE', 'CLASSIC', 'RAPID', 'BLITZ']),
+});
+
+export type CroissantSimpleSettingsDto = zod.input<
+  typeof CroissantSimpleSettingsDto
+>;
+export type CroissantSimpleSettingsDtoOutput = zod.output<
+  typeof CroissantSimpleSettingsDto
+>;
+
 export const PathSegmentId = zod.object({
   id: zod.string(),
 });
@@ -334,6 +546,7 @@ export const GameAdvancedSettingsDto = zod
   .discriminatedUnion('gameCode', [
     NothingAdvancedSettingsDto,
     CheckersAdvancedSettingsDto,
+    CroissantAdvancedSettingsDto,
   ])
   .describe('Advanced-настройки конкретной игры, вид — по полю gameCode');
 
@@ -341,6 +554,13 @@ export type GameAdvancedSettingsDto = zod.input<typeof GameAdvancedSettingsDto>;
 export type GameAdvancedSettingsDtoOutput = zod.output<
   typeof GameAdvancedSettingsDto
 >;
+
+export const GameAssetsDto = CroissantAssetsDto.describe(
+  'Статичные данные конкретной игры для отрисовки партии, вид — по полю gameCode',
+);
+
+export type GameAssetsDto = zod.input<typeof GameAssetsDto>;
+export type GameAssetsDtoOutput = zod.output<typeof GameAssetsDto>;
 
 export const RoomOptionsDto = zod.object({
   maxSpectators: zod.int(),
@@ -366,6 +586,7 @@ export const GameSimpleSettingsDto = zod
   .discriminatedUnion('gameCode', [
     NothingSimpleSettingsDto,
     CheckersSimpleSettingsDto,
+    CroissantSimpleSettingsDto,
   ])
   .describe('Simple-настройки конкретной игры, вид — по полю gameCode');
 
@@ -382,14 +603,6 @@ export const RoomSettingsDto = zod.object({
 
 export type RoomSettingsDto = zod.input<typeof RoomSettingsDto>;
 export type RoomSettingsDtoOutput = zod.output<typeof RoomSettingsDto>;
-
-export const IntRangeDto = zod.object({
-  max: zod.int(),
-  min: zod.int(),
-});
-
-export type IntRangeDto = zod.input<typeof IntRangeDto>;
-export type IntRangeDtoOutput = zod.output<typeof IntRangeDto>;
 
 export const NothingTimePresetDto = zod.object({
   baseSeconds: zod.int(),
@@ -419,6 +632,7 @@ export const GameSettingsLimitsDto = zod
   .discriminatedUnion('gameCode', [
     NothingSettingsLimitsDto,
     CheckersSettingsLimitsDto,
+    CroissantSettingsLimitsDto,
   ])
   .describe('Границы настроек конкретной игры, вид — по полю gameCode');
 
@@ -451,6 +665,7 @@ export type GameRulesDto = zod.input<typeof GameRulesDto>;
 export type GameRulesDtoOutput = zod.output<typeof GameRulesDto>;
 
 export const GameDetailsResponse = zod.object({
+  assets: zod.union([GameAssetsDto, zod.null()]).optional(),
   code: zod.enum(['nothing', 'croissant', 'checkers']),
   description: zod.string(),
   rules: GameRulesDto,
@@ -896,7 +1111,7 @@ export const SessionPatchEvent = zod
     SessionEventInfo,
   ])
   .describe(
-    'Событие журнала партии {seq, at, method, code, data}: одна операция над документом партии {status, meta, state}. Состояние меняется только по method (PUT, PATCH, DELETE; INFO не меняет), code — что произошло, для журнала и логов. Несуществующий путь у PATCH/DELETE или неподходящий тип — рассинхронизация, клиент переподключается за свежим снапшотом.\n\nИзвестные коды (code):\n- session-started — PUT [] {status, meta, state}: первое событие журнала (обычно уже в снапшоте);\n- session-finished — PATCH [] {status: FINISHED}: партия закончилась, последнее событие, поток закрывается;\n- session-cancelled — PATCH [] {status: CANCELLED}: партию отменил владелец, последнее событие, поток закрывается;\n- move-options-changed — PUT ["state", "players", {id}, "moveOptions"]: варианты ходов игрока (чужим зрителям — пустой список);\n- turn-changed — PUT ["state", "turns"]: сменился текущий игрок или раунд;\n- stage-changed — PUT ["state"]: партия перешла к другой стадии, состояние заменено целиком (часов нет, варианты ходов пусты — их ставят следующие события);\n- timer-started — PUT ["state", "timer"]: часы новой стадии (после stage-changed);\n- clock-switched — PUT ["state", "timer"]: часы после смены очереди (запас ходившего с инкрементом, если он есть, дедлайн следующего);\n- game-paused — PATCH ["state", "timer"] {status: PAUSED, pausedAt}: пауза;\n- game-resumed — PATCH ["state", "timer"] {status: RUNNING, deadline, pausedAt: null}: продолжение;\n- timer-stopped — PUT ["state", "timer"]: часы остановлены перед концом или отменой партии (итоговые остатки);\n- result-set — PUT ["state", "result"] {outcome, winnerIds, reason}: итог партии, только перед session-finished;\n- player-passed («игра в ничто») — PATCH ["state"] {moves}: игрок пропустил ход; по истечении времени — INFO {playerId, timeout: true};\n- piece-moved (шашки) — PATCH ["state", "pieces", {id}] {square}: шашка встала на последнюю клетку пути;\n- piece-captured (шашки) — DELETE ["state", "pieces", {id}]: шашка сбита (на каждую сбитую);\n- piece-crowned (шашки) — PATCH ["state", "pieces", {id}] {kind: KING}: шашка стала дамкой;\n- last-move-changed (шашки) — PUT ["state", "lastMove"] {pieceId, path, captured}: последний ход;\n- counters-changed (шашки) — PATCH ["state"] {quietMoves, materialMoves}: счётчики ходов дамками без взятий и ходов с последнего взятия или превращения;\n- position-recorded (шашки) — PUT ["state", "positionHistory"]: история позиций для повторения;\n- draw-offer-changed (шашки) — PATCH ["state"] {drawOfferedBy}: ничья предложена ходом или снята ходом соперника;\n- draw-accepted (шашки) — INFO {playerId}: игрок принял ничью;\n- player-resigned (шашки) — INFO {playerId}: игрок сдался;\n- move-timed-out (шашки) — INFO {playerId}: время хода игрока вышло (поражение);\n- color-picked (шашки) — INFO {playerId, color}: игрок первым выбрал цвет, следом stage-changed к игре;\n- color-pick-timed-out (шашки) — INFO {}: отсчёт выбора цвета истёк, цвета случайно, следом stage-changed.',
+    'Событие журнала партии {seq, at, method, code, data}: одна операция над документом партии {status, meta, state}. Состояние меняется только по method (PUT, PATCH, DELETE; INFO не меняет), code — что произошло, для журнала и логов. Несуществующий путь у PATCH/DELETE или неподходящий тип — рассинхронизация, клиент переподключается за свежим снапшотом.\n\nИзвестные коды (code):\n- session-started — PUT [] {status, meta, state}: первое событие журнала (обычно уже в снапшоте);\n- session-finished — PATCH [] {status: FINISHED}: партия закончилась, последнее событие, поток закрывается;\n- session-cancelled — PATCH [] {status: CANCELLED}: партию отменил владелец, последнее событие, поток закрывается;\n- move-options-changed — PUT ["state", "players", {id}, "moveOptions"]: варианты ходов игрока (чужим зрителям — пустой список);\n- turn-changed — PUT ["state", "turns"]: сменился текущий игрок или раунд;\n- stage-changed — PUT ["state"]: партия перешла к другой стадии, состояние заменено целиком (часов нет, варианты ходов пусты — их ставят следующие события);\n- timer-started — PUT ["state", "timer"]: часы новой стадии (после stage-changed);\n- clock-switched — PUT ["state", "timer"]: часы после смены очереди (запас ходившего с инкрементом, если он есть, дедлайн следующего);\n- game-paused — PATCH ["state", "timer"] {status: PAUSED, pausedAt}: пауза;\n- game-resumed — PATCH ["state", "timer"] {status: RUNNING, deadline, pausedAt: null}: продолжение;\n- timer-stopped — PUT ["state", "timer"]: часы остановлены перед концом или отменой партии (итоговые остатки);\n- result-set — PUT ["state", "result"] {outcome, winnerIds, reason}: итог партии, только перед session-finished;\n- player-passed («игра в ничто») — PATCH ["state"] {moves}: игрок пропустил ход; по истечении времени — INFO {playerId, timeout: true};\n- piece-moved (шашки) — PATCH ["state", "pieces", {id}] {square}: шашка встала на последнюю клетку пути;\n- piece-captured (шашки) — DELETE ["state", "pieces", {id}]: шашка сбита (на каждую сбитую);\n- piece-crowned (шашки) — PATCH ["state", "pieces", {id}] {kind: KING}: шашка стала дамкой;\n- last-move-changed (шашки) — PUT ["state", "lastMove"] {pieceId, path, captured}: последний ход;\n- counters-changed (шашки) — PATCH ["state"] {quietMoves, materialMoves}: счётчики ходов дамками без взятий и ходов с последнего взятия или превращения;\n- position-recorded (шашки) — PUT ["state", "positionHistory"]: история позиций для повторения;\n- draw-offer-changed (шашки) — PATCH ["state"] {drawOfferedBy}: ничья предложена ходом или снята ходом соперника;\n- draw-accepted (шашки) — INFO {playerId}: игрок принял ничью;\n- player-resigned (шашки) — INFO {playerId}: игрок сдался;\n- move-timed-out (шашки) — INFO {playerId}: время хода игрока вышло (поражение);\n- color-picked (шашки) — INFO {playerId, color}: игрок первым выбрал цвет, следом stage-changed к игре;\n- color-pick-timed-out (шашки) — INFO {}: отсчёт выбора цвета истёк, цвета случайно, следом stage-changed.\n- tile-placed (Круассан) — PUT ["state", "board", {id}] {id, x, y, tile, rotation}: тайл выложен;\n- spot-updated (Круассан) — PUT ["state", "spots", {id}]: участок сети создан или изменился (слияние, завершение);\n- spot-removed (Круассан) — DELETE ["state", "spots", {id}]: участок вошёл в другой при слиянии;\n- spot-completed (Круассан) — INFO {spotId, type, crumbs}: пекарня, тропа или сыроварня завершены;\n- tile-pending (Круассан) — PUT ["state", "pending"]: тайл ждёт кондитера;\n- tile-pending-cleared (Круассан) — DELETE ["state", "pending"]: шаг кондитера закончен;\n- confectioner-placed (Круассан) — PUT ["state", "spots", {id}] и PATCH ["state", "players", {id}]: кондитер поставлен;\n- confectioner-skipped (Круассан) — INFO {playerId}: шаг кондитера пропущен;\n- confectioners-returned (Круассан) — PATCH ["state", "players", {id}] {confectioners}: кондитеры вернулись с завершённого участка;\n- crumbs-changed (Круассан) — PATCH ["state", "players", {id}] {crumbs}: изменились «Золотые крошки»;\n- tile-drawn (Круассан) — PATCH ["state"] {currentTile, deckPos}: открыт следующий тайл;\n- tile-exhausted (Круассан) — PATCH ["state"] {currentTile: null, deckPos}: колода кончилась;\n- tile-discarded (Круассан) — INFO {tile, playerId}: тайл некуда положить, ушёл в сброс;\n- game-scored (Круассан) — INFO {crumbs}: итоговый подсчёт;\n- move-timed-out (Круассан) — INFO {playerId, x, y, rotation}: время вышло, тайл выложен автоматически.',
   );
 
 export type SessionPatchEvent = zod.input<typeof SessionPatchEvent>;
@@ -921,6 +1136,7 @@ export const SessionStateDto = zod
     NothingSessionStateDto,
     CheckersSessionStateDto,
     CheckersColorPickStateDto,
+    CroissantSessionStateDto,
   ])
   .describe(
     'Состояние текущей стадии партии конкретной игры: блоки core (stage, players, timer, turns, result) и поля игры. Игра — meta.game.code снапшота, стадия — state.stage; этой схемой клиент проверяет состояние после каждого события. Смена стадии (stage-changed) заменяет состояние целиком',

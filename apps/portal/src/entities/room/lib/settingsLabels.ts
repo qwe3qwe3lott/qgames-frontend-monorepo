@@ -5,6 +5,7 @@ import type {
   CheckersSimpleSettingsDtoColorAssignment,
   CheckersSimpleSettingsDtoTime,
   CheckersSimpleSettingsDtoVariant,
+  CroissantSimpleSettingsDtoTime,
   GameSimpleSettingsDto,
   NothingSimpleSettingsDtoTime,
   RoomSettingsDto,
@@ -59,6 +60,16 @@ export const NOTHING_TIME_LABELS: Readonly<
 > = {
   NONE: TIME_CONTROL_LABELS.none,
   CLASSIC: 'Классика',
+};
+
+/** Пресеты времени «Круассана» (`CroissantTime`). */
+export const CROISSANT_TIME_LABELS: Readonly<
+  Record<CroissantSimpleSettingsDtoTime, string>
+> = {
+  NONE: TIME_CONTROL_LABELS.none,
+  CLASSIC: 'Классика',
+  RAPID: 'Быстрые',
+  BLITZ: 'Блиц',
 };
 
 /** Цвет, который ходит первым (`CheckersColor`). */
@@ -186,6 +197,11 @@ function gameSettingsRow({simple, advanced}: RoomSettingsDto): SettingsRow {
             value: CHECKERS_VARIANT_LABELS[simple.variant],
           }
         : {label: 'Доска', value: formatBoardSize(advanced.boardSize)};
+    case 'croissant':
+      return {
+        label: 'Кондитеров у игрока',
+        value: String(advanced.confectioners),
+      };
   }
 }
 
@@ -196,6 +212,8 @@ function presetLabel(simple: GameSimpleSettingsDto): string {
       return NOTHING_TIME_LABELS[simple.time];
     case 'checkers':
       return CHECKERS_TIME_LABELS[simple.time];
+    case 'croissant':
+      return CROISSANT_TIME_LABELS[simple.time];
   }
 }
 
@@ -286,6 +304,14 @@ export function advancedSettingsRows(settings: RoomSettingsDto): SettingsRow[] {
         {
           label: 'Правила окончаний',
           value: CHECKERS_ENDGAME_RULE_LABELS[advanced.endgameRule],
+        },
+        timeRow(settings),
+      ];
+    case 'croissant':
+      return [
+        {
+          label: 'Кондитеров у игрока',
+          value: String(advanced.confectioners),
         },
         timeRow(settings),
       ];

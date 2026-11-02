@@ -1,3 +1,4 @@
+import {useGetGame} from '@qgames/api/portal';
 import {Suspense, use} from 'react';
 
 import {
@@ -41,6 +42,8 @@ function Board({
     rules: module,
   });
   const data = useSession(session.id);
+  // Карточка игры уже в кеше: маршрут комнаты ждёт её в loader.
+  const assets = useGetGame(room.gameCode).data?.assets ?? null;
   const controls = useMoveControls(room, module.staleMoveReasons);
   const players: GameBoardPlayer[] = room.members.map(member => ({
     id: member.id,
@@ -69,6 +72,7 @@ function Board({
             session={data}
             players={players}
             viewerId={viewerId}
+            assets={assets}
             {...controls}
           />
         </>

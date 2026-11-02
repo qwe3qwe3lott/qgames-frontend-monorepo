@@ -5,10 +5,13 @@
  * OpenAPI spec version: v0
  */
 import type {CheckersSimpleSettingsDto} from './checkersSimpleSettingsDto';
+import type {CroissantSimpleSettingsDto} from './croissantSimpleSettingsDto';
 import type {NothingSimpleSettingsDto} from './nothingSimpleSettingsDto';
 
 /**
  * Simple-настройки конкретной игры, вид — по полю gameCode
  */
 export type GameSimpleSettingsDto =
-  NothingSimpleSettingsDto | CheckersSimpleSettingsDto;
+  | NothingSimpleSettingsDto
+  | CheckersSimpleSettingsDto
+  | CroissantSimpleSettingsDto;

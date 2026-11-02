@@ -9,6 +9,8 @@ import type {
 import {
   CheckersAdvancedSettingsDto,
   CheckersSimpleSettingsDto,
+  CroissantAdvancedSettingsDto,
+  CroissantSimpleSettingsDto,
   NothingAdvancedSettingsDto,
   NothingSimpleSettingsDto,
   RoomOptionsDto,
@@ -89,7 +91,11 @@ function simpleSchema(limits: GameSettingsLimitsDto) {
           ),
         })
       : CheckersSimpleSettingsDto;
-  return z.discriminatedUnion('gameCode', [nothing, checkers]);
+  return z.discriminatedUnion('gameCode', [
+    nothing,
+    checkers,
+    CroissantSimpleSettingsDto,
+  ]);
 }
 
 /** Advanced-настройки: поля игры с её границами, плюс часы. */
@@ -123,7 +129,16 @@ function advancedSchema(rules: GameRulesDto) {
         : drawQuietMoves,
     timeControl,
   });
-  return z.discriminatedUnion('gameCode', [nothing, checkers]);
+  const croissant = CroissantAdvancedSettingsDto.extend({
+    confectioners:
+      limits.gameCode === 'croissant'
+        ? CroissantAdvancedSettingsDto.shape.confectioners
+            .min(limits.confectioners.min)
+            .max(limits.confectioners.max)
+        : CroissantAdvancedSettingsDto.shape.confectioners,
+    timeControl,
+  });
+  return z.discriminatedUnion('gameCode', [nothing, checkers, croissant]);
 }
 
 /**

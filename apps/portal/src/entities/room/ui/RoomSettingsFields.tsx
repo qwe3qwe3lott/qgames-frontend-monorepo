@@ -5,6 +5,7 @@ import {
   TimeControlDtoBonusType,
   type CheckersRulePresetDto,
   type CheckersSettingsLimitsDto,
+  type CroissantSettingsLimitsDto,
   type GameRulesDto,
   type NothingSettingsLimitsDto,
 } from '@qgames/api/portal/model';
@@ -33,6 +34,7 @@ import {
   CHECKERS_RULE_LABELS,
   CHECKERS_TIME_LABELS,
   CHECKERS_VARIANT_LABELS,
+  CROISSANT_TIME_LABELS,
   formatBoardSize,
   formatClock,
   formatDrawQuietMoves,
@@ -283,6 +285,64 @@ function RoundsField({
       />
       <FieldDescription>
         От {rounds.min} до {rounds.max}
+      </FieldDescription>
+      <FieldError errors={[error]} />
+    </Field>
+  );
+}
+
+/** Simple «Круассана»: только пресет времени — правила у игры одни. */
+function CroissantSimpleFields({
+  form,
+  limits,
+}: Pick<FormProps, 'form'> & {limits: CroissantSettingsLimitsDto}) {
+  const options: Option[] = [
+    {value: 'NONE', label: CROISSANT_TIME_LABELS.NONE},
+    ...limits.timePresets.map(item => ({
+      value: item.time,
+      label: CROISSANT_TIME_LABELS[item.time],
+      hint: formatClock(item),
+    })),
+  ];
+  return (
+    <SegmentedField
+      form={form}
+      name="simple.time"
+      legend="Время"
+      options={options}
+    />
+  );
+}
+
+/** Число кондитеров у игрока в advanced «Круассана». */
+function CroissantConfectionersField({
+  form,
+  idPrefix,
+  limits,
+}: FormProps & {limits: CroissantSettingsLimitsDto}) {
+  const {confectioners} = limits;
+  const name = 'advanced.confectioners' as const;
+  const {error} = form.getFieldState(name, form.formState);
+  const id = `${idPrefix}-advanced-confectioners`;
+  return (
+    <Field data-invalid={error !== undefined}>
+      <FieldLabel htmlFor={id}>Кондитеров у игрока</FieldLabel>
+      <Input
+        id={id}
+        data-testid={testIds.field}
+        data-field={name}
+        type="number"
+        inputMode="numeric"
+        min={confectioners.min}
+        max={confectioners.max}
+        step={1}
+        className="max-w-24"
+        aria-invalid={error !== undefined}
+        {...form.register(name, {valueAsNumber: true})}
+      />
+      <FieldDescription>
+        От {confectioners.min} до {confectioners.max}: сколько фишек кондитеров
+        получает каждый пекарь
       </FieldDescription>
       <FieldError errors={[error]} />
     </Field>
@@ -768,6 +828,8 @@ function SimpleFields({
       );
     case 'checkers':
       return <CheckersSimpleFields form={form} limits={limits} />;
+    case 'croissant':
+      return <CroissantSimpleFields form={form} limits={limits} />;
   }
 }
 
@@ -785,6 +847,12 @@ function AdvancedFields({
           form={form}
           idPrefix={idPrefix}
           name="advanced.rounds"
+          limits={limits}
+        />
+      ) : limits.gameCode === 'croissant' ? (
+        <CroissantConfectionersField
+          form={form}
+          idPrefix={idPrefix}
           limits={limits}
         />
       ) : (

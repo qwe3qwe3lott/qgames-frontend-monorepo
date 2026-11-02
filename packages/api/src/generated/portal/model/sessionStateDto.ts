@@ -6,10 +6,14 @@
  */
 import type {CheckersColorPickStateDto} from './checkersColorPickStateDto';
 import type {CheckersSessionStateDto} from './checkersSessionStateDto';
+import type {CroissantSessionStateDto} from './croissantSessionStateDto';
 import type {NothingSessionStateDto} from './nothingSessionStateDto';
 
 /**
  * Состояние текущей стадии партии конкретной игры: блоки core (stage, players, timer, turns, result) и поля игры. Игра — meta.game.code снапшота, стадия — state.stage; этой схемой клиент проверяет состояние после каждого события. Смена стадии (stage-changed) заменяет состояние целиком
  */
 export type SessionStateDto =
-  NothingSessionStateDto | CheckersSessionStateDto | CheckersColorPickStateDto;
+  | NothingSessionStateDto
+  | CheckersSessionStateDto
+  | CheckersColorPickStateDto
+  | CroissantSessionStateDto;

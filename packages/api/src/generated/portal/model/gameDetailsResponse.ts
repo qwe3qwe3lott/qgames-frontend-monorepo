@@ -4,10 +4,12 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
+import type {GameAssetsDto} from './gameAssetsDto';
 import type {GameDetailsResponseCode} from './gameDetailsResponseCode';
 import type {GameRulesDto} from './gameRulesDto';
 
 export interface GameDetailsResponse {
+  assets?: GameAssetsDto | null;
   code: GameDetailsResponseCode;
   description: string;
   rules: GameRulesDto;
