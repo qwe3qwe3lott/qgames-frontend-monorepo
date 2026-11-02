@@ -6,7 +6,7 @@ export const testIds = generateTestIds('CroissantBoard', [
   'rotateLeft',
   'rotateRight',
   'placeTile',
-  'spot',
+  'confirmConfectioner',
   'skipConfectioner',
   'zoomIn',
   'zoomOut',

@@ -3,7 +3,6 @@
  */
 export const PALETTE = {
   bakery: '#d9a066',
-  wall: '#b2703a',
   trail: '#f2e3c9',
   trailLine: '#c9a227',
   pasture: '#b9d3a7',

@@ -15,7 +15,7 @@ import {
 
 import {reasonLabel, SPOT_LABELS} from '../lib/labels';
 import {PALETTE} from '../lib/palette';
-import {cellKey} from '../lib/tiles';
+import {cellKey, partKey} from '../lib/tiles';
 import {
   isCroissantSession,
   parseCroissantTiles,
@@ -27,7 +27,11 @@ import {
 } from '../state';
 import type {BoardProps} from '../types';
 import {testIds} from './Board.testIds';
-import {CroissantTile} from './CroissantTile';
+import {
+  confectionerColor,
+  CroissantTile,
+  type ConfectionerChoice,
+} from './CroissantTile';
 import {ZoomControls} from './ZoomControls';
 
 const TILE_SIZE = 72;
@@ -60,6 +64,12 @@ interface Selection {
   readonly x: number;
   readonly y: number;
   readonly rotation: number;
+}
+
+/** Выбор участка для кондитера до подтверждения: держится на той же партии (`seq`), после события журнала сбрасывается. */
+interface ConfectionerDraft {
+  readonly seq: number;
+  readonly spotId: string;
 }
 
 /** Прямоугольник поля в координатах слоя (px при масштабе 1). */
@@ -164,6 +174,7 @@ function CroissantBoard({
   const spots = state.spots;
   const [selection, setSelection] = useState<Selection | null>(null);
   const [hoveredSpotId, setHoveredSpotId] = useState<string | null>(null);
+  const [draft, setDraft] = useState<ConfectionerDraft | null>(null);
   const transformRef = useRef<ReactZoomPanPinchRef>(null);
   // Положение слоя в начале жеста и признак «это было перетаскивание»: клик по клетке после панорамы не выбирает её.
   const panStart = useRef<{x: number; y: number} | null>(null);
@@ -249,6 +260,42 @@ function CroissantBoard({
   });
   const myConfectioners =
     state.players.find(player => player.id === viewerId)?.confectioners ?? 0;
+  const showConfectioner =
+    !over && pending !== undefined && pending !== null && canPlaceConfectioner;
+  const draftSpotId =
+    showConfectioner &&
+    draft !== null &&
+    draft.seq === session.seq &&
+    pendingSpots.some(spot => spot.id === draft.spotId)
+      ? draft.spotId
+      : null;
+  const draftSpot = pendingSpots.find(spot => spot.id === draftSpotId);
+  /** Части нового тайла, на которые можно поставить кондитера: `partKey` → id участка. */
+  const choiceSpots = new Map<string, string>();
+  pendingSpots.forEach(spot => {
+    spot.members
+      .filter(member => member.tileId === pending?.tileId)
+      .forEach(member => {
+        choiceSpots.set(
+          partKey({kind: spot.type, index: member.index}),
+          spot.id,
+        );
+      });
+  });
+  const confectionerChoice: ConfectionerChoice | undefined = showConfectioner
+    ? {
+        spots: choiceSpots,
+        selectedSpotId: draftSpotId,
+        color: confectionerColor(viewerId),
+        onChoose: spotId => {
+          if (dragged.current) {
+            dragged.current = false;
+            return;
+          }
+          setDraft(spotId === null ? null : {seq: session.seq, spotId});
+        },
+      }
+    : undefined;
 
   const selectCell = (
     x: number,
@@ -341,6 +388,9 @@ function CroissantBoard({
                   spots={spotsByTile.get(tile.id) ?? []}
                   highlightedSpotId={hoveredSpotId}
                   onHoverSpot={setHoveredSpotId}
+                  choice={
+                    tile.id === pending?.tileId ? confectionerChoice : undefined
+                  }
                 />
               </div>
             );
@@ -474,8 +524,6 @@ function CroissantBoard({
     );
   }
 
-  const showConfectioner =
-    pending !== undefined && pending !== null && canPlaceConfectioner;
   const hint = canPlace
     ? current === null
       ? 'Ваш ход: выберите клетку у края поля'
@@ -588,38 +636,38 @@ function CroissantBoard({
                 )}
               </div>
             ) : showConfectioner ? (
-              <div className="flex flex-col gap-2">
-                <div className="text-sm font-medium">
-                  Кондитер: выберите участок нового тайла ({myConfectioners} в
-                  запасе)
-                </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-sm">
+                  {draftSpot === undefined
+                    ? `Кондитер: выберите участок на новом тайле (в запасе ${String(myConfectioners)})`
+                    : `Кондитер: ${SPOT_LABELS[draftSpot.type].toLowerCase()}. Нажмите на фишку, чтобы убрать`}
+                </span>
                 <div className="flex flex-wrap gap-2">
-                  {pendingSpots.map(spot => (
-                    <WithHint key={spot.id} hint={null}>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        data-testid={testIds.spot}
-                        data-spot-id={spot.id}
-                        disabled={movePending}
-                        onMouseEnter={() => {
-                          setHoveredSpotId(spot.id);
-                        }}
-                        onMouseLeave={() => {
-                          setHoveredSpotId(null);
-                        }}
-                        onClick={() => {
+                  <WithHint
+                    hint={
+                      draftSpot === undefined
+                        ? 'Сначала выберите участок на тайле'
+                        : null
+                    }
+                  >
+                    <Button
+                      size="sm"
+                      data-testid={testIds.confirmConfectioner}
+                      disabled={draftSpot === undefined}
+                      onClick={() => {
+                        if (draftSpot !== undefined) {
                           onMove({
                             type: PLACE_CONFECTIONER,
-                            data: {spotId: spot.id},
+                            data: {spotId: draftSpot.id},
                           });
-                        }}
-                      >
-                        {SPOT_LABELS[spot.type]}
-                      </Button>
-                    </WithHint>
-                  ))}
+                        }
+                      }}
+                    >
+                      Поставить
+                    </Button>
+                  </WithHint>
                   <Button
+                    variant="outline"
                     size="sm"
                     data-testid={testIds.skipConfectioner}
                     disabled={movePending}
