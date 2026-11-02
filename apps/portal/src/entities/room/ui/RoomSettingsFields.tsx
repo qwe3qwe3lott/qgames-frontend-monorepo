@@ -1,6 +1,7 @@
 import {
   CheckersAdvancedSettingsDtoEndgameRule,
   CheckersAdvancedSettingsDtoFirstColor,
+  CheckersSimpleSettingsDtoColorAssignment,
   TimeControlDtoBonusType,
   type CheckersRulePresetDto,
   type CheckersSettingsLimitsDto,
@@ -25,6 +26,7 @@ import type {ReactNode} from 'react';
 import {Controller, useWatch, type UseFormReturn} from 'react-hook-form';
 
 import {
+  CHECKERS_COLOR_ASSIGNMENT_LABELS,
   CHECKERS_COLOR_LABELS,
   CHECKERS_ENDGAME_RULE_LABELS,
   CHECKERS_RULE_FLAGS,
@@ -131,7 +133,9 @@ function Segments({
 type SegmentedName =
   | 'simple.variant'
   | 'simple.time'
+  | 'simple.colorAssignment'
   | 'advanced.boardSize'
+  | 'advanced.colorAssignment'
   | 'advanced.firstColor'
   | 'advanced.endgameRule'
   | 'advanced.drawQuietMoves'
@@ -324,7 +328,21 @@ function NothingSimpleFields({
   );
 }
 
-/** Simple шашек: вариант правил и официальный контроль времени варианта. */
+const CHECKERS_COLOR_ASSIGNMENTS = Object.values(
+  CheckersSimpleSettingsDtoColorAssignment,
+);
+
+/** Распределение цветов шашек: случайно или кто первый выберет в начале партии. */
+const CHECKERS_COLOR_ASSIGNMENT_OPTIONS: Option[] =
+  CHECKERS_COLOR_ASSIGNMENTS.map(item => ({
+    value: item,
+    label: CHECKERS_COLOR_ASSIGNMENT_LABELS[item],
+  }));
+
+/**
+ * Simple шашек: вариант правил, распределение цветов и официальный контроль
+ * времени варианта.
+ */
 function CheckersSimpleFields({
   form,
   limits,
@@ -347,6 +365,12 @@ function CheckersSimpleFields({
         name="simple.variant"
         legend="Вариант правил"
         options={variantOptions(limits)}
+      />
+      <SegmentedField
+        form={form}
+        name="simple.colorAssignment"
+        legend="Цвета"
+        options={CHECKERS_COLOR_ASSIGNMENT_OPTIONS}
       />
       <SegmentedField
         form={form}
@@ -412,7 +436,8 @@ const CHECKERS_ENDGAME_RULES = Object.values(
 
 /**
  * Advanced шашек — одна рамка, которую заполняет пресет варианта: доска, первый
- * ход, правила хода галочками и правила ничьих.
+ * ход, правила хода галочками и правила ничьих; распределение цветов пресет не
+ * трогает.
  */
 function CheckersAdvancedFields({
   form,
@@ -440,6 +465,12 @@ function CheckersAdvancedFields({
             value: color,
             label: CHECKERS_COLOR_LABELS[color],
           }))}
+        />
+        <SegmentedField
+          form={form}
+          name="advanced.colorAssignment"
+          legend="Цвета"
+          options={CHECKERS_COLOR_ASSIGNMENT_OPTIONS}
         />
       </div>
       <FieldSet className="gap-2">

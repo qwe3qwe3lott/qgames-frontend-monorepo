@@ -1,5 +1,6 @@
 import {AuthDialog} from './models/authDialog';
 import {CheckersBoard} from './models/checkersBoard';
+import {CheckersColorPick} from './models/checkersColorPick';
 import {GameRoomsPage} from './models/gameRoomsPage';
 import {GamesPage} from './models/gamesPage';
 import {Header} from './models/header';
@@ -25,5 +26,6 @@ export const portalModels = {
   roomSettingsDialog: RoomSettingsDialog,
   sessionActions: SessionActions,
   checkersBoard: CheckersBoard,
+  checkersColorPick: CheckersColorPick,
   nothingBoard: NothingBoard,
 };

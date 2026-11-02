@@ -18,6 +18,8 @@ import type {SessionEventPut} from './sessionEventPut';
  * - session-cancelled — PATCH [] {status: CANCELLED}: партию отменил владелец, последнее событие, поток закрывается;
  * - move-options-changed — PUT ["state", "players", {id}, "moveOptions"]: варианты ходов игрока (чужим зрителям — пустой список);
  * - turn-changed — PUT ["state", "turns"]: сменился текущий игрок или раунд;
+ * - stage-changed — PUT ["state"]: партия перешла к другой стадии, состояние заменено целиком (часов нет, варианты ходов пусты — их ставят следующие события);
+ * - timer-started — PUT ["state", "timer"]: часы новой стадии (после stage-changed);
  * - clock-switched — PUT ["state", "timer"]: часы после смены очереди (запас ходившего с инкрементом, если он есть, дедлайн следующего);
  * - game-paused — PATCH ["state", "timer"] {status: PAUSED, pausedAt}: пауза;
  * - game-resumed — PATCH ["state", "timer"] {status: RUNNING, deadline, pausedAt: null}: продолжение;
@@ -33,7 +35,9 @@ import type {SessionEventPut} from './sessionEventPut';
  * - draw-offer-changed (шашки) — PATCH ["state"] {drawOfferedBy}: ничья предложена ходом или снята ходом соперника;
  * - draw-accepted (шашки) — INFO {playerId}: игрок принял ничью;
  * - player-resigned (шашки) — INFO {playerId}: игрок сдался;
- * - move-timed-out (шашки) — INFO {playerId}: время хода игрока вышло (поражение).
+ * - move-timed-out (шашки) — INFO {playerId}: время хода игрока вышло (поражение);
+ * - color-picked (шашки) — INFO {playerId, color}: игрок первым выбрал цвет, следом stage-changed к игре;
+ * - color-pick-timed-out (шашки) — INFO {}: отсчёт выбора цвета истёк, цвета случайно, следом stage-changed.
  */
 export type SessionPatchEvent =
   SessionEventPut | SessionEventPatch | SessionEventDelete | SessionEventInfo;

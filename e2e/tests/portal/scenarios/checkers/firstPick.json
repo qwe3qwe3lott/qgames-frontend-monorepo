@@ -1,0 +1,1597 @@
+{
+  "game": "checkers",
+  "seed": 1,
+  "settings": {
+    "simple": {
+      "colorAssignment": "FIRST_PICK",
+      "gameCode": "checkers",
+      "time": "RAPID",
+      "variant": "RUSSIAN"
+    }
+  },
+  "actors": [
+    {
+      "name": "alice",
+      "role": "PLAYER"
+    },
+    {
+      "name": "bob",
+      "role": "PLAYER"
+    },
+    {
+      "name": "spectator",
+      "role": "SPECTATOR"
+    }
+  ],
+  "start": {
+    "expected": {
+      "alice": [
+        {
+          "type": "snapshot",
+          "data": {
+            "seq": 1,
+            "status": "IN_PROGRESS",
+            "serverTime": "$time",
+            "meta": {
+              "game": {
+                "code": "checkers",
+                "settings": {
+                  "gameCode": "checkers",
+                  "boardSize": 8,
+                  "firstColor": "WHITE",
+                  "endgameRule": "RUSSIAN",
+                  "drawQuietMoves": 30,
+                  "timeControl": {
+                    "enabled": true,
+                    "baseSeconds": 480,
+                    "bonusType": "INCREMENT",
+                    "bonusSeconds": 4
+                  },
+                  "menMoveBackward": false,
+                  "menCaptureBackward": true,
+                  "flyingKings": true,
+                  "captureRequired": true,
+                  "maxCaptureRequired": false,
+                  "promoteMidCapture": true,
+                  "removeCapturedAfterMove": true,
+                  "colorAssignment": "FIRST_PICK"
+                }
+              },
+              "advancedRules": {
+                "boardSize": 8,
+                "firstColor": "WHITE",
+                "menMoveBackward": false,
+                "menCaptureBackward": true,
+                "flyingKings": true,
+                "captureRequired": true,
+                "maxCaptureRequired": false,
+                "promoteMidCapture": true,
+                "removeCapturedAfterMove": true
+              }
+            },
+            "state": {
+              "stage": "color-pick",
+              "players": [
+                {
+                  "id": "{{alice.id}}",
+                  "moveOptions": [
+                    {
+                      "type": "PICK_COLOR",
+                      "data": null
+                    }
+                  ]
+                },
+                {
+                  "id": "{{bob.id}}",
+                  "moveOptions": []
+                }
+              ],
+              "timer": {
+                "kind": "STAGE",
+                "status": "RUNNING",
+                "deadline": "$time",
+                "pausedAt": null,
+                "clocks": []
+              },
+              "turns": {
+                "currentPlayerId": null,
+                "round": 1,
+                "rounds": null
+              },
+              "result": null
+            }
+          }
+        }
+      ],
+      "bob": [
+        {
+          "type": "snapshot",
+          "data": {
+            "seq": 1,
+            "status": "IN_PROGRESS",
+            "serverTime": "$time",
+            "meta": {
+              "game": {
+                "code": "checkers",
+                "settings": {
+                  "gameCode": "checkers",
+                  "boardSize": 8,
+                  "firstColor": "WHITE",
+                  "endgameRule": "RUSSIAN",
+                  "drawQuietMoves": 30,
+                  "timeControl": {
+                    "enabled": true,
+                    "baseSeconds": 480,
+                    "bonusType": "INCREMENT",
+                    "bonusSeconds": 4
+                  },
+                  "menMoveBackward": false,
+                  "menCaptureBackward": true,
+                  "flyingKings": true,
+                  "captureRequired": true,
+                  "maxCaptureRequired": false,
+                  "promoteMidCapture": true,
+                  "removeCapturedAfterMove": true,
+                  "colorAssignment": "FIRST_PICK"
+                }
+              },
+              "advancedRules": {
+                "boardSize": 8,
+                "firstColor": "WHITE",
+                "menMoveBackward": false,
+                "menCaptureBackward": true,
+                "flyingKings": true,
+                "captureRequired": true,
+                "maxCaptureRequired": false,
+                "promoteMidCapture": true,
+                "removeCapturedAfterMove": true
+              }
+            },
+            "state": {
+              "stage": "color-pick",
+              "players": [
+                {
+                  "id": "{{alice.id}}",
+                  "moveOptions": []
+                },
+                {
+                  "id": "{{bob.id}}",
+                  "moveOptions": [
+                    {
+                      "type": "PICK_COLOR",
+                      "data": null
+                    }
+                  ]
+                }
+              ],
+              "timer": {
+                "kind": "STAGE",
+                "status": "RUNNING",
+                "deadline": "$time",
+                "pausedAt": null,
+                "clocks": []
+              },
+              "turns": {
+                "currentPlayerId": null,
+                "round": 1,
+                "rounds": null
+              },
+              "result": null
+            }
+          }
+        }
+      ],
+      "spectator": [
+        {
+          "type": "snapshot",
+          "data": {
+            "seq": 1,
+            "status": "IN_PROGRESS",
+            "serverTime": "$time",
+            "meta": {
+              "game": {
+                "code": "checkers",
+                "settings": {
+                  "gameCode": "checkers",
+                  "boardSize": 8,
+                  "firstColor": "WHITE",
+                  "endgameRule": "RUSSIAN",
+                  "drawQuietMoves": 30,
+                  "timeControl": {
+                    "enabled": true,
+                    "baseSeconds": 480,
+                    "bonusType": "INCREMENT",
+                    "bonusSeconds": 4
+                  },
+                  "menMoveBackward": false,
+                  "menCaptureBackward": true,
+                  "flyingKings": true,
+                  "captureRequired": true,
+                  "maxCaptureRequired": false,
+                  "promoteMidCapture": true,
+                  "removeCapturedAfterMove": true,
+                  "colorAssignment": "FIRST_PICK"
+                }
+              },
+              "advancedRules": {
+                "boardSize": 8,
+                "firstColor": "WHITE",
+                "menMoveBackward": false,
+                "menCaptureBackward": true,
+                "flyingKings": true,
+                "captureRequired": true,
+                "maxCaptureRequired": false,
+                "promoteMidCapture": true,
+                "removeCapturedAfterMove": true
+              }
+            },
+            "state": {
+              "stage": "color-pick",
+              "players": [
+                {
+                  "id": "{{alice.id}}",
+                  "moveOptions": []
+                },
+                {
+                  "id": "{{bob.id}}",
+                  "moveOptions": []
+                }
+              ],
+              "timer": {
+                "kind": "STAGE",
+                "status": "RUNNING",
+                "deadline": "$time",
+                "pausedAt": null,
+                "clocks": []
+              },
+              "turns": {
+                "currentPlayerId": null,
+                "round": 1,
+                "rounds": null
+              },
+              "result": null
+            }
+          }
+        }
+      ]
+    }
+  },
+  "steps": [
+    {
+      "title": "Боб первым выбирает белые",
+      "actor": "bob",
+      "move": {
+        "pickColor": "WHITE"
+      },
+      "expected": {
+        "alice": [
+          {
+            "type": "info",
+            "data": {
+              "seq": 2,
+              "at": "$time",
+              "method": "INFO",
+              "code": "color-picked",
+              "data": {
+                "playerId": "{{bob.id}}",
+                "color": "WHITE"
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 3,
+              "at": "$time",
+              "method": "PUT",
+              "code": "stage-changed",
+              "data": {
+                "path": ["state"],
+                "value": {
+                  "stage": "play",
+                  "players": [
+                    {
+                      "id": "{{alice.id}}",
+                      "moveOptions": [],
+                      "color": "BLACK"
+                    },
+                    {
+                      "id": "{{bob.id}}",
+                      "moveOptions": [],
+                      "color": "WHITE"
+                    }
+                  ],
+                  "timer": null,
+                  "turns": {
+                    "currentPlayerId": "{{bob.id}}",
+                    "round": 1,
+                    "rounds": null
+                  },
+                  "result": null,
+                  "pieces": [
+                    {
+                      "id": "w1",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [1, 1]
+                    },
+                    {
+                      "id": "w2",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [3, 1]
+                    },
+                    {
+                      "id": "w3",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [5, 1]
+                    },
+                    {
+                      "id": "w4",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [7, 1]
+                    },
+                    {
+                      "id": "w5",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [2, 2]
+                    },
+                    {
+                      "id": "w6",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [4, 2]
+                    },
+                    {
+                      "id": "w7",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [6, 2]
+                    },
+                    {
+                      "id": "w8",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [8, 2]
+                    },
+                    {
+                      "id": "w9",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [1, 3]
+                    },
+                    {
+                      "id": "w10",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [3, 3]
+                    },
+                    {
+                      "id": "w11",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [5, 3]
+                    },
+                    {
+                      "id": "w12",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [7, 3]
+                    },
+                    {
+                      "id": "b1",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [8, 8]
+                    },
+                    {
+                      "id": "b2",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [6, 8]
+                    },
+                    {
+                      "id": "b3",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [4, 8]
+                    },
+                    {
+                      "id": "b4",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [2, 8]
+                    },
+                    {
+                      "id": "b5",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [7, 7]
+                    },
+                    {
+                      "id": "b6",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [5, 7]
+                    },
+                    {
+                      "id": "b7",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [3, 7]
+                    },
+                    {
+                      "id": "b8",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [1, 7]
+                    },
+                    {
+                      "id": "b9",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [8, 6]
+                    },
+                    {
+                      "id": "b10",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [6, 6]
+                    },
+                    {
+                      "id": "b11",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [4, 6]
+                    },
+                    {
+                      "id": "b12",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [2, 6]
+                    }
+                  ],
+                  "lastMove": null,
+                  "quietMoves": 0,
+                  "materialMoves": 0,
+                  "positionHistory": [
+                    "W|BM1,7;BM2,6;BM2,8;BM3,7;BM4,6;BM4,8;BM5,7;BM6,6;BM6,8;BM7,7;BM8,6;BM8,8;WM1,1;WM1,3;WM2,2;WM3,1;WM3,3;WM4,2;WM5,1;WM5,3;WM6,2;WM7,1;WM7,3;WM8,2"
+                  ],
+                  "drawOfferedBy": null
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 4,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{alice.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": [
+                  {
+                    "type": "RESIGN",
+                    "data": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 5,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{bob.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": []
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 6,
+              "at": "$time",
+              "method": "PUT",
+              "code": "timer-started",
+              "data": {
+                "path": ["state", "timer"],
+                "value": {
+                  "kind": "PLAYERS",
+                  "status": "RUNNING",
+                  "deadline": "$time",
+                  "pausedAt": null,
+                  "clocks": [
+                    {
+                      "playerId": "{{alice.id}}",
+                      "remainingMs": "$time"
+                    },
+                    {
+                      "playerId": "{{bob.id}}",
+                      "remainingMs": "$time"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ],
+        "bob": [
+          {
+            "type": "info",
+            "data": {
+              "seq": 2,
+              "at": "$time",
+              "method": "INFO",
+              "code": "color-picked",
+              "data": {
+                "playerId": "{{bob.id}}",
+                "color": "WHITE"
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 3,
+              "at": "$time",
+              "method": "PUT",
+              "code": "stage-changed",
+              "data": {
+                "path": ["state"],
+                "value": {
+                  "stage": "play",
+                  "players": [
+                    {
+                      "id": "{{alice.id}}",
+                      "moveOptions": [],
+                      "color": "BLACK"
+                    },
+                    {
+                      "id": "{{bob.id}}",
+                      "moveOptions": [],
+                      "color": "WHITE"
+                    }
+                  ],
+                  "timer": null,
+                  "turns": {
+                    "currentPlayerId": "{{bob.id}}",
+                    "round": 1,
+                    "rounds": null
+                  },
+                  "result": null,
+                  "pieces": [
+                    {
+                      "id": "w1",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [1, 1]
+                    },
+                    {
+                      "id": "w2",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [3, 1]
+                    },
+                    {
+                      "id": "w3",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [5, 1]
+                    },
+                    {
+                      "id": "w4",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [7, 1]
+                    },
+                    {
+                      "id": "w5",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [2, 2]
+                    },
+                    {
+                      "id": "w6",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [4, 2]
+                    },
+                    {
+                      "id": "w7",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [6, 2]
+                    },
+                    {
+                      "id": "w8",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [8, 2]
+                    },
+                    {
+                      "id": "w9",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [1, 3]
+                    },
+                    {
+                      "id": "w10",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [3, 3]
+                    },
+                    {
+                      "id": "w11",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [5, 3]
+                    },
+                    {
+                      "id": "w12",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [7, 3]
+                    },
+                    {
+                      "id": "b1",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [8, 8]
+                    },
+                    {
+                      "id": "b2",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [6, 8]
+                    },
+                    {
+                      "id": "b3",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [4, 8]
+                    },
+                    {
+                      "id": "b4",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [2, 8]
+                    },
+                    {
+                      "id": "b5",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [7, 7]
+                    },
+                    {
+                      "id": "b6",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [5, 7]
+                    },
+                    {
+                      "id": "b7",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [3, 7]
+                    },
+                    {
+                      "id": "b8",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [1, 7]
+                    },
+                    {
+                      "id": "b9",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [8, 6]
+                    },
+                    {
+                      "id": "b10",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [6, 6]
+                    },
+                    {
+                      "id": "b11",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [4, 6]
+                    },
+                    {
+                      "id": "b12",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [2, 6]
+                    }
+                  ],
+                  "lastMove": null,
+                  "quietMoves": 0,
+                  "materialMoves": 0,
+                  "positionHistory": [
+                    "W|BM1,7;BM2,6;BM2,8;BM3,7;BM4,6;BM4,8;BM5,7;BM6,6;BM6,8;BM7,7;BM8,6;BM8,8;WM1,1;WM1,3;WM2,2;WM3,1;WM3,3;WM4,2;WM5,1;WM5,3;WM6,2;WM7,1;WM7,3;WM8,2"
+                  ],
+                  "drawOfferedBy": null
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 4,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{alice.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": []
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 5,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{bob.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": [
+                  {
+                    "type": "MOVE",
+                    "data": null
+                  },
+                  {
+                    "type": "RESIGN",
+                    "data": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 6,
+              "at": "$time",
+              "method": "PUT",
+              "code": "timer-started",
+              "data": {
+                "path": ["state", "timer"],
+                "value": {
+                  "kind": "PLAYERS",
+                  "status": "RUNNING",
+                  "deadline": "$time",
+                  "pausedAt": null,
+                  "clocks": [
+                    {
+                      "playerId": "{{alice.id}}",
+                      "remainingMs": "$time"
+                    },
+                    {
+                      "playerId": "{{bob.id}}",
+                      "remainingMs": "$time"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ],
+        "spectator": [
+          {
+            "type": "info",
+            "data": {
+              "seq": 2,
+              "at": "$time",
+              "method": "INFO",
+              "code": "color-picked",
+              "data": {
+                "playerId": "{{bob.id}}",
+                "color": "WHITE"
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 3,
+              "at": "$time",
+              "method": "PUT",
+              "code": "stage-changed",
+              "data": {
+                "path": ["state"],
+                "value": {
+                  "stage": "play",
+                  "players": [
+                    {
+                      "id": "{{alice.id}}",
+                      "moveOptions": [],
+                      "color": "BLACK"
+                    },
+                    {
+                      "id": "{{bob.id}}",
+                      "moveOptions": [],
+                      "color": "WHITE"
+                    }
+                  ],
+                  "timer": null,
+                  "turns": {
+                    "currentPlayerId": "{{bob.id}}",
+                    "round": 1,
+                    "rounds": null
+                  },
+                  "result": null,
+                  "pieces": [
+                    {
+                      "id": "w1",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [1, 1]
+                    },
+                    {
+                      "id": "w2",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [3, 1]
+                    },
+                    {
+                      "id": "w3",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [5, 1]
+                    },
+                    {
+                      "id": "w4",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [7, 1]
+                    },
+                    {
+                      "id": "w5",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [2, 2]
+                    },
+                    {
+                      "id": "w6",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [4, 2]
+                    },
+                    {
+                      "id": "w7",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [6, 2]
+                    },
+                    {
+                      "id": "w8",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [8, 2]
+                    },
+                    {
+                      "id": "w9",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [1, 3]
+                    },
+                    {
+                      "id": "w10",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [3, 3]
+                    },
+                    {
+                      "id": "w11",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [5, 3]
+                    },
+                    {
+                      "id": "w12",
+                      "color": "WHITE",
+                      "kind": "MAN",
+                      "square": [7, 3]
+                    },
+                    {
+                      "id": "b1",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [8, 8]
+                    },
+                    {
+                      "id": "b2",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [6, 8]
+                    },
+                    {
+                      "id": "b3",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [4, 8]
+                    },
+                    {
+                      "id": "b4",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [2, 8]
+                    },
+                    {
+                      "id": "b5",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [7, 7]
+                    },
+                    {
+                      "id": "b6",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [5, 7]
+                    },
+                    {
+                      "id": "b7",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [3, 7]
+                    },
+                    {
+                      "id": "b8",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [1, 7]
+                    },
+                    {
+                      "id": "b9",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [8, 6]
+                    },
+                    {
+                      "id": "b10",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [6, 6]
+                    },
+                    {
+                      "id": "b11",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [4, 6]
+                    },
+                    {
+                      "id": "b12",
+                      "color": "BLACK",
+                      "kind": "MAN",
+                      "square": [2, 6]
+                    }
+                  ],
+                  "lastMove": null,
+                  "quietMoves": 0,
+                  "materialMoves": 0,
+                  "positionHistory": [
+                    "W|BM1,7;BM2,6;BM2,8;BM3,7;BM4,6;BM4,8;BM5,7;BM6,6;BM6,8;BM7,7;BM8,6;BM8,8;WM1,1;WM1,3;WM2,2;WM3,1;WM3,3;WM4,2;WM5,1;WM5,3;WM6,2;WM7,1;WM7,3;WM8,2"
+                  ],
+                  "drawOfferedBy": null
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 4,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{alice.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": []
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 5,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{bob.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": []
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 6,
+              "at": "$time",
+              "method": "PUT",
+              "code": "timer-started",
+              "data": {
+                "path": ["state", "timer"],
+                "value": {
+                  "kind": "PLAYERS",
+                  "status": "RUNNING",
+                  "deadline": "$time",
+                  "pausedAt": null,
+                  "clocks": [
+                    {
+                      "playerId": "{{alice.id}}",
+                      "remainingMs": "$time"
+                    },
+                    {
+                      "playerId": "{{bob.id}}",
+                      "remainingMs": "$time"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "title": "c3-d4",
+      "actor": "bob",
+      "move": {
+        "path": [
+          [3, 3],
+          [4, 4]
+        ]
+      },
+      "expected": {
+        "alice": [
+          {
+            "type": "patch",
+            "data": {
+              "seq": 7,
+              "at": "$time",
+              "method": "PATCH",
+              "code": "piece-moved",
+              "data": {
+                "path": [
+                  "state",
+                  "pieces",
+                  {
+                    "id": "w10"
+                  }
+                ],
+                "value": {
+                  "square": [4, 4]
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 8,
+              "at": "$time",
+              "method": "PUT",
+              "code": "last-move-changed",
+              "data": {
+                "path": ["state", "lastMove"],
+                "value": {
+                  "pieceId": "w10",
+                  "path": [
+                    [3, 3],
+                    [4, 4]
+                  ],
+                  "captured": []
+                }
+              }
+            }
+          },
+          {
+            "type": "patch",
+            "data": {
+              "seq": 9,
+              "at": "$time",
+              "method": "PATCH",
+              "code": "counters-changed",
+              "data": {
+                "path": ["state"],
+                "value": {
+                  "quietMoves": 0,
+                  "materialMoves": 1
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 10,
+              "at": "$time",
+              "method": "PUT",
+              "code": "position-recorded",
+              "data": {
+                "path": ["state", "positionHistory"],
+                "value": [
+                  "B|BM1,7;BM2,6;BM2,8;BM3,7;BM4,6;BM4,8;BM5,7;BM6,6;BM6,8;BM7,7;BM8,6;BM8,8;WM1,1;WM1,3;WM2,2;WM3,1;WM4,2;WM4,4;WM5,1;WM5,3;WM6,2;WM7,1;WM7,3;WM8,2"
+                ]
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 11,
+              "at": "$time",
+              "method": "PUT",
+              "code": "turn-changed",
+              "data": {
+                "path": ["state", "turns"],
+                "value": {
+                  "currentPlayerId": "{{alice.id}}",
+                  "round": 1,
+                  "rounds": null
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 12,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{alice.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": [
+                  {
+                    "type": "MOVE",
+                    "data": null
+                  },
+                  {
+                    "type": "RESIGN",
+                    "data": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 13,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{bob.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": []
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 14,
+              "at": "$time",
+              "method": "PUT",
+              "code": "clock-switched",
+              "data": {
+                "path": ["state", "timer"],
+                "value": {
+                  "kind": "PLAYERS",
+                  "status": "RUNNING",
+                  "deadline": "$time",
+                  "pausedAt": null,
+                  "clocks": [
+                    {
+                      "playerId": "{{alice.id}}",
+                      "remainingMs": "$time"
+                    },
+                    {
+                      "playerId": "{{bob.id}}",
+                      "remainingMs": "$time"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ],
+        "bob": [
+          {
+            "type": "patch",
+            "data": {
+              "seq": 7,
+              "at": "$time",
+              "method": "PATCH",
+              "code": "piece-moved",
+              "data": {
+                "path": [
+                  "state",
+                  "pieces",
+                  {
+                    "id": "w10"
+                  }
+                ],
+                "value": {
+                  "square": [4, 4]
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 8,
+              "at": "$time",
+              "method": "PUT",
+              "code": "last-move-changed",
+              "data": {
+                "path": ["state", "lastMove"],
+                "value": {
+                  "pieceId": "w10",
+                  "path": [
+                    [3, 3],
+                    [4, 4]
+                  ],
+                  "captured": []
+                }
+              }
+            }
+          },
+          {
+            "type": "patch",
+            "data": {
+              "seq": 9,
+              "at": "$time",
+              "method": "PATCH",
+              "code": "counters-changed",
+              "data": {
+                "path": ["state"],
+                "value": {
+                  "quietMoves": 0,
+                  "materialMoves": 1
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 10,
+              "at": "$time",
+              "method": "PUT",
+              "code": "position-recorded",
+              "data": {
+                "path": ["state", "positionHistory"],
+                "value": [
+                  "B|BM1,7;BM2,6;BM2,8;BM3,7;BM4,6;BM4,8;BM5,7;BM6,6;BM6,8;BM7,7;BM8,6;BM8,8;WM1,1;WM1,3;WM2,2;WM3,1;WM4,2;WM4,4;WM5,1;WM5,3;WM6,2;WM7,1;WM7,3;WM8,2"
+                ]
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 11,
+              "at": "$time",
+              "method": "PUT",
+              "code": "turn-changed",
+              "data": {
+                "path": ["state", "turns"],
+                "value": {
+                  "currentPlayerId": "{{alice.id}}",
+                  "round": 1,
+                  "rounds": null
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 12,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{alice.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": []
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 13,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{bob.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": [
+                  {
+                    "type": "RESIGN",
+                    "data": null
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 14,
+              "at": "$time",
+              "method": "PUT",
+              "code": "clock-switched",
+              "data": {
+                "path": ["state", "timer"],
+                "value": {
+                  "kind": "PLAYERS",
+                  "status": "RUNNING",
+                  "deadline": "$time",
+                  "pausedAt": null,
+                  "clocks": [
+                    {
+                      "playerId": "{{alice.id}}",
+                      "remainingMs": "$time"
+                    },
+                    {
+                      "playerId": "{{bob.id}}",
+                      "remainingMs": "$time"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ],
+        "spectator": [
+          {
+            "type": "patch",
+            "data": {
+              "seq": 7,
+              "at": "$time",
+              "method": "PATCH",
+              "code": "piece-moved",
+              "data": {
+                "path": [
+                  "state",
+                  "pieces",
+                  {
+                    "id": "w10"
+                  }
+                ],
+                "value": {
+                  "square": [4, 4]
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 8,
+              "at": "$time",
+              "method": "PUT",
+              "code": "last-move-changed",
+              "data": {
+                "path": ["state", "lastMove"],
+                "value": {
+                  "pieceId": "w10",
+                  "path": [
+                    [3, 3],
+                    [4, 4]
+                  ],
+                  "captured": []
+                }
+              }
+            }
+          },
+          {
+            "type": "patch",
+            "data": {
+              "seq": 9,
+              "at": "$time",
+              "method": "PATCH",
+              "code": "counters-changed",
+              "data": {
+                "path": ["state"],
+                "value": {
+                  "quietMoves": 0,
+                  "materialMoves": 1
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 10,
+              "at": "$time",
+              "method": "PUT",
+              "code": "position-recorded",
+              "data": {
+                "path": ["state", "positionHistory"],
+                "value": [
+                  "B|BM1,7;BM2,6;BM2,8;BM3,7;BM4,6;BM4,8;BM5,7;BM6,6;BM6,8;BM7,7;BM8,6;BM8,8;WM1,1;WM1,3;WM2,2;WM3,1;WM4,2;WM4,4;WM5,1;WM5,3;WM6,2;WM7,1;WM7,3;WM8,2"
+                ]
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 11,
+              "at": "$time",
+              "method": "PUT",
+              "code": "turn-changed",
+              "data": {
+                "path": ["state", "turns"],
+                "value": {
+                  "currentPlayerId": "{{alice.id}}",
+                  "round": 1,
+                  "rounds": null
+                }
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 12,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{alice.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": []
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 13,
+              "at": "$time",
+              "method": "PUT",
+              "code": "move-options-changed",
+              "data": {
+                "path": [
+                  "state",
+                  "players",
+                  {
+                    "id": "{{bob.id}}"
+                  },
+                  "moveOptions"
+                ],
+                "value": []
+              }
+            }
+          },
+          {
+            "type": "put",
+            "data": {
+              "seq": 14,
+              "at": "$time",
+              "method": "PUT",
+              "code": "clock-switched",
+              "data": {
+                "path": ["state", "timer"],
+                "value": {
+                  "kind": "PLAYERS",
+                  "status": "RUNNING",
+                  "deadline": "$time",
+                  "pausedAt": null,
+                  "clocks": [
+                    {
+                      "playerId": "{{alice.id}}",
+                      "remainingMs": "$time"
+                    },
+                    {
+                      "playerId": "{{bob.id}}",
+                      "remainingMs": "$time"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

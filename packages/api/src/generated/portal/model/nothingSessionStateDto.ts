@@ -4,6 +4,7 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
+import type {NothingSessionStateDtoStage} from './nothingSessionStateDtoStage';
 import type {SessionPlayerDto} from './sessionPlayerDto';
 import type {SessionResultDto} from './sessionResultDto';
 import type {SessionTimerDto} from './sessionTimerDto';
@@ -13,6 +14,7 @@ export interface NothingSessionStateDto {
   moves: number;
   players: SessionPlayerDto[];
   result?: SessionResultDto | null;
+  stage: NothingSessionStateDtoStage;
   timer?: SessionTimerDto | null;
   turns: SessionTurnsDto;
 }

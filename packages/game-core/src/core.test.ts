@@ -7,6 +7,7 @@ import {
   isCoreState,
   moveOptionsOf,
   playerClock,
+  stageClock,
   type ActiveTimer,
 } from './core';
 import {sessionFromSnapshot, type SessionData} from './session';
@@ -63,6 +64,7 @@ describe('moveOptionsOf', () => {
 describe('activeTimer', () => {
   it('идущие часы', () => {
     expect(activeTimer(session())).toEqual({
+      kind: 'PLAYERS',
       paused: false,
       deadline: TIMER.deadline,
       pausedAt: null,
@@ -95,6 +97,37 @@ describe('activeTimer', () => {
       paused: true,
       pausedAt: '2026-10-21T10:00:10Z',
     });
+  });
+});
+
+describe('stageClock', () => {
+  const STAGE_TIMER = {
+    kind: 'STAGE',
+    status: 'RUNNING',
+    deadline: '2026-10-21T10:00:30Z',
+    pausedAt: null,
+    clocks: [],
+  } as const;
+
+  it('общий отсчёт стадии идёт до её дедлайна, часов игроков нет', () => {
+    const timer = activeTimer(
+      session({state: {...STATE, stage: 'color-pick', timer: STAGE_TIMER}}),
+    );
+
+    expect(timer && stageClock(timer)).toEqual({
+      remainingMs: Number.MAX_SAFE_INTEGER,
+      delayMs: 0,
+      deadline: STAGE_TIMER.deadline,
+      paused: false,
+      pausedAt: null,
+    });
+    expect(timer && playerClock(timer, ALICE, null)).toBeNull();
+  });
+
+  it('у часов игроков отсчёта стадии нет', () => {
+    const timer = activeTimer(session());
+
+    expect(timer && stageClock(timer)).toBeNull();
   });
 });
 

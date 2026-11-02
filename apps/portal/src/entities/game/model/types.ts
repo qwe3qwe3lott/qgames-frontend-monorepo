@@ -51,4 +51,11 @@ export interface GameModule extends GameStateRules {
   Board: ComponentType<GameBoardProps>;
   /** Нет — в списке игроков базовая карточка. */
   PlayerCard?: ComponentType<GamePlayerCardProps>;
+  /**
+   * Причины отказа хода (`reason` у 422 `MOVE_REJECTED`), которые значат
+   * «действие опоздало, состояние уже сменилось» (например, соперник первым
+   * выбрал цвет): снекбар по ним не показывается, новое состояние придёт
+   * потоком.
+   */
+  staleMoveReasons?: readonly string[];
 }

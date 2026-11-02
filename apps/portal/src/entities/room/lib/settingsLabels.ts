@@ -2,6 +2,7 @@ import type {
   CheckersAdvancedSettingsDto,
   CheckersAdvancedSettingsDtoEndgameRule,
   CheckersAdvancedSettingsDtoFirstColor,
+  CheckersSimpleSettingsDtoColorAssignment,
   CheckersSimpleSettingsDtoTime,
   CheckersSimpleSettingsDtoVariant,
   GameSimpleSettingsDto,
@@ -32,6 +33,14 @@ export const CHECKERS_VARIANT_LABELS: Readonly<
   RUSSIAN: 'Русские',
   INTERNATIONAL: 'Международные',
   ENGLISH: 'Английские',
+};
+
+/** Распределение цветов шашек (`CheckersColorAssignment`). */
+export const CHECKERS_COLOR_ASSIGNMENT_LABELS: Readonly<
+  Record<CheckersSimpleSettingsDtoColorAssignment, string>
+> = {
+  RANDOM: 'Случайно',
+  FIRST_PICK: 'Кто первый выберет',
 };
 
 /** Пресеты времени шашек (`CheckersTime`). */
@@ -103,6 +112,7 @@ export type CheckersRuleFlag = Exclude<
   | 'firstColor'
   | 'endgameRule'
   | 'drawQuietMoves'
+  | 'colorAssignment'
 >;
 
 /** Правила хода шашек в порядке показа. */
@@ -211,16 +221,32 @@ export function isAdvancedSettings(settings: RoomSettingsDto): boolean {
   return settings.simple === undefined || settings.simple === null;
 }
 
+/** Как распределяются цвета (у шашек); у игр без цветов строки нет. */
+function colorsRows({advanced}: RoomSettingsDto): SettingsRow[] {
+  return advanced.gameCode === 'checkers'
+    ? [
+        {
+          label: 'Цвета',
+          value: CHECKERS_COLOR_ASSIGNMENT_LABELS[advanced.colorAssignment],
+        },
+      ]
+    : [];
+}
+
 /**
- * Строки описания настроек комнаты: при простых правилах — настройки игры и
- * время, при продвинутых их нет (они в `advancedSettingsRows`); места
- * наблюдателей — всегда.
+ * Строки описания настроек комнаты: при простых правилах — настройки игры,
+ * распределение цветов и время, при продвинутых их нет (они в
+ * `advancedSettingsRows`); места наблюдателей — всегда.
  */
 export function roomSettingsRows(settings: RoomSettingsDto): SettingsRow[] {
   return [
     ...(isAdvancedSettings(settings)
       ? []
-      : [gameSettingsRow(settings), timeRow(settings)]),
+      : [
+          gameSettingsRow(settings),
+          ...colorsRows(settings),
+          timeRow(settings),
+        ]),
     {
       label: 'Мест наблюдателей',
       value: String(settings.room.maxSpectators),
@@ -248,6 +274,7 @@ export function advancedSettingsRows(settings: RoomSettingsDto): SettingsRow[] {
           label: 'Первыми ходят',
           value: CHECKERS_COLOR_LABELS[advanced.firstColor],
         },
+        ...colorsRows(settings),
         ...CHECKERS_RULE_FLAGS.map(flag => ({
           label: CHECKERS_RULE_LABELS[flag],
           value: yesNo(advanced[flag]),

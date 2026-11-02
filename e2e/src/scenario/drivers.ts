@@ -18,6 +18,8 @@ const checkersMoveSchema = z.union([
   }),
   z.object({resign: z.literal(true)}),
   z.object({acceptDraw: z.literal(true)}),
+  /** Выбор своего цвета в стадии выбора цвета. */
+  z.object({pickColor: z.enum(['WHITE', 'BLACK'])}),
 ]);
 
 const checkersDriver: GameDriver = {
@@ -32,6 +34,8 @@ const checkersDriver: GameDriver = {
       for (const [x, y] of parsed.path) {
         await board.squareButton(x, y).click();
       }
+    } else if ('pickColor' in parsed) {
+      await actor.checkersColorPick.colorButton(parsed.pickColor).click();
     } else if ('resign' in parsed) {
       await board.resignButton.click();
       await board.resignConfirmButton.click();

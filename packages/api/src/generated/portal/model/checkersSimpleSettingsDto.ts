@@ -4,11 +4,13 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
+import type {CheckersSimpleSettingsDtoColorAssignment} from './checkersSimpleSettingsDtoColorAssignment';
 import type {CheckersSimpleSettingsDtoGameCode} from './checkersSimpleSettingsDtoGameCode';
 import type {CheckersSimpleSettingsDtoTime} from './checkersSimpleSettingsDtoTime';
 import type {CheckersSimpleSettingsDtoVariant} from './checkersSimpleSettingsDtoVariant';
 
 export interface CheckersSimpleSettingsDto {
+  colorAssignment: CheckersSimpleSettingsDtoColorAssignment;
   gameCode: CheckersSimpleSettingsDtoGameCode;
   time: CheckersSimpleSettingsDtoTime;
   variant: CheckersSimpleSettingsDtoVariant;

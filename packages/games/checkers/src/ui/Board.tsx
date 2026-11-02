@@ -28,6 +28,7 @@ import {
 } from '../lib/path';
 import {
   ACCEPT_DRAW,
+  isCheckersColorPickSession,
   isCheckersSession,
   MOVE,
   RESIGN,
@@ -36,6 +37,7 @@ import {
 import type {BoardProps} from '../types';
 import {testIds} from './Board.testIds';
 import {CheckersGrid} from './CheckersGrid';
+import {ColorPick} from './ColorPick';
 
 const UNKNOWN_PLAYER_NAME = 'Игрок';
 const PAUSED_HINT = 'Партия на паузе';
@@ -326,12 +328,16 @@ function CheckersBoard({
 }
 
 /**
- * Доска шашек. Правила знает сервер: варианты действий — из `moveOptions`
- * игрока, путь собирается по подсказкам из флагов `meta.advancedRules` и
- * отправляется целиком (`{type: MOVE, data: {path, offerDraw?}}`); ничья
- * предлагается вместе с ходом и принимается ходом `ACCEPT_DRAW`.
+ * Доска шашек по стадии партии: выбор цвета (`ColorPick`) или игра. Правила
+ * знает сервер: варианты действий — из `moveOptions` игрока, путь собирается
+ * по подсказкам из флагов `meta.advancedRules` и отправляется целиком
+ * (`{type: MOVE, data: {path, offerDraw?}}`); ничья предлагается вместе с
+ * ходом и принимается ходом `ACCEPT_DRAW`.
  */
 export function Board({session, ...props}: BoardProps) {
+  if (isCheckersColorPickSession(session)) {
+    return <ColorPick session={session} {...props} />;
+  }
   if (!isCheckersSession(session)) {
     return (
       <p className="text-destructive">Не удалось прочитать состояние партии</p>
