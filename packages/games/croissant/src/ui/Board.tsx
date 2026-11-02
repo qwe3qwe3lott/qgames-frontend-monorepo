@@ -3,7 +3,6 @@ import {
   GameOver,
   type GameOverResult,
 } from '@qgames/game-ui/components/GameOver';
-import {TurnIndicator} from '@qgames/game-ui/components/TurnIndicator';
 import {Button} from '@qgames/ui/components/Button';
 import {WithHint} from '@qgames/ui/components/WithHint';
 import {useMemo, useRef, useState, type ReactNode} from 'react';
@@ -70,6 +69,38 @@ interface Selection {
 interface ConfectionerDraft {
   readonly seq: number;
   readonly spotId: string;
+}
+
+/** Длительность поворота поля, мс: столько же идёт подгонка вида под повёрнутое поле. */
+const ROTATE_MS = 300;
+/** Ось поворота поля — центр клетки (0, 0): точка не сдвигается, когда поле растёт. */
+const PIVOT = TILE_SIZE / 2;
+
+/** Поворот в градусах, приведённый к 0..270: так его понимают функции геометрии тайла. */
+function normalizeRotation(degrees: number): number {
+  return ((degrees % 360) + 360) % 360;
+}
+
+/** Рамка поля после поворота слоя на `degrees` вокруг оси `PIVOT`. */
+function rotateBounds(bounds: Bounds, degrees: number): Bounds {
+  const angle = (normalizeRotation(degrees) * Math.PI) / 180;
+  const cos = Math.round(Math.cos(angle));
+  const sin = Math.round(Math.sin(angle));
+  const corners = [
+    [bounds.left, bounds.top],
+    [bounds.right, bounds.top],
+    [bounds.right, bounds.bottom],
+    [bounds.left, bounds.bottom],
+  ].map(([x = 0, y = 0]) => ({
+    x: PIVOT + (x - PIVOT) * cos - (y - PIVOT) * sin,
+    y: PIVOT + (x - PIVOT) * sin + (y - PIVOT) * cos,
+  }));
+  return {
+    left: Math.min(...corners.map(point => point.x)),
+    top: Math.min(...corners.map(point => point.y)),
+    right: Math.max(...corners.map(point => point.x)),
+    bottom: Math.max(...corners.map(point => point.y)),
+  };
 }
 
 /** Прямоугольник поля в координатах слоя (px при масштабе 1). */
@@ -174,6 +205,9 @@ function CroissantBoard({
   const spots = state.spots;
   const [selection, setSelection] = useState<Selection | null>(null);
   const [draft, setDraft] = useState<ConfectionerDraft | null>(null);
+  // Поворот поля зрителем, градусы с шагом 90: локальный вид, в партию не уходит и не запоминается. Без приведения к
+  // 0..270, чтобы анимация всегда шла в сторону нажатой кнопки.
+  const [view, setView] = useState(0);
   const transformRef = useRef<ReactZoomPanPinchRef>(null);
   // Положение слоя в начале жеста и признак «это было перетаскивание»: клик по клетке после панорамы не выбирает её.
   const panStart = useRef<{x: number; y: number} | null>(null);
@@ -185,7 +219,6 @@ function CroissantBoard({
   const timer = activeTimer(session);
   const paused = timer?.paused ?? false;
   const over = isSessionOver(session);
-  const turnPlayerId = state.turns.currentPlayerId ?? null;
 
   const tilesByCode = useMemo(
     () => new Map(tiles.map(tile => [tile.code, tile])),
@@ -235,13 +268,17 @@ function CroissantBoard({
     bottom: (-Math.min(...ys, 0) + 1) * TILE_SIZE,
   };
 
-  const fitView = (ref: ReactZoomPanPinchRef, animationMs: number): void => {
+  const fitView = (
+    ref: ReactZoomPanPinchRef,
+    animationMs: number,
+    degrees: number = view,
+  ): void => {
     const wrapper = ref.instance.wrapperComponent;
     if (wrapper === null) {
       return;
     }
     const {x, y, scale} = fitTransform(
-      bounds,
+      rotateBounds(bounds, degrees),
       wrapper.clientWidth,
       wrapper.clientHeight,
     );
@@ -367,7 +404,14 @@ function CroissantBoard({
         wrapperClass="size-full! cursor-grab active:cursor-grabbing"
         contentClass="size-0! overflow-visible!"
       >
-        <div className="relative">
+        <div
+          className="relative transition-transform duration-300"
+          // Угол поворота задаёт зритель — классом не выразить.
+          style={{
+            transform: `rotate(${String(view)}deg)`,
+            transformOrigin: `${String(PIVOT)}px ${String(PIVOT)}px`,
+          }}
+        >
           {state.board.map(tile => {
             const shape = tilesByCode.get(tile.tile);
             const {left, top} = positionOf(tile.x, tile.y);
@@ -457,6 +501,14 @@ function CroissantBoard({
                 fitView(ref, animationMs);
               }
             }}
+            onRotate={step => {
+              const next = view + step * 90;
+              setView(next);
+              const ref = transformRef.current;
+              if (ref !== null) {
+                fitView(ref, ROTATE_MS, next);
+              }
+            }}
           />
         </div>
       </div>
@@ -541,17 +593,10 @@ function CroissantBoard({
     >
       {field}
 
-      {/* Сверху: чей ход, пауза, колода; справа — легенда. */}
+      {/* Сверху: пауза и колода (кто ходит — видно в списке игроков); справа — легенда. */}
       <div className="pointer-events-none absolute inset-x-2 top-2 flex flex-wrap items-start justify-between gap-2">
         <Panel>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-            <TurnIndicator
-              playerName={
-                turnPlayerId === null
-                  ? UNKNOWN_PLAYER_NAME
-                  : nameOf(turnPlayerId)
-              }
-            />
             {paused ? (
               <span
                 role="status"
@@ -580,7 +625,9 @@ function CroissantBoard({
                     <CroissantTile
                       shape={currentShape}
                       tileId="current"
-                      rotation={current?.rotation ?? 0}
+                      rotation={normalizeRotation(
+                        (current?.rotation ?? 0) + view,
+                      )}
                       size={PREVIEW_SIZE}
                       spots={[]}
                     />

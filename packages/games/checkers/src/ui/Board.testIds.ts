@@ -5,4 +5,5 @@ export const testIds = generateTestIds('CheckersBoard', [
   'acceptDrawButton',
   'resignButton',
   'resignConfirmButton',
+  'flipBoard',
 ]);

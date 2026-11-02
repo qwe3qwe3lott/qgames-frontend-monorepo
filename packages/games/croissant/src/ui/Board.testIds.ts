@@ -11,4 +11,6 @@ export const testIds = generateTestIds('CroissantBoard', [
   'zoomIn',
   'zoomOut',
   'zoomReset',
+  'rotateFieldLeft',
+  'rotateFieldRight',
 ]);

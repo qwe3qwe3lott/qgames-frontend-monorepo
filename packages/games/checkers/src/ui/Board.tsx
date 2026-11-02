@@ -16,6 +16,7 @@ import {
   DialogTrigger,
 } from '@qgames/ui/components/Dialog';
 import {WithHint} from '@qgames/ui/components/WithHint';
+import {ArrowDownUp} from 'lucide-react';
 import {useState} from 'react';
 
 import {reasonLabel} from '../lib/labels';
@@ -125,6 +126,8 @@ function CheckersBoard({
   const [selection, setSelection] = useState<Selection | null>(null);
   // Предложить ничью вместе со следующим ходом; сбрасывается, когда ход отправлен.
   const [offerDraw, setOfferDraw] = useState(false);
+  // Сколько раз зритель перевернул доску: локальный вид, в партию не уходит и не запоминается.
+  const [flips, setFlips] = useState(0);
   const {state} = session;
   const rules = session.meta.advancedRules;
   const byId = new Map(players.map(player => [player.id, player]));
@@ -203,6 +206,7 @@ function CheckersBoard({
       boardSize={rules.boardSize}
       pieces={state.pieces}
       bottomColor={viewerColor ?? 'WHITE'}
+      turn={flips * 180}
       lastMovePath={lastMovePath}
       movableIds={movable.pieceIds}
       mustCapture={movable.capture}
@@ -212,6 +216,22 @@ function CheckersBoard({
       interactive={canMove}
       onSquareClick={onSquareClick}
     />
+  );
+
+  const flipButton = (
+    <WithHint hint="Перевернуть доску">
+      <Button
+        size="icon-sm"
+        variant="ghost"
+        aria-label="Перевернуть доску"
+        data-testid={testIds.flipBoard}
+        onClick={() => {
+          setFlips(value => value + 1);
+        }}
+      >
+        <ArrowDownUp />
+      </Button>
+    </WithHint>
   );
 
   if (over) {
@@ -234,6 +254,7 @@ function CheckersBoard({
               : reasonLabel(result.reason)
           }
         />
+        <div className="flex justify-end">{flipButton}</div>
         {grid}
       </div>
     );
@@ -252,14 +273,17 @@ function CheckersBoard({
             currentId === null ? UNKNOWN_PLAYER_NAME : nameOf(currentId)
           }
         />
-        {paused ? (
-          <span
-            role="status"
-            className="rounded-md bg-muted px-2 py-1 text-sm font-medium text-muted-foreground"
-          >
-            Пауза
-          </span>
-        ) : null}
+        <div className="flex items-center gap-2">
+          {paused ? (
+            <span
+              role="status"
+              className="rounded-md bg-muted px-2 py-1 text-sm font-medium text-muted-foreground"
+            >
+              Пауза
+            </span>
+          ) : null}
+          {flipButton}
+        </div>
       </div>
       {canAcceptDraw ? (
         <div

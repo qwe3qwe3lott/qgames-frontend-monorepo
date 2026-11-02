@@ -1,6 +1,6 @@
 import {Button} from '@qgames/ui/components/Button';
 import {WithHint} from '@qgames/ui/components/WithHint';
-import {LocateFixed, Minus, Plus} from 'lucide-react';
+import {LocateFixed, Minus, Plus, RotateCcw, RotateCw} from 'lucide-react';
 import {
   useControls,
   useTransformComponent,
@@ -15,6 +15,8 @@ const FIT_ANIMATION_MS = 200;
 interface ZoomControlsProps {
   /** Показать всё поле: масштаб и центр по выложенным тайлам и свободным клеткам. */
   readonly onFit: (animationMs: number) => void;
+  /** Повернуть поле на 90°: -1 — против часовой, 1 — по часовой. */
+  readonly onRotate: (step: -1 | 1) => void;
 }
 
 /**
@@ -22,7 +24,7 @@ interface ZoomControlsProps {
  * поле») ставится здесь, а не в `onInit` обёртки: тот срабатывает раньше, чем счётчик масштаба подпишется на
  * изменения, и показал бы 100%.
  */
-export function ZoomControls({onFit}: ZoomControlsProps) {
+export function ZoomControls({onFit, onRotate}: ZoomControlsProps) {
   const {zoomIn, zoomOut} = useControls();
   const scale = useTransformComponent(({state}) => state.scale);
   useTransformInit(() => {
@@ -71,6 +73,33 @@ export function ZoomControls({onFit}: ZoomControlsProps) {
           }}
         >
           <LocateFixed />
+        </Button>
+      </WithHint>
+      <div className="my-0.5 h-px w-full bg-border" aria-hidden />
+      <WithHint hint="Повернуть поле против часовой">
+        <Button
+          size="icon-sm"
+          variant="ghost"
+          aria-label="Повернуть поле против часовой"
+          data-testid={testIds.rotateFieldLeft}
+          onClick={() => {
+            onRotate(-1);
+          }}
+        >
+          <RotateCcw />
+        </Button>
+      </WithHint>
+      <WithHint hint="Повернуть поле по часовой">
+        <Button
+          size="icon-sm"
+          variant="ghost"
+          aria-label="Повернуть поле по часовой"
+          data-testid={testIds.rotateFieldRight}
+          onClick={() => {
+            onRotate(1);
+          }}
+        >
+          <RotateCw />
         </Button>
       </WithHint>
     </div>
