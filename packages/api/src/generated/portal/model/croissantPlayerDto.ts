@@ -11,4 +11,5 @@ export interface CroissantPlayerDto {
   crumbs: number;
   id: string;
   moveOptions: MoveOptionDto[];
+  out: boolean;
 }

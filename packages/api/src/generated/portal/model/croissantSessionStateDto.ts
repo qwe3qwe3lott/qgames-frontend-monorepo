@@ -18,6 +18,7 @@ export interface CroissantSessionStateDto {
   /** @nullable */
   currentTile?: string | null;
   deckPos: number;
+  deckReturns: number[];
   deckSize: number;
   pending?: CroissantPendingDto | null;
   players: CroissantPlayerDto[];

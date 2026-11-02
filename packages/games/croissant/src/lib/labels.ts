@@ -14,6 +14,9 @@ export function reasonLabel(reason: string): string {
   if (reason === 'SCORED') {
     return 'Колода кончилась — подведён итог по сети заведений';
   }
+  if (reason === 'TIMEOUT') {
+    return 'У остальных пекарей вышло время — подведён итог по сети заведений';
+  }
   return reason;
 }
 

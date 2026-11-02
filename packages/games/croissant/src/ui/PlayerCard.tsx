@@ -41,7 +41,12 @@ export function PlayerCard({session, card}: GamePlayerCardProps) {
   return (
     <BasePlayerCard
       {...card}
-      badges={[...(card.badges ?? []), `${String(player.crumbs)} крошек`]}
+      badges={[
+        ...(card.badges ?? []),
+        `${String(player.crumbs)} крошек`,
+        // Выбыл по времени: не ходит и не может победить, крошки ему считаются.
+        ...(player.out ? ['Выбыл'] : []),
+      ]}
       active={!over && turnPlayerId === card.id}
       note={
         <WithHint hint={hint}>
