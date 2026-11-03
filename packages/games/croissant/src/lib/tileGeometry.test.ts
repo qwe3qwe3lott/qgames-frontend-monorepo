@@ -162,7 +162,7 @@ describe('tileGeometry', () => {
   });
 
   it('ends the fork branches at the garden and splits three pastures', () => {
-    const fork = TILES.find(tile => tile.code === 'trail-cross');
+    const fork = TILES.find(tile => tile.code === 'trail-fork-with-garden');
     const geometry = fork === undefined ? null : tileGeometry(fork, 100);
     expect(geometry?.garden?.center).toEqual({x: 50, y: 50});
     expect(geometry?.trails).toHaveLength(3);

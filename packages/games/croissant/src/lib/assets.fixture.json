@@ -2,6 +2,78 @@
   "gameCode": "croissant",
   "tiles": [
     {
+      "code": "trail-to-dairy",
+      "title": "Сыроварня у тропы",
+      "edges": {
+        "N": {
+          "type": "PASTURE",
+          "index": 0
+        },
+        "E": {
+          "type": "PASTURE",
+          "index": 0
+        },
+        "S": {
+          "type": "TRAIL",
+          "index": 0
+        },
+        "W": {
+          "type": "PASTURE",
+          "index": 0
+        }
+      },
+      "bakeries": [],
+      "trails": [
+        {
+          "bakeryIndex": null,
+          "structure": true
+        }
+      ],
+      "structures": {
+        "garden": false,
+        "dairy": true
+      },
+      "pastures": [
+        {
+          "halves": [
+            {
+              "dir": "N",
+              "half": 0
+            },
+            {
+              "dir": "N",
+              "half": 1
+            },
+            {
+              "dir": "E",
+              "half": 0
+            },
+            {
+              "dir": "E",
+              "half": 1
+            },
+            {
+              "dir": "S",
+              "half": 0
+            },
+            {
+              "dir": "S",
+              "half": 1
+            },
+            {
+              "dir": "W",
+              "half": 0
+            },
+            {
+              "dir": "W",
+              "half": 1
+            }
+          ],
+          "adjacentBakeries": []
+        }
+      ]
+    },
+    {
       "code": "dairy",
       "title": "Сыроварня",
       "edges": {
@@ -69,67 +141,101 @@
       ]
     },
     {
-      "code": "dairy-trail",
-      "title": "Сыроварня у тропы",
+      "code": "bakery-center-with-sign",
+      "title": "Центр пекарни с вывеской",
       "edges": {
         "N": {
-          "type": "TRAIL",
+          "type": "BAKERY",
           "index": 0
         },
         "E": {
-          "type": "PASTURE",
+          "type": "BAKERY",
+          "index": 0
+        },
+        "S": {
+          "type": "BAKERY",
+          "index": 0
+        },
+        "W": {
+          "type": "BAKERY",
+          "index": 0
+        }
+      },
+      "bakeries": [
+        {
+          "sign": true
+        }
+      ],
+      "trails": [],
+      "structures": {
+        "garden": false,
+        "dairy": false
+      },
+      "pastures": []
+    },
+    {
+      "code": "bakery-and-trail-near-by",
+      "title": "Тропа рядом с пекарней",
+      "edges": {
+        "N": {
+          "type": "BAKERY",
+          "index": 0
+        },
+        "E": {
+          "type": "TRAIL",
           "index": 0
         },
         "S": {
           "type": "PASTURE",
-          "index": 0
+          "index": 1
         },
         "W": {
-          "type": "PASTURE",
+          "type": "TRAIL",
           "index": 0
         }
       },
-      "bakeries": [],
+      "bakeries": [
+        {
+          "sign": false
+        }
+      ],
       "trails": [
         {
           "bakeryIndex": null,
-          "structure": true
+          "structure": false
         }
       ],
       "structures": {
         "garden": false,
-        "dairy": true
+        "dairy": false
       },
       "pastures": [
         {
           "halves": [
             {
-              "dir": "N",
-              "half": 0
-            },
-            {
-              "dir": "N",
-              "half": 1
-            },
-            {
               "dir": "E",
               "half": 0
-            },
-            {
-              "dir": "E",
-              "half": 1
-            },
-            {
-              "dir": "S",
-              "half": 0
-            },
-            {
-              "dir": "S",
-              "half": 1
             },
             {
               "dir": "W",
               "half": 0
+            }
+          ],
+          "adjacentBakeries": [0]
+        },
+        {
+          "halves": [
+            {
+              "dir": "E",
+              "half": 1
+            },
+            {
+              "dir": "S",
+              "half": 0
+            },
+            {
+              "dir": "S",
+              "half": 1
             },
             {
               "dir": "W",
@@ -141,7 +247,7 @@
       ]
     },
     {
-      "code": "bakery-one",
+      "code": "bakery",
       "title": "Пекарня",
       "edges": {
         "N": {
@@ -204,8 +310,128 @@
       ]
     },
     {
-      "code": "bakery-one-sign",
-      "title": "Пекарня с вывеской",
+      "code": "bakery-bridge-with-sign",
+      "title": "Узкая пекарня с вывеской",
+      "edges": {
+        "N": {
+          "type": "PASTURE",
+          "index": 0
+        },
+        "E": {
+          "type": "BAKERY",
+          "index": 0
+        },
+        "S": {
+          "type": "PASTURE",
+          "index": 1
+        },
+        "W": {
+          "type": "BAKERY",
+          "index": 0
+        }
+      },
+      "bakeries": [
+        {
+          "sign": true
+        }
+      ],
+      "trails": [],
+      "structures": {
+        "garden": false,
+        "dairy": false
+      },
+      "pastures": [
+        {
+          "halves": [
+            {
+              "dir": "N",
+              "half": 0
+            },
+            {
+              "dir": "N",
+              "half": 1
+            }
+          ],
+          "adjacentBakeries": [0]
+        },
+        {
+          "halves": [
+            {
+              "dir": "S",
+              "half": 0
+            },
+            {
+              "dir": "S",
+              "half": 1
+            }
+          ],
+          "adjacentBakeries": [0]
+        }
+      ]
+    },
+    {
+      "code": "bakery-bridge",
+      "title": "Узкая пекарня",
+      "edges": {
+        "N": {
+          "type": "PASTURE",
+          "index": 0
+        },
+        "E": {
+          "type": "BAKERY",
+          "index": 0
+        },
+        "S": {
+          "type": "PASTURE",
+          "index": 1
+        },
+        "W": {
+          "type": "BAKERY",
+          "index": 0
+        }
+      },
+      "bakeries": [
+        {
+          "sign": false
+        }
+      ],
+      "trails": [],
+      "structures": {
+        "garden": false,
+        "dairy": false
+      },
+      "pastures": [
+        {
+          "halves": [
+            {
+              "dir": "N",
+              "half": 0
+            },
+            {
+              "dir": "N",
+              "half": 1
+            }
+          ],
+          "adjacentBakeries": [0]
+        },
+        {
+          "halves": [
+            {
+              "dir": "S",
+              "half": 0
+            },
+            {
+              "dir": "S",
+              "half": 1
+            }
+          ],
+          "adjacentBakeries": [0]
+        }
+      ]
+    },
+    {
+      "code": "two-opposite-bakeries",
+      "title": "Две пекарни напротив",
       "edges": {
         "N": {
           "type": "BAKERY",
@@ -216,8 +442,8 @@
           "index": 0
         },
         "S": {
-          "type": "PASTURE",
-          "index": 0
+          "type": "BAKERY",
+          "index": 1
         },
         "W": {
           "type": "PASTURE",
@@ -226,7 +452,10 @@
       },
       "bakeries": [
         {
-          "sign": true
+          "sign": false
+        },
+        {
+          "sign": false
         }
       ],
       "trails": [],
@@ -246,14 +475,6 @@
               "half": 1
             },
             {
-              "dir": "S",
-              "half": 0
-            },
-            {
-              "dir": "S",
-              "half": 1
-            },
-            {
               "dir": "W",
               "half": 0
             },
@@ -262,20 +483,20 @@
               "half": 1
             }
           ],
-          "adjacentBakeries": [0]
+          "adjacentBakeries": [0, 1]
         }
       ]
     },
     {
-      "code": "bakery-corner",
-      "title": "Угловая пекарня",
+      "code": "two-neighbour-bakeries",
+      "title": "Две пекарни рядом",
       "edges": {
         "N": {
           "type": "BAKERY",
           "index": 0
         },
         "E": {
-          "type": "BAKERY",
+          "type": "PASTURE",
           "index": 0
         },
         "S": {
@@ -283,13 +504,16 @@
           "index": 0
         },
         "W": {
-          "type": "PASTURE",
-          "index": 0
+          "type": "BAKERY",
+          "index": 1
         }
       },
       "bakeries": [
         {
-          "sign": true
+          "sign": false
+        },
+        {
+          "sign": false
         }
       ],
       "trails": [],
@@ -309,88 +533,157 @@
               "half": 1
             },
             {
+              "dir": "E",
+              "half": 0
+            },
+            {
+              "dir": "E",
+              "half": 1
+            }
+          ],
+          "adjacentBakeries": [0, 1]
+        }
+      ]
+    },
+    {
+      "code": "bakery-and-trail-turn-near-by",
+      "title": "Поворот тропы рядом с пекарней",
+      "edges": {
+        "N": {
+          "type": "BAKERY",
+          "index": 0
+        },
+        "E": {
+          "type": "TRAIL",
+          "index": 0
+        },
+        "S": {
+          "type": "TRAIL",
+          "index": 0
+        },
+        "W": {
+          "type": "PASTURE",
+          "index": 0
+        }
+      },
+      "bakeries": [
+        {
+          "sign": false
+        }
+      ],
+      "trails": [
+        {
+          "bakeryIndex": null,
+          "structure": false
+        }
+      ],
+      "structures": {
+        "garden": false,
+        "dairy": false
+      },
+      "pastures": [
+        {
+          "halves": [
+            {
               "dir": "W",
               "half": 0
             },
             {
               "dir": "W",
+              "half": 1
+            },
+            {
+              "dir": "S",
+              "half": 0
+            },
+            {
+              "dir": "E",
+              "half": 0
+            }
+          ],
+          "adjacentBakeries": [0]
+        },
+        {
+          "halves": [
+            {
+              "dir": "S",
+              "half": 1
+            },
+            {
+              "dir": "E",
+              "half": 1
+            }
+          ],
+          "adjacentBakeries": []
+        }
+      ]
+    },
+    {
+      "code": "bakery-and-trail-turn-near-by-2",
+      "title": "Поворот тропы рядом с пекарней",
+      "edges": {
+        "N": {
+          "type": "BAKERY",
+          "index": 0
+        },
+        "E": {
+          "type": "PASTURE",
+          "index": 0
+        },
+        "S": {
+          "type": "TRAIL",
+          "index": 0
+        },
+        "W": {
+          "type": "TRAIL",
+          "index": 0
+        }
+      },
+      "bakeries": [
+        {
+          "sign": false
+        }
+      ],
+      "trails": [
+        {
+          "bakeryIndex": null,
+          "structure": false
+        }
+      ],
+      "structures": {
+        "garden": false,
+        "dairy": false
+      },
+      "pastures": [
+        {
+          "halves": [
+            {
+              "dir": "W",
+              "half": 0
+            },
+            {
+              "dir": "S",
+              "half": 1
+            },
+            {
+              "dir": "E",
+              "half": 0
+            },
+            {
+              "dir": "E",
               "half": 1
             }
           ],
           "adjacentBakeries": [0]
-        }
-      ]
-    },
-    {
-      "code": "trail-straight",
-      "title": "Прямая тропа",
-      "edges": {
-        "N": {
-          "type": "TRAIL",
-          "index": 0
-        },
-        "E": {
-          "type": "PASTURE",
-          "index": 1
-        },
-        "S": {
-          "type": "TRAIL",
-          "index": 0
-        },
-        "W": {
-          "type": "PASTURE",
-          "index": 0
-        }
-      },
-      "bakeries": [],
-      "trails": [
-        {
-          "bakeryIndex": null,
-          "structure": false
-        }
-      ],
-      "structures": {
-        "garden": false,
-        "dairy": false
-      },
-      "pastures": [
-        {
-          "halves": [
-            {
-              "dir": "N",
-              "half": 0
-            },
-            {
-              "dir": "W",
-              "half": 0
-            },
-            {
-              "dir": "W",
-              "half": 1
-            },
-            {
-              "dir": "S",
-              "half": 0
-            }
-          ],
-          "adjacentBakeries": []
         },
         {
           "halves": [
             {
-              "dir": "N",
-              "half": 1
-            },
-            {
-              "dir": "E",
+              "dir": "S",
               "half": 0
             },
             {
-              "dir": "E",
-              "half": 1
-            },
-            {
-              "dir": "S",
+              "dir": "W",
               "half": 1
             }
           ],
@@ -399,100 +692,711 @@
       ]
     },
     {
-      "code": "trail-curve",
-      "title": "Изгиб тропы",
+      "code": "bakery-and-trail-fork-into-garden-near-by",
+      "title": "Развилка тропы с садом рядом с пекарней",
       "edges": {
         "N": {
-          "type": "TRAIL",
+          "type": "BAKERY",
           "index": 0
         },
         "E": {
-          "type": "PASTURE",
-          "index": 1
+          "type": "TRAIL",
+          "index": 0
         },
         "S": {
-          "type": "PASTURE",
+          "type": "TRAIL",
           "index": 1
         },
         "W": {
-          "type": "TRAIL",
-          "index": 0
-        }
-      },
-      "bakeries": [],
-      "trails": [
-        {
-          "bakeryIndex": null,
-          "structure": false
-        }
-      ],
-      "structures": {
-        "garden": false,
-        "dairy": false
-      },
-      "pastures": [
-        {
-          "halves": [
-            {
-              "dir": "N",
-              "half": 0
-            },
-            {
-              "dir": "W",
-              "half": 0
-            }
-          ],
-          "adjacentBakeries": []
-        },
-        {
-          "halves": [
-            {
-              "dir": "N",
-              "half": 1
-            },
-            {
-              "dir": "E",
-              "half": 0
-            },
-            {
-              "dir": "E",
-              "half": 1
-            },
-            {
-              "dir": "S",
-              "half": 0
-            },
-            {
-              "dir": "S",
-              "half": 1
-            },
-            {
-              "dir": "W",
-              "half": 1
-            }
-          ],
-          "adjacentBakeries": []
-        }
-      ]
-    },
-    {
-      "code": "trail-cross",
-      "title": "Развилка троп",
-      "edges": {
-        "N": {
-          "type": "TRAIL",
-          "index": 0
-        },
-        "E": {
-          "type": "TRAIL",
-          "index": 1
-        },
-        "S": {
           "type": "TRAIL",
           "index": 2
+        }
+      },
+      "bakeries": [
+        {
+          "sign": false
+        }
+      ],
+      "trails": [
+        {
+          "bakeryIndex": null,
+          "structure": true
+        },
+        {
+          "bakeryIndex": null,
+          "structure": true
+        },
+        {
+          "bakeryIndex": null,
+          "structure": true
+        }
+      ],
+      "structures": {
+        "garden": true,
+        "dairy": false
+      },
+      "pastures": [
+        {
+          "halves": [
+            {
+              "dir": "W",
+              "half": 0
+            },
+            {
+              "dir": "E",
+              "half": 0
+            }
+          ],
+          "adjacentBakeries": [0]
+        },
+        {
+          "halves": [
+            {
+              "dir": "W",
+              "half": 1
+            },
+            {
+              "dir": "S",
+              "half": 0
+            }
+          ],
+          "adjacentBakeries": []
+        },
+        {
+          "halves": [
+            {
+              "dir": "S",
+              "half": 1
+            },
+            {
+              "dir": "E",
+              "half": 1
+            }
+          ],
+          "adjacentBakeries": []
+        }
+      ]
+    },
+    {
+      "code": "large-bakery-with-sign",
+      "title": "Большая пекарня с вывеской",
+      "edges": {
+        "N": {
+          "type": "BAKERY",
+          "index": 0
+        },
+        "E": {
+          "type": "BAKERY",
+          "index": 0
+        },
+        "S": {
+          "type": "PASTURE",
+          "index": 0
         },
         "W": {
           "type": "PASTURE",
+          "index": 0
+        }
+      },
+      "bakeries": [
+        {
+          "sign": true
+        }
+      ],
+      "trails": [],
+      "structures": {
+        "garden": false,
+        "dairy": false
+      },
+      "pastures": [
+        {
+          "halves": [
+            {
+              "dir": "S",
+              "half": 0
+            },
+            {
+              "dir": "S",
+              "half": 1
+            },
+            {
+              "dir": "W",
+              "half": 0
+            },
+            {
+              "dir": "W",
+              "half": 1
+            }
+          ],
+          "adjacentBakeries": [0]
+        }
+      ]
+    },
+    {
+      "code": "large-bakery",
+      "title": "Большая пекарня",
+      "edges": {
+        "N": {
+          "type": "BAKERY",
+          "index": 0
+        },
+        "E": {
+          "type": "BAKERY",
+          "index": 0
+        },
+        "S": {
+          "type": "PASTURE",
+          "index": 0
+        },
+        "W": {
+          "type": "PASTURE",
+          "index": 0
+        }
+      },
+      "bakeries": [
+        {
+          "sign": false
+        }
+      ],
+      "trails": [],
+      "structures": {
+        "garden": false,
+        "dairy": false
+      },
+      "pastures": [
+        {
+          "halves": [
+            {
+              "dir": "S",
+              "half": 0
+            },
+            {
+              "dir": "S",
+              "half": 1
+            },
+            {
+              "dir": "W",
+              "half": 0
+            },
+            {
+              "dir": "W",
+              "half": 1
+            }
+          ],
+          "adjacentBakeries": [0]
+        }
+      ]
+    },
+    {
+      "code": "large-bakery-with-sign-and-trail-turn-near-by",
+      "title": "Поворот тропы рядом с большой пекарней с вывеской",
+      "edges": {
+        "N": {
+          "type": "BAKERY",
+          "index": 0
+        },
+        "E": {
+          "type": "TRAIL",
+          "index": 0
+        },
+        "S": {
+          "type": "TRAIL",
+          "index": 0
+        },
+        "W": {
+          "type": "BAKERY",
+          "index": 0
+        }
+      },
+      "bakeries": [
+        {
+          "sign": true
+        }
+      ],
+      "trails": [
+        {
+          "bakeryIndex": null,
+          "structure": false
+        }
+      ],
+      "structures": {
+        "garden": false,
+        "dairy": false
+      },
+      "pastures": [
+        {
+          "halves": [
+            {
+              "dir": "S",
+              "half": 0
+            },
+            {
+              "dir": "E",
+              "half": 0
+            }
+          ],
+          "adjacentBakeries": [0]
+        },
+        {
+          "halves": [
+            {
+              "dir": "S",
+              "half": 1
+            },
+            {
+              "dir": "E",
+              "half": 1
+            }
+          ],
+          "adjacentBakeries": []
+        }
+      ]
+    },
+    {
+      "code": "large-bakery-and-trail-turn-near-by",
+      "title": "Поворот тропы рядом с большой пекарней",
+      "edges": {
+        "N": {
+          "type": "BAKERY",
+          "index": 0
+        },
+        "E": {
+          "type": "TRAIL",
+          "index": 0
+        },
+        "S": {
+          "type": "TRAIL",
+          "index": 0
+        },
+        "W": {
+          "type": "BAKERY",
+          "index": 0
+        }
+      },
+      "bakeries": [
+        {
+          "sign": false
+        }
+      ],
+      "trails": [
+        {
+          "bakeryIndex": null,
+          "structure": false
+        }
+      ],
+      "structures": {
+        "garden": false,
+        "dairy": false
+      },
+      "pastures": [
+        {
+          "halves": [
+            {
+              "dir": "S",
+              "half": 0
+            },
+            {
+              "dir": "E",
+              "half": 0
+            }
+          ],
+          "adjacentBakeries": [0]
+        },
+        {
+          "halves": [
+            {
+              "dir": "S",
+              "half": 1
+            },
+            {
+              "dir": "E",
+              "half": 1
+            }
+          ],
+          "adjacentBakeries": []
+        }
+      ]
+    },
+    {
+      "code": "huge-bakery-with-sign",
+      "title": "Огромная пекарня с вывеской",
+      "edges": {
+        "N": {
+          "type": "BAKERY",
+          "index": 0
+        },
+        "E": {
+          "type": "BAKERY",
+          "index": 0
+        },
+        "S": {
+          "type": "PASTURE",
+          "index": 0
+        },
+        "W": {
+          "type": "BAKERY",
+          "index": 0
+        }
+      },
+      "bakeries": [
+        {
+          "sign": true
+        }
+      ],
+      "trails": [],
+      "structures": {
+        "garden": false,
+        "dairy": false
+      },
+      "pastures": [
+        {
+          "halves": [
+            {
+              "dir": "S",
+              "half": 0
+            },
+            {
+              "dir": "S",
+              "half": 1
+            }
+          ],
+          "adjacentBakeries": [0]
+        }
+      ]
+    },
+    {
+      "code": "huge-bakery",
+      "title": "Огромная пекарня",
+      "edges": {
+        "N": {
+          "type": "BAKERY",
+          "index": 0
+        },
+        "E": {
+          "type": "BAKERY",
+          "index": 0
+        },
+        "S": {
+          "type": "PASTURE",
+          "index": 0
+        },
+        "W": {
+          "type": "BAKERY",
+          "index": 0
+        }
+      },
+      "bakeries": [
+        {
+          "sign": false
+        }
+      ],
+      "trails": [],
+      "structures": {
+        "garden": false,
+        "dairy": false
+      },
+      "pastures": [
+        {
+          "halves": [
+            {
+              "dir": "S",
+              "half": 0
+            },
+            {
+              "dir": "S",
+              "half": 1
+            }
+          ],
+          "adjacentBakeries": [0]
+        }
+      ]
+    },
+    {
+      "code": "huge-bakery-with-sign-and-trail",
+      "title": "Огромная пекарня с вывеской и тропой",
+      "edges": {
+        "N": {
+          "type": "BAKERY",
+          "index": 0
+        },
+        "E": {
+          "type": "BAKERY",
+          "index": 0
+        },
+        "S": {
+          "type": "TRAIL",
+          "index": 0
+        },
+        "W": {
+          "type": "BAKERY",
+          "index": 0
+        }
+      },
+      "bakeries": [
+        {
+          "sign": true
+        }
+      ],
+      "trails": [
+        {
+          "bakeryIndex": 0,
+          "structure": false
+        }
+      ],
+      "structures": {
+        "garden": false,
+        "dairy": false
+      },
+      "pastures": [
+        {
+          "halves": [
+            {
+              "dir": "S",
+              "half": 0
+            }
+          ],
+          "adjacentBakeries": [0]
+        },
+        {
+          "halves": [
+            {
+              "dir": "S",
+              "half": 1
+            }
+          ],
+          "adjacentBakeries": [0]
+        }
+      ]
+    },
+    {
+      "code": "huge-bakery-with-trail",
+      "title": "Огромная пекарня с тропой",
+      "edges": {
+        "N": {
+          "type": "BAKERY",
+          "index": 0
+        },
+        "E": {
+          "type": "BAKERY",
+          "index": 0
+        },
+        "S": {
+          "type": "TRAIL",
+          "index": 0
+        },
+        "W": {
+          "type": "BAKERY",
+          "index": 0
+        }
+      },
+      "bakeries": [
+        {
+          "sign": false
+        }
+      ],
+      "trails": [
+        {
+          "bakeryIndex": 0,
+          "structure": false
+        }
+      ],
+      "structures": {
+        "garden": false,
+        "dairy": false
+      },
+      "pastures": [
+        {
+          "halves": [
+            {
+              "dir": "S",
+              "half": 0
+            }
+          ],
+          "adjacentBakeries": [0]
+        },
+        {
+          "halves": [
+            {
+              "dir": "S",
+              "half": 1
+            }
+          ],
+          "adjacentBakeries": [0]
+        }
+      ]
+    },
+    {
+      "code": "trail",
+      "title": "Тропа",
+      "edges": {
+        "N": {
+          "type": "TRAIL",
+          "index": 0
+        },
+        "E": {
+          "type": "PASTURE",
+          "index": 1
+        },
+        "S": {
+          "type": "TRAIL",
+          "index": 0
+        },
+        "W": {
+          "type": "PASTURE",
+          "index": 0
+        }
+      },
+      "bakeries": [],
+      "trails": [
+        {
+          "bakeryIndex": null,
+          "structure": false
+        }
+      ],
+      "structures": {
+        "garden": false,
+        "dairy": false
+      },
+      "pastures": [
+        {
+          "halves": [
+            {
+              "dir": "N",
+              "half": 0
+            },
+            {
+              "dir": "W",
+              "half": 0
+            },
+            {
+              "dir": "W",
+              "half": 1
+            },
+            {
+              "dir": "S",
+              "half": 0
+            }
+          ],
+          "adjacentBakeries": []
+        },
+        {
+          "halves": [
+            {
+              "dir": "N",
+              "half": 1
+            },
+            {
+              "dir": "E",
+              "half": 0
+            },
+            {
+              "dir": "E",
+              "half": 1
+            },
+            {
+              "dir": "S",
+              "half": 1
+            }
+          ],
+          "adjacentBakeries": []
+        }
+      ]
+    },
+    {
+      "code": "trail-turn",
+      "title": "Поворот тропы",
+      "edges": {
+        "N": {
+          "type": "PASTURE",
+          "index": 1
+        },
+        "E": {
+          "type": "PASTURE",
+          "index": 1
+        },
+        "S": {
+          "type": "TRAIL",
+          "index": 0
+        },
+        "W": {
+          "type": "TRAIL",
+          "index": 0
+        }
+      },
+      "bakeries": [],
+      "trails": [
+        {
+          "bakeryIndex": null,
+          "structure": false
+        }
+      ],
+      "structures": {
+        "garden": false,
+        "dairy": false
+      },
+      "pastures": [
+        {
+          "halves": [
+            {
+              "dir": "W",
+              "half": 1
+            },
+            {
+              "dir": "S",
+              "half": 0
+            }
+          ],
+          "adjacentBakeries": []
+        },
+        {
+          "halves": [
+            {
+              "dir": "W",
+              "half": 0
+            },
+            {
+              "dir": "N",
+              "half": 0
+            },
+            {
+              "dir": "N",
+              "half": 1
+            },
+            {
+              "dir": "E",
+              "half": 0
+            },
+            {
+              "dir": "E",
+              "half": 1
+            },
+            {
+              "dir": "S",
+              "half": 1
+            }
+          ],
+          "adjacentBakeries": []
+        }
+      ]
+    },
+    {
+      "code": "trail-fork-with-garden",
+      "title": "Развилка тропы с садом",
+      "edges": {
+        "N": {
+          "type": "PASTURE",
+          "index": 0
+        },
+        "E": {
+          "type": "TRAIL",
+          "index": 0
+        },
+        "S": {
+          "type": "TRAIL",
+          "index": 1
+        },
+        "W": {
+          "type": "TRAIL",
           "index": 2
         }
       },
@@ -519,6 +1423,14 @@
         {
           "halves": [
             {
+              "dir": "W",
+              "half": 0
+            },
+            {
+              "dir": "N",
+              "half": 0
+            },
+            {
               "dir": "N",
               "half": 1
             },
@@ -532,12 +1444,12 @@
         {
           "halves": [
             {
-              "dir": "E",
+              "dir": "W",
               "half": 1
             },
             {
               "dir": "S",
-              "half": 1
+              "half": 0
             }
           ],
           "adjacentBakeries": []
@@ -546,19 +1458,11 @@
           "halves": [
             {
               "dir": "S",
-              "half": 0
-            },
-            {
-              "dir": "W",
-              "half": 0
-            },
-            {
-              "dir": "W",
               "half": 1
             },
             {
-              "dir": "N",
-              "half": 0
+              "dir": "E",
+              "half": 1
             }
           ],
           "adjacentBakeries": []
@@ -566,8 +1470,8 @@
       ]
     },
     {
-      "code": "trail-junction",
-      "title": "Перекрёсток троп",
+      "code": "trail-cross-with-garden",
+      "title": "Перекрёсток троп с садом",
       "edges": {
         "N": {
           "type": "TRAIL",
@@ -613,12 +1517,12 @@
         {
           "halves": [
             {
+              "dir": "W",
+              "half": 0
+            },
+            {
               "dir": "N",
               "half": 0
-            },
-            {
-              "dir": "W",
-              "half": 0
             }
           ],
           "adjacentBakeries": []
@@ -663,300 +1567,6 @@
           "adjacentBakeries": []
         }
       ]
-    },
-    {
-      "code": "bakery-trail",
-      "title": "Ворота пекарни",
-      "edges": {
-        "N": {
-          "type": "BAKERY",
-          "index": 0
-        },
-        "E": {
-          "type": "PASTURE",
-          "index": 1
-        },
-        "S": {
-          "type": "TRAIL",
-          "index": 0
-        },
-        "W": {
-          "type": "PASTURE",
-          "index": 0
-        }
-      },
-      "bakeries": [
-        {
-          "sign": false
-        }
-      ],
-      "trails": [
-        {
-          "bakeryIndex": 0,
-          "structure": false
-        }
-      ],
-      "structures": {
-        "garden": false,
-        "dairy": false
-      },
-      "pastures": [
-        {
-          "halves": [
-            {
-              "dir": "W",
-              "half": 0
-            },
-            {
-              "dir": "W",
-              "half": 1
-            },
-            {
-              "dir": "S",
-              "half": 0
-            }
-          ],
-          "adjacentBakeries": [0]
-        },
-        {
-          "halves": [
-            {
-              "dir": "E",
-              "half": 0
-            },
-            {
-              "dir": "E",
-              "half": 1
-            },
-            {
-              "dir": "S",
-              "half": 1
-            }
-          ],
-          "adjacentBakeries": [0]
-        }
-      ]
-    },
-    {
-      "code": "bakery-trail-t",
-      "title": "Пекарня на распутье",
-      "edges": {
-        "N": {
-          "type": "BAKERY",
-          "index": 0
-        },
-        "E": {
-          "type": "TRAIL",
-          "index": 0
-        },
-        "S": {
-          "type": "TRAIL",
-          "index": 0
-        },
-        "W": {
-          "type": "PASTURE",
-          "index": 0
-        }
-      },
-      "bakeries": [
-        {
-          "sign": false
-        }
-      ],
-      "trails": [
-        {
-          "bakeryIndex": null,
-          "structure": false
-        }
-      ],
-      "structures": {
-        "garden": false,
-        "dairy": false
-      },
-      "pastures": [
-        {
-          "halves": [
-            {
-              "dir": "E",
-              "half": 0
-            },
-            {
-              "dir": "S",
-              "half": 0
-            },
-            {
-              "dir": "W",
-              "half": 0
-            },
-            {
-              "dir": "W",
-              "half": 1
-            }
-          ],
-          "adjacentBakeries": [0]
-        },
-        {
-          "halves": [
-            {
-              "dir": "E",
-              "half": 1
-            },
-            {
-              "dir": "S",
-              "half": 1
-            }
-          ],
-          "adjacentBakeries": []
-        }
-      ]
-    },
-    {
-      "code": "bakery-two",
-      "title": "Две пекарни",
-      "edges": {
-        "N": {
-          "type": "BAKERY",
-          "index": 0
-        },
-        "E": {
-          "type": "TRAIL",
-          "index": 0
-        },
-        "S": {
-          "type": "BAKERY",
-          "index": 1
-        },
-        "W": {
-          "type": "TRAIL",
-          "index": 0
-        }
-      },
-      "bakeries": [
-        {
-          "sign": false
-        },
-        {
-          "sign": false
-        }
-      ],
-      "trails": [
-        {
-          "bakeryIndex": null,
-          "structure": false
-        }
-      ],
-      "structures": {
-        "garden": false,
-        "dairy": false
-      },
-      "pastures": [
-        {
-          "halves": [
-            {
-              "dir": "E",
-              "half": 0
-            },
-            {
-              "dir": "W",
-              "half": 0
-            }
-          ],
-          "adjacentBakeries": [0]
-        },
-        {
-          "halves": [
-            {
-              "dir": "E",
-              "half": 1
-            },
-            {
-              "dir": "W",
-              "half": 1
-            }
-          ],
-          "adjacentBakeries": [1]
-        }
-      ]
-    },
-    {
-      "code": "bakery-three",
-      "title": "Большая пекарня",
-      "edges": {
-        "N": {
-          "type": "BAKERY",
-          "index": 0
-        },
-        "E": {
-          "type": "BAKERY",
-          "index": 0
-        },
-        "S": {
-          "type": "BAKERY",
-          "index": 0
-        },
-        "W": {
-          "type": "PASTURE",
-          "index": 0
-        }
-      },
-      "bakeries": [
-        {
-          "sign": true
-        }
-      ],
-      "trails": [],
-      "structures": {
-        "garden": false,
-        "dairy": false
-      },
-      "pastures": [
-        {
-          "halves": [
-            {
-              "dir": "W",
-              "half": 0
-            },
-            {
-              "dir": "W",
-              "half": 1
-            }
-          ],
-          "adjacentBakeries": [0]
-        }
-      ]
-    },
-    {
-      "code": "bakery-four",
-      "title": "Пекарня-крепость",
-      "edges": {
-        "N": {
-          "type": "BAKERY",
-          "index": 0
-        },
-        "E": {
-          "type": "BAKERY",
-          "index": 0
-        },
-        "S": {
-          "type": "BAKERY",
-          "index": 0
-        },
-        "W": {
-          "type": "BAKERY",
-          "index": 0
-        }
-      },
-      "bakeries": [
-        {
-          "sign": true
-        }
-      ],
-      "trails": [],
-      "structures": {
-        "garden": false,
-        "dairy": false
-      },
-      "pastures": []
     }
   ],
   "modules": [
@@ -964,59 +1574,99 @@
       "code": "base",
       "tiles": [
         {
+          "code": "trail-to-dairy",
+          "count": 2
+        },
+        {
           "code": "dairy",
           "count": 4
         },
         {
-          "code": "dairy-trail",
-          "count": 2
-        },
-        {
-          "code": "bakery-one",
-          "count": 12
-        },
-        {
-          "code": "bakery-one-sign",
-          "count": 7
-        },
-        {
-          "code": "bakery-corner",
-          "count": 10
-        },
-        {
-          "code": "trail-straight",
-          "count": 8
-        },
-        {
-          "code": "trail-curve",
-          "count": 9
-        },
-        {
-          "code": "trail-cross",
-          "count": 4
-        },
-        {
-          "code": "trail-junction",
+          "code": "bakery-center-with-sign",
           "count": 1
         },
         {
-          "code": "bakery-trail",
-          "count": 6
-        },
-        {
-          "code": "bakery-trail-t",
+          "code": "bakery-and-trail-near-by",
           "count": 4
         },
         {
-          "code": "bakery-two",
+          "code": "bakery",
+          "count": 5
+        },
+        {
+          "code": "bakery-bridge-with-sign",
           "count": 2
         },
         {
-          "code": "bakery-three",
+          "code": "bakery-bridge",
+          "count": 1
+        },
+        {
+          "code": "two-opposite-bakeries",
+          "count": 3
+        },
+        {
+          "code": "two-neighbour-bakeries",
           "count": 2
         },
         {
-          "code": "bakery-four",
+          "code": "bakery-and-trail-turn-near-by",
+          "count": 3
+        },
+        {
+          "code": "bakery-and-trail-turn-near-by-2",
+          "count": 3
+        },
+        {
+          "code": "bakery-and-trail-fork-into-garden-near-by",
+          "count": 3
+        },
+        {
+          "code": "large-bakery-with-sign",
+          "count": 2
+        },
+        {
+          "code": "large-bakery",
+          "count": 3
+        },
+        {
+          "code": "large-bakery-with-sign-and-trail-turn-near-by",
+          "count": 2
+        },
+        {
+          "code": "large-bakery-and-trail-turn-near-by",
+          "count": 3
+        },
+        {
+          "code": "huge-bakery-with-sign",
+          "count": 1
+        },
+        {
+          "code": "huge-bakery",
+          "count": 3
+        },
+        {
+          "code": "huge-bakery-with-sign-and-trail",
+          "count": 2
+        },
+        {
+          "code": "huge-bakery-with-trail",
+          "count": 1
+        },
+        {
+          "code": "trail",
+          "count": 8
+        },
+        {
+          "code": "trail-turn",
+          "count": 9
+        },
+        {
+          "code": "trail-fork-with-garden",
+          "count": 4
+        },
+        {
+          "code": "trail-cross-with-garden",
           "count": 1
         }
       ]
