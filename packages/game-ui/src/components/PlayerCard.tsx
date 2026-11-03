@@ -16,6 +16,8 @@ export interface PlayerCardProps {
   badges?: readonly string[];
   /** Игрок сейчас ходит; карточка подсвечивается. */
   active?: boolean;
+  /** Что сейчас делает ходящий, например «выбирает, куда положить тайл»; показывается только у `active`. */
+  activity?: ReactNode;
   /** Строка под именем, например «Предлагает ничью». */
   note?: ReactNode;
   /** Состояние игрока в партии справа, например его часы. */
@@ -36,6 +38,7 @@ export function PlayerCard({
   self = false,
   badges = [],
   active = false,
+  activity,
   note,
   status,
   actions,
@@ -49,7 +52,7 @@ export function PlayerCard({
       aria-current={active ? 'true' : undefined}
       className={cn(
         'flex items-center gap-2 rounded-md border px-3 py-2 text-sm',
-        active && 'border-primary bg-primary/10',
+        active && 'border-primary bg-primary/10 ring-2 ring-primary/60',
       )}
     >
       <PlayerAvatar avatar={avatar} owner={owner} self={self} />
@@ -68,6 +71,14 @@ export function PlayerCard({
             </span>
           ))}
         </div>
+        {active && activity !== undefined ? (
+          <div
+            data-testid={testIds.activity}
+            className="text-xs font-medium text-primary"
+          >
+            {activity}
+          </div>
+        ) : null}
         {note === undefined ? null : <div className="text-xs">{note}</div>}
       </div>
       {status === undefined && actions === undefined ? null : (

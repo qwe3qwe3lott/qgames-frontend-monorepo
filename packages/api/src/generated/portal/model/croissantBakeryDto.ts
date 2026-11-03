@@ -4,9 +4,7 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
-import type {CroissantBakeryDtoSidesItem} from './croissantBakeryDtoSidesItem';
 
 export interface CroissantBakeryDto {
-  sides: CroissantBakeryDtoSidesItem[];
   sign: boolean;
 }

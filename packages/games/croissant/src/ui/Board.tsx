@@ -12,8 +12,9 @@ import {
   type ReactZoomPanPinchRef,
 } from 'react-zoom-pan-pinch';
 
-import {reasonLabel, SPOT_LABELS} from '../lib/labels';
+import {reasonLabel, SPOT_LABELS, turnActivity} from '../lib/labels';
 import {PALETTE} from '../lib/palette';
+import {colorOf, lastPlacedTile, playerColors} from '../lib/players';
 import {cellKey, partKey} from '../lib/tiles';
 import {
   isCroissantSession,
@@ -26,11 +27,7 @@ import {
 } from '../state';
 import type {BoardProps} from '../types';
 import {testIds} from './Board.testIds';
-import {
-  confectionerColor,
-  CroissantTile,
-  type ConfectionerChoice,
-} from './CroissantTile';
+import {CroissantTile, type ConfectionerChoice} from './CroissantTile';
 import {ZoomControls} from './ZoomControls';
 
 const TILE_SIZE = 72;
@@ -224,6 +221,9 @@ function CroissantBoard({
     () => new Map(tiles.map(tile => [tile.code, tile])),
     [tiles],
   );
+  const colors = useMemo(() => playerColors(state), [state]);
+  /** Последний выложенный тайл: рамка цвета игрока, который его выложил. */
+  const lastTile = lastPlacedTile(state);
   const spotsByTile = useMemo(() => {
     const map = new Map<string, typeof spots>();
     spots.forEach(spot => {
@@ -322,7 +322,7 @@ function CroissantBoard({
     ? {
         spots: choiceSpots,
         selectedSpotId: draftSpotId,
-        color: confectionerColor(viewerId),
+        color: colorOf(colors, viewerId),
         onChoose: spotId => {
           if (dragged.current) {
             dragged.current = false;
@@ -434,6 +434,13 @@ function CroissantBoard({
                   rotation={tile.rotation}
                   size={TILE_SIZE}
                   spots={spotsByTile.get(tile.id) ?? []}
+                  colors={colors}
+                  frame={
+                    tile.id === lastTile?.id &&
+                    typeof tile.playerId === 'string'
+                      ? colorOf(colors, tile.playerId)
+                      : undefined
+                  }
                   choice={
                     tile.id === pending?.tileId ? confectionerChoice : undefined
                   }
@@ -578,12 +585,13 @@ function CroissantBoard({
     );
   }
 
+  const turnPlayerId = state.turns.currentPlayerId ?? null;
   const hint = canPlace
     ? current === null
       ? 'Ваш ход: выберите клетку у края поля'
       : null
-    : pending !== undefined && pending !== null && !canPlaceConfectioner
-      ? 'Ждём ход другого пекаря'
+    : turnPlayerId !== null && turnPlayerId !== viewerId
+      ? `${nameOf(turnPlayerId)} ${turnActivity(pending !== undefined && pending !== null)}`
       : null;
 
   return (

@@ -31,10 +31,11 @@
 
 ## 1. Приложения
 
-| Приложение     | Назначение                                            | Сборка              | Рендеринг                           | Порт (dev) |
-| -------------- | ----------------------------------------------------- | ------------------- | ----------------------------------- | ---------- |
-| `apps/portal`  | Игровой портал: вход, профиль, комнаты, партии        | Rsbuild (Rspack)    | CSR SPA, чанки по роутам            | 3000       |
-| `apps/admin`   | Админка портала                                       | Rsbuild (Rspack)    | CSR SPA, чанки по роутам            | 3001       |
+| Приложение       | Назначение                                     | Сборка                 | Рендеринг                | Порт (dev) |
+| ---------------- | ---------------------------------------------- | ---------------------- | ------------------------ | ---------- |
+| `apps/portal`    | Игровой портал: вход, профиль, комнаты, партии | Rsbuild (Rspack)       | CSR SPA, чанки по роутам | 3000       |
+| `apps/admin`     | Админка портала                                | Rsbuild (Rspack)       | CSR SPA, чанки по роутам | 3001       |
+| `apps/storybook` | Витрина UI-компонентов (только локально)       | Storybook 10 + Rsbuild | —                        | 6006       |
 
 - **Бэкенд — одно приложение** (`http://localhost:8080` локально), API разделён на две группы: portal → группа `portal` (`/api/**`, кроме `/api/admin/**`), admin → группа `admin` (`/api/admin/**`).
 - Приложения ходят в API **того же origin**, что и страница: портал — `/api/**` своего хоста (прод — `https://qgames.duckdns.org`), админка — `/api/admin/**` своего хоста (прод — `https://admin.qgames.duckdns.org`). API админки на хосте портала закрыт (404), API портала на хосте админки — тоже. Локально — так же по HTTPS на `<LOCAL_DOMAIN>` и `admin.<LOCAL_DOMAIN>` (`.env` корня, mkcert, hosts — `README.md`), в `pnpm dev` с портами :3000 и :3001; бэкенд :8080 за прокси. На `http://localhost` не переходить: там другие правила кук и same-site.
@@ -47,6 +48,7 @@
 apps/
   portal/        CSR SPA (Rsbuild + TanStack Router)
   admin/         CSR SPA (Rsbuild + TanStack Router)
+  storybook/     Storybook: витрина UI-компонентов пакетов, только локально
 packages/
   config/        @qgames/config: tsconfig-пресеты, фабрика ESLint flat-конфига, stylelint, prettier
   ui/            @qgames/ui: компоненты shadcn/ui, общие PageLayout и WithHint, cn(), globals.css (Tailwind 4, тема)
@@ -157,6 +159,7 @@ src/
 - **E2E — Playwright, пакет `e2e/`** против поднятых стендов (решение — `adr/frontend/e2e-testing.md`). Правила — во вложенном **`e2e/CLAUDE.md`**: читать, когда трогаешь тесты или добавляешь элемент, нужный тестам.
 - **`data-testid` в компонентах:** элемент, который нужен или может понадобиться e2e, получает id из файла `<Компонент>.testIds.ts` рядом с компонентом (`generateTestIds` из `@qgames/ui/lib/testIds`). Одинаковые элементы различаются атрибутами `data-*`, а не текстом.
 - **Unit-тесты — Vitest** (решение — `adr/frontend/unit-testing.md`): только чистая логика, и только сложная (применитель патчей, сверка seq, guard'ы, применение сообщений потоков). UI-компоненты unit-тестами не покрываем — для них позже скриншотные или снапшотные тесты.
+- **Storybook** (`apps/storybook`, решение — `adr/frontend/storybook.md`): истории `<Компонент>.stories.tsx` лежат рядом с компонентом в пакете и не экспортируются из `index.ts`. Только пропсы и фикстуры в формате контракта, без запросов, бэкенда и моков сервера. Состояния — через args/Controls, типы — из `storybook-react-rsbuild`.
 - Тесты лежат рядом с кодом (`*.test.ts`), без конфига Vitest. Пакет с тестами объявляет `"test": "vitest run"` и `vitest` в devDependencies. Запуск — `pnpm test` (turbo, без e2e).
 - Сценарии `@qgames/doc-patch` повторяют `DocumentPatchScenariosTest` бэкенда: правка семантики применителя — на обеих сторонах вместе.
 
@@ -171,7 +174,8 @@ Node.js 24 LTS, pnpm 12, Turborepo 2, TypeScript 6.0, React 19, Rsbuild 2 (Rspac
 
 ```bash
 pnpm install                 # зависимости (только корневой node_modules)
-pnpm dev                     # все приложения в dev-режиме (pnpm --parallel, не turbo)
+pnpm dev                     # портал и админка в dev-режиме (pnpm --parallel, не turbo; без Storybook)
+pnpm --filter @qgames/storybook dev   # Storybook — http://localhost:6006 (в Docker: docker compose up --build -d --wait storybook)
 pnpm --filter @qgames/portal dev   # одно приложение
 pnpm build                   # сборка всего
 pnpm typecheck               # проверка типов
@@ -179,6 +183,7 @@ pnpm lint                    # ESLint + Stylelint
 pnpm format                  # Prettier
 pnpm api:fetch               # снять OpenAPI групп portal и admin с запущенного бэкенда в packages/api/openapi/ (снапшоты не коммитятся; API_URL, по умолчанию http://localhost:8080)
 pnpm api:generate            # сгенерировать клиент API (Orval)
+pnpm --filter @qgames/game-croissant assets:fetch   # снять карточку «Круассана» (каталог тайлов и модули) с запущенного бэкенда в src/lib/assets.fixture.json — данные тестов геометрии и Storybook, коммитится; обновлять вместе с api:fetch при правке каталога
 pnpm test:e2e                # e2e против поднятых стендов (браузер: pnpm --filter @qgames/e2e exec playwright install chromium); E2E_UPDATE_SCENARIOS=1 — записать ОР сценариев партий
 ```
 
@@ -191,4 +196,3 @@ pnpm test:e2e                # e2e против поднятых стендов 
 ## 11. Архитектурные решения и отвергнутые варианты
 
 В **`adr/`** (индекс — `adr/README.md`): читать нужные ADR перед тем, как предлагать архитектурную альтернативу или менять принятое решение.
-

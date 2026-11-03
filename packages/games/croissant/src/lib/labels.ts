@@ -14,7 +14,17 @@ export function reasonLabel(reason: string): string {
   if (reason === 'SCORED') {
     return 'Колода кончилась — подведён итог по сети заведений';
   }
+  if (reason === 'TIMEOUT') {
+    return 'У остальных пекарей вышло время — подведён итог по сети заведений';
+  }
   return reason;
+}
+
+/** Шаг ходящего: без ожидания кондитера он выкладывает тайл, с ожиданием (`pending`) — ставит кондитера. */
+export function turnActivity(confectionerStep: boolean): string {
+  return confectionerStep
+    ? 'выбирает, куда поставить кондитера'
+    : 'выбирает, куда положить тайл';
 }
 
 /** Подпись стороны тайла для легенды. */

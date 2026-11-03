@@ -1,0 +1,201 @@
+import {CroissantAssetsDto} from '@qgames/api/portal/zod';
+import {describe, expect, it} from 'vitest';
+
+import assets from './assets.fixture.json';
+import {pastureHalves, tileGeometry, type TileFace} from './tileGeometry';
+import {
+  partKey,
+  type EdgeKind,
+  type HalfEdge,
+  type Side,
+  type TileEdge,
+  type TileShape,
+} from './tiles';
+
+// Каталог — снимок `GET /api/games/croissant` → `assets` (`pnpm assets:fetch`): геометрия проверяется на реальных
+// типах тайлов. Схема контракта сразу покажет устаревший формат снимка.
+const TILES: readonly TileShape[] = CroissantAssetsDto.parse(assets).tiles;
+
+const half = (dir: Side, value: number): HalfEdge => ({dir, half: value});
+const edge = (type: EdgeKind, index: number): TileEdge => ({type, index});
+const trail = (target: {bakeryIndex?: number; structure?: boolean} = {}) => ({
+  bakeryIndex: target.bakeryIndex ?? null,
+  structure: target.structure ?? false,
+});
+const NO_STRUCTURES = {garden: false, dairy: false};
+
+/** Две независимые дуги W-N и S-E: уголки NW и SE и большой луг между ними. */
+const TWO_CURVES: TileShape = {
+  code: 'test-two-curves',
+  title: 'Две дуги',
+  edges: {
+    N: edge('TRAIL', 0),
+    E: edge('TRAIL', 1),
+    S: edge('TRAIL', 1),
+    W: edge('TRAIL', 0),
+  },
+  bakeries: [],
+  trails: [trail(), trail()],
+  structures: NO_STRUCTURES,
+  pastures: [
+    {halves: [half('W', 0), half('N', 0)]},
+    {halves: [half('N', 1), half('E', 0), half('S', 0), half('W', 1)]},
+    {halves: [half('E', 1), half('S', 1)]},
+  ],
+};
+
+/** Раздельные пекарни N и E, тропы W→N и S→E. */
+const TWO_BAKERIES: TileShape = {
+  code: 'test-two-bakeries',
+  title: 'Две пекарни',
+  edges: {
+    N: edge('BAKERY', 0),
+    E: edge('BAKERY', 1),
+    S: edge('TRAIL', 1),
+    W: edge('TRAIL', 0),
+  },
+  bakeries: [{sign: false}, {sign: true}],
+  trails: [trail({bakeryIndex: 0}), trail({bakeryIndex: 1})],
+  structures: NO_STRUCTURES,
+  pastures: [
+    {halves: [half('W', 0)]},
+    {halves: [half('W', 1), half('S', 0)]},
+    {halves: [half('S', 1)]},
+  ],
+};
+
+/** Тропа W→пекарня N, тропа S→сыроварня, отдельная пекарня E. */
+const BAKERY_DAIRY: TileShape = {
+  code: 'test-bakery-dairy',
+  title: 'Пекарни и сыроварня',
+  edges: {
+    N: edge('BAKERY', 0),
+    E: edge('BAKERY', 1),
+    S: edge('TRAIL', 1),
+    W: edge('TRAIL', 0),
+  },
+  bakeries: [{sign: false}, {sign: false}],
+  trails: [trail({bakeryIndex: 0}), trail({structure: true})],
+  structures: {garden: false, dairy: true},
+  pastures: [
+    {halves: [half('W', 0)]},
+    {halves: [half('W', 1), half('S', 0), half('S', 1)]},
+  ],
+};
+
+const facesOf = (tile: TileShape) => tileGeometry(tile, 100).faces;
+const keysOf = (faces: readonly TileFace[]) =>
+  faces.map(face => partKey(face.part)).sort();
+
+/** Общие вершины двух граней (в px, с округлением). */
+function sharedPoints(a: TileFace, b: TileFace): string[] {
+  const key = (point: {x: number; y: number}) =>
+    `${point.x.toFixed(1)}:${point.y.toFixed(1)}`;
+  const other = new Set(b.points.map(key));
+  return [...new Set(a.points.map(key))].filter(point => other.has(point));
+}
+
+describe('tileGeometry', () => {
+  it.each(TILES.map(tile => [tile.code, tile] as const))(
+    '%s: each bakery and pasture is one face',
+    (_, tile) => {
+      const expected = [
+        ...tile.bakeries.map((__, index) => `BAKERY:${String(index)}`),
+        ...tile.pastures.map((__, index) => `PASTURE:${String(index)}`),
+      ].sort();
+      expect(keysOf(facesOf(tile))).toEqual(expected);
+    },
+  );
+
+  it.each(TILES.map(tile => [tile.code, tile] as const))(
+    '%s: faces fill the whole tile',
+    (_, tile) => {
+      const area = facesOf(tile).reduce((sum, face) => {
+        let doubled = 0;
+        face.points.forEach((point, index) => {
+          const next = face.points[(index + 1) % face.points.length] ?? point;
+          doubled += point.x * next.y - next.x * point.y;
+        });
+        return sum + doubled / 2;
+      }, 0);
+      expect(area).toBeCloseTo(100 * 100, 0);
+    },
+  );
+
+  it('keeps two curves apart: three pastures, the trails do not meet', () => {
+    const geometry = tileGeometry(TWO_CURVES, 100);
+    expect(keysOf(geometry.faces)).toEqual([
+      'PASTURE:0',
+      'PASTURE:1',
+      'PASTURE:2',
+    ]);
+    const [first, second] = geometry.trails;
+    expect(first?.d).not.toContain('50.00,50.00');
+    expect(second?.d).not.toContain('50.00,50.00');
+  });
+
+  it('draws separate bakeries on neighbour sides as shapes touching only at the corner', () => {
+    const faces = facesOf(TWO_BAKERIES);
+    expect(keysOf(faces)).toEqual([
+      'BAKERY:0',
+      'BAKERY:1',
+      'PASTURE:0',
+      'PASTURE:1',
+      'PASTURE:2',
+    ]);
+    const north = faces.find(face => partKey(face.part) === 'BAKERY:0');
+    const east = faces.find(face => partKey(face.part) === 'BAKERY:1');
+    expect(north && east && sharedPoints(north, east)).toEqual(['100.0:0.0']);
+  });
+
+  it('leads trails into their bakery and the dairy', () => {
+    const geometry = tileGeometry(BAKERY_DAIRY, 100);
+    expect(keysOf(geometry.faces)).toEqual([
+      'BAKERY:0',
+      'BAKERY:1',
+      'PASTURE:0',
+      'PASTURE:1',
+    ]);
+    expect(geometry.dairy?.center).toEqual({x: 50, y: 50});
+    expect(geometry.trails[1]?.d).toBe('M50.00,100.00 L50.00,50.00');
+    expect(geometry.anchors.get('DAIRY:0')).toEqual({x: 50, y: 50});
+  });
+
+  it('ends the fork branches at the garden and splits three pastures', () => {
+    const fork = TILES.find(tile => tile.code === 'trail-fork-with-garden');
+    const geometry = fork === undefined ? null : tileGeometry(fork, 100);
+    expect(geometry?.garden?.center).toEqual({x: 50, y: 50});
+    expect(geometry?.trails).toHaveLength(3);
+    expect(geometry?.faces).toHaveLength(3);
+  });
+
+  it('puts every anchor inside its own face', () => {
+    TILES.forEach(tile => {
+      tileGeometry(tile, 100).faces.forEach(face => {
+        expect(face.anchor.x).toBeGreaterThan(0);
+        expect(face.anchor.x).toBeLessThan(100);
+        expect(face.anchor.y).toBeGreaterThan(0);
+        expect(face.anchor.y).toBeLessThan(100);
+      });
+    });
+  });
+
+  it('derives the same pastures as the server catalog', () => {
+    // Луг — множество полуребер, луга тайла — множество лугов: порядок не важен.
+    const normalize = (pastures: TileShape['pastures']) =>
+      pastures
+        .map(pasture =>
+          pasture.halves
+            .map(item => `${item.dir}${String(item.half)}`)
+            .sort()
+            .join(','),
+        )
+        .sort();
+    TILES.forEach(tile => {
+      expect({
+        code: tile.code,
+        pastures: normalize(pastureHalves(tile)),
+      }).toEqual({code: tile.code, pastures: normalize(tile.pastures)});
+    });
+  });
+});

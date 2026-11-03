@@ -7,6 +7,8 @@
 
 export interface CroissantPlacedTileDto {
   id: string;
+  /** @nullable */
+  playerId?: string | null;
   rotation: number;
   tile: string;
   x: number;

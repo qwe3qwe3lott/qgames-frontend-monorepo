@@ -5,10 +5,10 @@
  * OpenAPI spec version: v0
  */
 
-export type CroissantTileDtoEdgesItem =
-  (typeof CroissantTileDtoEdgesItem)[keyof typeof CroissantTileDtoEdgesItem];
+export type CroissantTileEdgeDtoType =
+  (typeof CroissantTileEdgeDtoType)[keyof typeof CroissantTileEdgeDtoType];
 
-export const CroissantTileDtoEdgesItem = {
+export const CroissantTileEdgeDtoType = {
   BAKERY: 'BAKERY',
   TRAIL: 'TRAIL',
   PASTURE: 'PASTURE',

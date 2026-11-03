@@ -70,6 +70,11 @@ catalog:
   next-themes: 0.4.6
   react-zoom-pan-pinch: 4.2.0
 
+  # Storybook: витрина UI-компонентов (apps/storybook), только локально
+  storybook: 10.6.5
+  storybook-react-rsbuild: 3.6.1
+  eslint-plugin-storybook: 10.6.5
+
 # Install-скрипты зависимостей запрещены; бинарники приходят через optionalDependencies.
 allowBuilds:
   esbuild: false

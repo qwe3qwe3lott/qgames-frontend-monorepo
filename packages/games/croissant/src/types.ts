@@ -34,4 +34,6 @@ export interface GamePlayerCardProps {
   viewerId: string;
   /** Базовая карточка участника комнаты: имя, аватар, пометки и действия комнаты. */
   card: PlayerCardProps;
+  /** Статичные данные игры из её карточки: каталог тайлов для превью, проверяется схемой. */
+  assets: unknown;
 }

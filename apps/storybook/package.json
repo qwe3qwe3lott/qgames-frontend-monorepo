@@ -1,0 +1,33 @@
+{
+  "name": "@qgames/storybook",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "storybook dev -p 6006 --no-open",
+    "build": "storybook build -o dist --quiet",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:styles": "stylelint \".storybook/**/*.css\""
+  },
+  "dependencies": {
+    "@qgames/game-croissant": "workspace:*",
+    "@qgames/ui": "workspace:*",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@qgames/config": "workspace:*",
+    "@rsbuild/core": "catalog:",
+    "@rsbuild/plugin-react": "catalog:",
+    "@tailwindcss/postcss": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "eslint": "catalog:",
+    "storybook": "catalog:",
+    "storybook-react-rsbuild": "catalog:",
+    "stylelint": "catalog:",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:"
+  }
+}

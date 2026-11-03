@@ -3,6 +3,7 @@
 # portal — https://<LOCAL_DOMAIN> (/api/** → бэкенд), admin — https://admin.<LOCAL_DOMAIN> (/api/admin/** → бэкенд);
 # http:// — редирект на https://. LOCAL_DOMAIN — из .env в корне (шаблон — .env.example), сертификаты mkcert —
 # docker/certs/, имена — в hosts (README.md, «Подготовка»).
+# storybook — http://localhost:6006: витрина UI-компонентов (apps/storybook), только локально, в прод не входит.
 # Без hot reload; для разработки — pnpm dev.
 # Переменные окружения приложений вшиваются при сборке из apps/<app>/.env (шаблон — .env.example): после правки — --build.
 # Бэкенд поднимается отдельно в своём репозитории (qgames-backend-monorepo): docker compose up --build -d --wait.
@@ -38,6 +39,24 @@ services:
       test:
         - CMD-SHELL
         - wget -q --spider http://127.0.0.1:8080/healthz
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 5s
+
+  storybook:
+    build:
+      context: .
+      dockerfile: docker/storybook.Dockerfile
+    # Только статика без бэкенда и кук: HTTPS и имя в hosts не нужны.
+    ports:
+      - '6006:8080'
+    mem_limit: 32m
+    memswap_limit: 32m
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget -q --spider http://127.0.0.1:8080/
       interval: 10s
       timeout: 3s
       retries: 6

@@ -8,6 +8,7 @@
     "./testIds/*": "./src/ui/*.testIds.ts"
   },
   "scripts": {
+    "assets:fetch": "node scripts/fetchAssets.js",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run"
@@ -25,8 +26,11 @@
     "@types/react": "catalog:",
     "eslint": "catalog:",
     "react": "catalog:",
+    "storybook": "catalog:",
+    "storybook-react-rsbuild": "catalog:",
     "typescript": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "zod": "catalog:"
   },
   "peerDependencies": {
     "react": "catalog:"

@@ -4,8 +4,9 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
-import type {CroissantTrailDtoSidesItem} from './croissantTrailDtoSidesItem';
 
 export interface CroissantTrailDto {
-  sides: CroissantTrailDtoSidesItem[];
+  /** @nullable */
+  bakeryIndex?: number | null;
+  structure: boolean;
 }

@@ -8,4 +8,5 @@
 - Заголовки ставятся на уровне server с `always` (`add_header_inherit merge`). Дубли заголовков от Spring скрываются `proxy_hide_header`. Новый внешний источник скриптов, стилей или фреймов требует правки CSP, по согласованию.
 - Образ собирается на `node:<версия>-alpine`, мажор совпадает с `.nvmrc`, обновляются вместе.
 - `PUBLIC_*` вшиваются при сборке из `apps/<app>/.env`. Если файла нет при наличии `.env.example`, сборка падает. После правки `.env` — `--build`.
+- `storybook` — отдельный локальный сервис корневого compose (`docker/storybook.Dockerfile`, http://localhost:6006), в образ web и `deploy/compose.yml` не входит.
 - Бэкенд в этот compose не входит.
