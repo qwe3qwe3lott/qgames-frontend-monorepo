@@ -6,16 +6,16 @@
  */
 import type {CroissantBakeryDto} from './croissantBakeryDto';
 import type {CroissantPastureDto} from './croissantPastureDto';
-import type {CroissantTileDtoEdgesItem} from './croissantTileDtoEdgesItem';
+import type {CroissantStructuresDto} from './croissantStructuresDto';
+import type {CroissantTileEdgesDto} from './croissantTileEdgesDto';
 import type {CroissantTrailDto} from './croissantTrailDto';
 
 export interface CroissantTileDto {
   bakeries: CroissantBakeryDto[];
   code: string;
-  dairy: boolean;
-  edges: CroissantTileDtoEdgesItem[];
-  garden: boolean;
+  edges: CroissantTileEdgesDto;
   pastures: CroissantPastureDto[];
+  structures: CroissantStructuresDto;
   title: string;
   trails: CroissantTrailDto[];
 }

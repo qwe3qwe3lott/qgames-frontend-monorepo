@@ -4,11 +4,30 @@
     {
       "code": "dairy",
       "title": "Сыроварня",
-      "edges": ["PASTURE", "PASTURE", "PASTURE", "PASTURE"],
+      "edges": {
+        "N": {
+          "type": "PASTURE",
+          "index": 0
+        },
+        "E": {
+          "type": "PASTURE",
+          "index": 0
+        },
+        "S": {
+          "type": "PASTURE",
+          "index": 0
+        },
+        "W": {
+          "type": "PASTURE",
+          "index": 0
+        }
+      },
       "bakeries": [],
       "trails": [],
-      "dairy": true,
-      "garden": false,
+      "structures": {
+        "garden": false,
+        "dairy": true
+      },
       "pastures": [
         {
           "halves": [
@@ -45,25 +64,42 @@
               "half": 1
             }
           ],
-          "bakeries": []
+          "adjacentBakeries": []
         }
       ]
     },
     {
       "code": "dairy-trail",
       "title": "Сыроварня у тропы",
-      "edges": ["TRAIL", "PASTURE", "PASTURE", "PASTURE"],
+      "edges": {
+        "N": {
+          "type": "TRAIL",
+          "index": 0
+        },
+        "E": {
+          "type": "PASTURE",
+          "index": 0
+        },
+        "S": {
+          "type": "PASTURE",
+          "index": 0
+        },
+        "W": {
+          "type": "PASTURE",
+          "index": 0
+        }
+      },
       "bakeries": [],
       "trails": [
         {
-          "sides": ["N"],
-          "bakery": null,
-          "dairy": true,
-          "garden": false
+          "bakeryIndex": null,
+          "structure": true
         }
       ],
-      "dairy": true,
-      "garden": false,
+      "structures": {
+        "garden": false,
+        "dairy": true
+      },
       "pastures": [
         {
           "halves": [
@@ -100,23 +136,41 @@
               "half": 1
             }
           ],
-          "bakeries": []
+          "adjacentBakeries": []
         }
       ]
     },
     {
       "code": "bakery-one",
       "title": "Пекарня",
-      "edges": ["BAKERY", "PASTURE", "PASTURE", "PASTURE"],
+      "edges": {
+        "N": {
+          "type": "BAKERY",
+          "index": 0
+        },
+        "E": {
+          "type": "PASTURE",
+          "index": 0
+        },
+        "S": {
+          "type": "PASTURE",
+          "index": 0
+        },
+        "W": {
+          "type": "PASTURE",
+          "index": 0
+        }
+      },
       "bakeries": [
         {
-          "sides": ["N"],
           "sign": false
         }
       ],
       "trails": [],
-      "dairy": false,
-      "garden": false,
+      "structures": {
+        "garden": false,
+        "dairy": false
+      },
       "pastures": [
         {
           "halves": [
@@ -145,23 +199,41 @@
               "half": 1
             }
           ],
-          "bakeries": [0]
+          "adjacentBakeries": [0]
         }
       ]
     },
     {
       "code": "bakery-one-sign",
       "title": "Пекарня с вывеской",
-      "edges": ["BAKERY", "PASTURE", "PASTURE", "PASTURE"],
+      "edges": {
+        "N": {
+          "type": "BAKERY",
+          "index": 0
+        },
+        "E": {
+          "type": "PASTURE",
+          "index": 0
+        },
+        "S": {
+          "type": "PASTURE",
+          "index": 0
+        },
+        "W": {
+          "type": "PASTURE",
+          "index": 0
+        }
+      },
       "bakeries": [
         {
-          "sides": ["N"],
           "sign": true
         }
       ],
       "trails": [],
-      "dairy": false,
-      "garden": false,
+      "structures": {
+        "garden": false,
+        "dairy": false
+      },
       "pastures": [
         {
           "halves": [
@@ -190,23 +262,41 @@
               "half": 1
             }
           ],
-          "bakeries": [0]
+          "adjacentBakeries": [0]
         }
       ]
     },
     {
       "code": "bakery-corner",
       "title": "Угловая пекарня",
-      "edges": ["BAKERY", "BAKERY", "PASTURE", "PASTURE"],
+      "edges": {
+        "N": {
+          "type": "BAKERY",
+          "index": 0
+        },
+        "E": {
+          "type": "BAKERY",
+          "index": 0
+        },
+        "S": {
+          "type": "PASTURE",
+          "index": 0
+        },
+        "W": {
+          "type": "PASTURE",
+          "index": 0
+        }
+      },
       "bakeries": [
         {
-          "sides": ["N", "E"],
           "sign": true
         }
       ],
       "trails": [],
-      "dairy": false,
-      "garden": false,
+      "structures": {
+        "garden": false,
+        "dairy": false
+      },
       "pastures": [
         {
           "halves": [
@@ -227,25 +317,42 @@
               "half": 1
             }
           ],
-          "bakeries": [0]
+          "adjacentBakeries": [0]
         }
       ]
     },
     {
       "code": "trail-straight",
       "title": "Прямая тропа",
-      "edges": ["TRAIL", "PASTURE", "TRAIL", "PASTURE"],
+      "edges": {
+        "N": {
+          "type": "TRAIL",
+          "index": 0
+        },
+        "E": {
+          "type": "PASTURE",
+          "index": 1
+        },
+        "S": {
+          "type": "TRAIL",
+          "index": 0
+        },
+        "W": {
+          "type": "PASTURE",
+          "index": 0
+        }
+      },
       "bakeries": [],
       "trails": [
         {
-          "sides": ["N", "S"],
-          "bakery": null,
-          "dairy": false,
-          "garden": false
+          "bakeryIndex": null,
+          "structure": false
         }
       ],
-      "dairy": false,
-      "garden": false,
+      "structures": {
+        "garden": false,
+        "dairy": false
+      },
       "pastures": [
         {
           "halves": [
@@ -266,7 +373,7 @@
               "half": 0
             }
           ],
-          "bakeries": []
+          "adjacentBakeries": []
         },
         {
           "halves": [
@@ -287,25 +394,42 @@
               "half": 1
             }
           ],
-          "bakeries": []
+          "adjacentBakeries": []
         }
       ]
     },
     {
       "code": "trail-curve",
       "title": "Изгиб тропы",
-      "edges": ["TRAIL", "PASTURE", "PASTURE", "TRAIL"],
+      "edges": {
+        "N": {
+          "type": "TRAIL",
+          "index": 0
+        },
+        "E": {
+          "type": "PASTURE",
+          "index": 1
+        },
+        "S": {
+          "type": "PASTURE",
+          "index": 1
+        },
+        "W": {
+          "type": "TRAIL",
+          "index": 0
+        }
+      },
       "bakeries": [],
       "trails": [
         {
-          "sides": ["N", "W"],
-          "bakery": null,
-          "dairy": false,
-          "garden": false
+          "bakeryIndex": null,
+          "structure": false
         }
       ],
-      "dairy": false,
-      "garden": false,
+      "structures": {
+        "garden": false,
+        "dairy": false
+      },
       "pastures": [
         {
           "halves": [
@@ -318,7 +442,7 @@
               "half": 0
             }
           ],
-          "bakeries": []
+          "adjacentBakeries": []
         },
         {
           "halves": [
@@ -347,37 +471,50 @@
               "half": 1
             }
           ],
-          "bakeries": []
+          "adjacentBakeries": []
         }
       ]
     },
     {
       "code": "trail-cross",
       "title": "Развилка троп",
-      "edges": ["TRAIL", "TRAIL", "TRAIL", "PASTURE"],
+      "edges": {
+        "N": {
+          "type": "TRAIL",
+          "index": 0
+        },
+        "E": {
+          "type": "TRAIL",
+          "index": 1
+        },
+        "S": {
+          "type": "TRAIL",
+          "index": 2
+        },
+        "W": {
+          "type": "PASTURE",
+          "index": 2
+        }
+      },
       "bakeries": [],
       "trails": [
         {
-          "sides": ["N"],
-          "bakery": null,
-          "dairy": false,
-          "garden": true
+          "bakeryIndex": null,
+          "structure": true
         },
         {
-          "sides": ["E"],
-          "bakery": null,
-          "dairy": false,
-          "garden": true
+          "bakeryIndex": null,
+          "structure": true
         },
         {
-          "sides": ["S"],
-          "bakery": null,
-          "dairy": false,
-          "garden": true
+          "bakeryIndex": null,
+          "structure": true
         }
       ],
-      "dairy": false,
-      "garden": true,
+      "structures": {
+        "garden": true,
+        "dairy": false
+      },
       "pastures": [
         {
           "halves": [
@@ -390,7 +527,7 @@
               "half": 0
             }
           ],
-          "bakeries": []
+          "adjacentBakeries": []
         },
         {
           "halves": [
@@ -403,7 +540,7 @@
               "half": 1
             }
           ],
-          "bakeries": []
+          "adjacentBakeries": []
         },
         {
           "halves": [
@@ -424,43 +561,54 @@
               "half": 0
             }
           ],
-          "bakeries": []
+          "adjacentBakeries": []
         }
       ]
     },
     {
       "code": "trail-junction",
       "title": "Перекрёсток троп",
-      "edges": ["TRAIL", "TRAIL", "TRAIL", "TRAIL"],
+      "edges": {
+        "N": {
+          "type": "TRAIL",
+          "index": 0
+        },
+        "E": {
+          "type": "TRAIL",
+          "index": 1
+        },
+        "S": {
+          "type": "TRAIL",
+          "index": 2
+        },
+        "W": {
+          "type": "TRAIL",
+          "index": 3
+        }
+      },
       "bakeries": [],
       "trails": [
         {
-          "sides": ["N"],
-          "bakery": null,
-          "dairy": false,
-          "garden": true
+          "bakeryIndex": null,
+          "structure": true
         },
         {
-          "sides": ["E"],
-          "bakery": null,
-          "dairy": false,
-          "garden": true
+          "bakeryIndex": null,
+          "structure": true
         },
         {
-          "sides": ["S"],
-          "bakery": null,
-          "dairy": false,
-          "garden": true
+          "bakeryIndex": null,
+          "structure": true
         },
         {
-          "sides": ["W"],
-          "bakery": null,
-          "dairy": false,
-          "garden": true
+          "bakeryIndex": null,
+          "structure": true
         }
       ],
-      "dairy": false,
-      "garden": true,
+      "structures": {
+        "garden": true,
+        "dairy": false
+      },
       "pastures": [
         {
           "halves": [
@@ -473,7 +621,7 @@
               "half": 0
             }
           ],
-          "bakeries": []
+          "adjacentBakeries": []
         },
         {
           "halves": [
@@ -486,7 +634,7 @@
               "half": 0
             }
           ],
-          "bakeries": []
+          "adjacentBakeries": []
         },
         {
           "halves": [
@@ -499,7 +647,7 @@
               "half": 1
             }
           ],
-          "bakeries": []
+          "adjacentBakeries": []
         },
         {
           "halves": [
@@ -512,30 +660,46 @@
               "half": 1
             }
           ],
-          "bakeries": []
+          "adjacentBakeries": []
         }
       ]
     },
     {
       "code": "bakery-trail",
       "title": "Ворота пекарни",
-      "edges": ["BAKERY", "PASTURE", "TRAIL", "PASTURE"],
+      "edges": {
+        "N": {
+          "type": "BAKERY",
+          "index": 0
+        },
+        "E": {
+          "type": "PASTURE",
+          "index": 1
+        },
+        "S": {
+          "type": "TRAIL",
+          "index": 0
+        },
+        "W": {
+          "type": "PASTURE",
+          "index": 0
+        }
+      },
       "bakeries": [
         {
-          "sides": ["N"],
           "sign": false
         }
       ],
       "trails": [
         {
-          "sides": ["S"],
-          "bakery": 0,
-          "dairy": false,
-          "garden": false
+          "bakeryIndex": 0,
+          "structure": false
         }
       ],
-      "dairy": false,
-      "garden": false,
+      "structures": {
+        "garden": false,
+        "dairy": false
+      },
       "pastures": [
         {
           "halves": [
@@ -552,7 +716,7 @@
               "half": 0
             }
           ],
-          "bakeries": [0]
+          "adjacentBakeries": [0]
         },
         {
           "halves": [
@@ -569,30 +733,46 @@
               "half": 1
             }
           ],
-          "bakeries": [0]
+          "adjacentBakeries": [0]
         }
       ]
     },
     {
       "code": "bakery-trail-t",
       "title": "Пекарня на распутье",
-      "edges": ["BAKERY", "TRAIL", "TRAIL", "PASTURE"],
+      "edges": {
+        "N": {
+          "type": "BAKERY",
+          "index": 0
+        },
+        "E": {
+          "type": "TRAIL",
+          "index": 0
+        },
+        "S": {
+          "type": "TRAIL",
+          "index": 0
+        },
+        "W": {
+          "type": "PASTURE",
+          "index": 0
+        }
+      },
       "bakeries": [
         {
-          "sides": ["N"],
           "sign": false
         }
       ],
       "trails": [
         {
-          "sides": ["E", "S"],
-          "bakery": null,
-          "dairy": false,
-          "garden": false
+          "bakeryIndex": null,
+          "structure": false
         }
       ],
-      "dairy": false,
-      "garden": false,
+      "structures": {
+        "garden": false,
+        "dairy": false
+      },
       "pastures": [
         {
           "halves": [
@@ -613,7 +793,7 @@
               "half": 1
             }
           ],
-          "bakeries": [0]
+          "adjacentBakeries": [0]
         },
         {
           "halves": [
@@ -626,34 +806,49 @@
               "half": 1
             }
           ],
-          "bakeries": []
+          "adjacentBakeries": []
         }
       ]
     },
     {
       "code": "bakery-two",
       "title": "Две пекарни",
-      "edges": ["BAKERY", "TRAIL", "BAKERY", "TRAIL"],
+      "edges": {
+        "N": {
+          "type": "BAKERY",
+          "index": 0
+        },
+        "E": {
+          "type": "TRAIL",
+          "index": 0
+        },
+        "S": {
+          "type": "BAKERY",
+          "index": 1
+        },
+        "W": {
+          "type": "TRAIL",
+          "index": 0
+        }
+      },
       "bakeries": [
         {
-          "sides": ["N"],
           "sign": false
         },
         {
-          "sides": ["S"],
           "sign": false
         }
       ],
       "trails": [
         {
-          "sides": ["E", "W"],
-          "bakery": null,
-          "dairy": false,
-          "garden": false
+          "bakeryIndex": null,
+          "structure": false
         }
       ],
-      "dairy": false,
-      "garden": false,
+      "structures": {
+        "garden": false,
+        "dairy": false
+      },
       "pastures": [
         {
           "halves": [
@@ -666,7 +861,7 @@
               "half": 0
             }
           ],
-          "bakeries": [0]
+          "adjacentBakeries": [0]
         },
         {
           "halves": [
@@ -679,23 +874,41 @@
               "half": 1
             }
           ],
-          "bakeries": [1]
+          "adjacentBakeries": [1]
         }
       ]
     },
     {
       "code": "bakery-three",
       "title": "Большая пекарня",
-      "edges": ["BAKERY", "BAKERY", "BAKERY", "PASTURE"],
+      "edges": {
+        "N": {
+          "type": "BAKERY",
+          "index": 0
+        },
+        "E": {
+          "type": "BAKERY",
+          "index": 0
+        },
+        "S": {
+          "type": "BAKERY",
+          "index": 0
+        },
+        "W": {
+          "type": "PASTURE",
+          "index": 0
+        }
+      },
       "bakeries": [
         {
-          "sides": ["N", "E", "S"],
           "sign": true
         }
       ],
       "trails": [],
-      "dairy": false,
-      "garden": false,
+      "structures": {
+        "garden": false,
+        "dairy": false
+      },
       "pastures": [
         {
           "halves": [
@@ -708,23 +921,41 @@
               "half": 1
             }
           ],
-          "bakeries": [0]
+          "adjacentBakeries": [0]
         }
       ]
     },
     {
       "code": "bakery-four",
       "title": "Пекарня-крепость",
-      "edges": ["BAKERY", "BAKERY", "BAKERY", "BAKERY"],
+      "edges": {
+        "N": {
+          "type": "BAKERY",
+          "index": 0
+        },
+        "E": {
+          "type": "BAKERY",
+          "index": 0
+        },
+        "S": {
+          "type": "BAKERY",
+          "index": 0
+        },
+        "W": {
+          "type": "BAKERY",
+          "index": 0
+        }
+      },
       "bakeries": [
         {
-          "sides": ["N", "E", "S", "W"],
           "sign": true
         }
       ],
       "trails": [],
-      "dairy": false,
-      "garden": false,
+      "structures": {
+        "garden": false,
+        "dairy": false
+      },
       "pastures": []
     }
   ],

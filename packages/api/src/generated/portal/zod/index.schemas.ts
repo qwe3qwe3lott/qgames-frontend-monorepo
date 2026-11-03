@@ -320,12 +320,33 @@ export type CroissantModuleDto = zod.input<typeof CroissantModuleDto>;
 export type CroissantModuleDtoOutput = zod.output<typeof CroissantModuleDto>;
 
 export const CroissantBakeryDto = zod.object({
-  sides: zod.array(zod.enum(['N', 'E', 'S', 'W'])),
   sign: zod.boolean(),
 });
 
 export type CroissantBakeryDto = zod.input<typeof CroissantBakeryDto>;
 export type CroissantBakeryDtoOutput = zod.output<typeof CroissantBakeryDto>;
+
+export const CroissantTileEdgeDto = zod.object({
+  index: zod.int(),
+  type: zod.enum(['BAKERY', 'TRAIL', 'PASTURE']),
+});
+
+export type CroissantTileEdgeDto = zod.input<typeof CroissantTileEdgeDto>;
+export type CroissantTileEdgeDtoOutput = zod.output<
+  typeof CroissantTileEdgeDto
+>;
+
+export const CroissantTileEdgesDto = zod.object({
+  E: CroissantTileEdgeDto,
+  N: CroissantTileEdgeDto,
+  S: CroissantTileEdgeDto,
+  W: CroissantTileEdgeDto,
+});
+
+export type CroissantTileEdgesDto = zod.input<typeof CroissantTileEdgesDto>;
+export type CroissantTileEdgesDtoOutput = zod.output<
+  typeof CroissantTileEdgesDto
+>;
 
 export const CroissantHalfEdgeDto = zod.object({
   dir: zod.enum(['N', 'E', 'S', 'W']),
@@ -338,18 +359,26 @@ export type CroissantHalfEdgeDtoOutput = zod.output<
 >;
 
 export const CroissantPastureDto = zod.object({
-  bakeries: zod.array(zod.int()),
+  adjacentBakeries: zod.array(zod.int()),
   halves: zod.array(CroissantHalfEdgeDto),
 });
 
 export type CroissantPastureDto = zod.input<typeof CroissantPastureDto>;
 export type CroissantPastureDtoOutput = zod.output<typeof CroissantPastureDto>;
 
-export const CroissantTrailDto = zod.object({
-  bakery: zod.int().nullish(),
+export const CroissantStructuresDto = zod.object({
   dairy: zod.boolean(),
   garden: zod.boolean(),
-  sides: zod.array(zod.enum(['N', 'E', 'S', 'W'])),
+});
+
+export type CroissantStructuresDto = zod.input<typeof CroissantStructuresDto>;
+export type CroissantStructuresDtoOutput = zod.output<
+  typeof CroissantStructuresDto
+>;
+
+export const CroissantTrailDto = zod.object({
+  bakeryIndex: zod.int().nullish(),
+  structure: zod.boolean(),
 });
 
 export type CroissantTrailDto = zod.input<typeof CroissantTrailDto>;
@@ -358,10 +387,9 @@ export type CroissantTrailDtoOutput = zod.output<typeof CroissantTrailDto>;
 export const CroissantTileDto = zod.object({
   bakeries: zod.array(CroissantBakeryDto),
   code: zod.string(),
-  dairy: zod.boolean(),
-  edges: zod.array(zod.enum(['BAKERY', 'TRAIL', 'PASTURE'])),
-  garden: zod.boolean(),
+  edges: CroissantTileEdgesDto,
   pastures: zod.array(CroissantPastureDto),
+  structures: CroissantStructuresDto,
   title: zod.string(),
   trails: zod.array(CroissantTrailDto),
 });

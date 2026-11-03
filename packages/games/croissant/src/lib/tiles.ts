@@ -13,30 +13,42 @@ export type SpotKind = 'BAKERY' | 'TRAIL' | 'DAIRY' | 'PASTURE';
 /** Стороны в порядке обхода по часовой стрелке. */
 export const SIDES: readonly Side[] = ['N', 'E', 'S', 'W'];
 
+/** Сторона тайла: какой элемент на неё выходит — тип и индекс в его списке (`bakeries`, `trails`, `pastures`). */
+export interface TileEdge {
+  readonly type: EdgeKind;
+  readonly index: number;
+}
+
 /** Тип тайла в том виде, в каком он приходит в каталоге игры. */
 export interface TileShape {
   readonly code: string;
   readonly title: string;
-  readonly edges: readonly EdgeKind[];
-  readonly bakeries: readonly {
-    readonly sides: readonly Side[];
-    readonly sign: boolean;
-  }[];
+  /** Что выходит на каждую сторону: только отсюда известны стороны пекарен и троп. */
+  readonly edges: Readonly<Record<Side, TileEdge>>;
+  readonly bakeries: readonly {readonly sign: boolean}[];
   /**
-   * Тропы: стороны выхода и цель. Тропа на одну сторону входит в пекарню `bakery` (индекс в `bakeries`), сыроварню
-   * или сад; тропа на две стороны и больше соединяет их.
+   * Тропы: стороны — рёбра `edges` с индексом тропы. Тропа на одну сторону входит в пекарню `bakeryIndex` (индекс в
+   * `bakeries`) или в постройку тайла (`structure`); тропа на две стороны и больше соединяет их.
    */
   readonly trails: readonly {
-    readonly sides: readonly Side[];
-    readonly bakery?: number | null | undefined;
-    readonly dairy: boolean;
-    readonly garden: boolean;
+    readonly bakeryIndex?: number | null | undefined;
+    readonly structure: boolean;
   }[];
-  readonly dairy: boolean;
-  /** Сад в центре: тропы заканчиваются у него, кондитера на сад не ставят. */
-  readonly garden: boolean;
+  /** Постройка в центре: сыроварня или сад (тропы заканчиваются у него, кондитера на сад не ставят). */
+  readonly structures: {readonly garden: boolean; readonly dairy: boolean};
   /** Луга: полуребра, которыми луг выходит к соседним клеткам. */
   readonly pastures: readonly {readonly halves: readonly HalfEdge[]}[];
+}
+
+/** Стороны элемента `kind` с индексом `index` по рёбрам тайла, в порядке обхода по часовой стрелке. */
+export function sidesOf(
+  edges: TileShape['edges'],
+  kind: EdgeKind,
+  index: number,
+): Side[] {
+  return SIDES.filter(
+    side => edges[side].type === kind && edges[side].index === index,
+  );
 }
 
 /**

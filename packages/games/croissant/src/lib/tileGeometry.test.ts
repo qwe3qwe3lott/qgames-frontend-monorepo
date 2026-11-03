@@ -3,32 +3,40 @@ import {describe, expect, it} from 'vitest';
 
 import assets from './assets.fixture.json';
 import {pastureHalves, tileGeometry, type TileFace} from './tileGeometry';
-import {partKey, type HalfEdge, type Side, type TileShape} from './tiles';
+import {
+  partKey,
+  type EdgeKind,
+  type HalfEdge,
+  type Side,
+  type TileEdge,
+  type TileShape,
+} from './tiles';
 
 // Каталог — снимок `GET /api/games/croissant` → `assets` (`pnpm assets:fetch`): геометрия проверяется на реальных
 // типах тайлов. Схема контракта сразу покажет устаревший формат снимка.
 const TILES: readonly TileShape[] = CroissantAssetsDto.parse(assets).tiles;
 
 const half = (dir: Side, value: number): HalfEdge => ({dir, half: value});
-const trail = (
-  sides: Side[],
-  target: {bakery?: number; dairy?: boolean; garden?: boolean} = {},
-) => ({
-  sides,
-  bakery: target.bakery ?? null,
-  dairy: target.dairy ?? false,
-  garden: target.garden ?? false,
+const edge = (type: EdgeKind, index: number): TileEdge => ({type, index});
+const trail = (target: {bakeryIndex?: number; structure?: boolean} = {}) => ({
+  bakeryIndex: target.bakeryIndex ?? null,
+  structure: target.structure ?? false,
 });
+const NO_STRUCTURES = {garden: false, dairy: false};
 
 /** Две независимые дуги W-N и S-E: уголки NW и SE и большой луг между ними. */
 const TWO_CURVES: TileShape = {
   code: 'test-two-curves',
   title: 'Две дуги',
-  edges: ['TRAIL', 'TRAIL', 'TRAIL', 'TRAIL'],
+  edges: {
+    N: edge('TRAIL', 0),
+    E: edge('TRAIL', 1),
+    S: edge('TRAIL', 1),
+    W: edge('TRAIL', 0),
+  },
   bakeries: [],
-  trails: [trail(['W', 'N']), trail(['S', 'E'])],
-  dairy: false,
-  garden: false,
+  trails: [trail(), trail()],
+  structures: NO_STRUCTURES,
   pastures: [
     {halves: [half('W', 0), half('N', 0)]},
     {halves: [half('N', 1), half('E', 0), half('S', 0), half('W', 1)]},
@@ -40,14 +48,15 @@ const TWO_CURVES: TileShape = {
 const TWO_BAKERIES: TileShape = {
   code: 'test-two-bakeries',
   title: 'Две пекарни',
-  edges: ['BAKERY', 'BAKERY', 'TRAIL', 'TRAIL'],
-  bakeries: [
-    {sides: ['N'], sign: false},
-    {sides: ['E'], sign: true},
-  ],
-  trails: [trail(['W'], {bakery: 0}), trail(['S'], {bakery: 1})],
-  dairy: false,
-  garden: false,
+  edges: {
+    N: edge('BAKERY', 0),
+    E: edge('BAKERY', 1),
+    S: edge('TRAIL', 1),
+    W: edge('TRAIL', 0),
+  },
+  bakeries: [{sign: false}, {sign: true}],
+  trails: [trail({bakeryIndex: 0}), trail({bakeryIndex: 1})],
+  structures: NO_STRUCTURES,
   pastures: [
     {halves: [half('W', 0)]},
     {halves: [half('W', 1), half('S', 0)]},
@@ -59,14 +68,15 @@ const TWO_BAKERIES: TileShape = {
 const BAKERY_DAIRY: TileShape = {
   code: 'test-bakery-dairy',
   title: 'Пекарни и сыроварня',
-  edges: ['BAKERY', 'BAKERY', 'TRAIL', 'TRAIL'],
-  bakeries: [
-    {sides: ['N'], sign: false},
-    {sides: ['E'], sign: false},
-  ],
-  trails: [trail(['W'], {bakery: 0}), trail(['S'], {dairy: true})],
-  dairy: true,
-  garden: false,
+  edges: {
+    N: edge('BAKERY', 0),
+    E: edge('BAKERY', 1),
+    S: edge('TRAIL', 1),
+    W: edge('TRAIL', 0),
+  },
+  bakeries: [{sign: false}, {sign: false}],
+  trails: [trail({bakeryIndex: 0}), trail({structure: true})],
+  structures: {garden: false, dairy: true},
   pastures: [
     {halves: [half('W', 0)]},
     {halves: [half('W', 1), half('S', 0), half('S', 1)]},

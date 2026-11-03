@@ -5,6 +5,7 @@
 import {
   SIDES,
   partKey,
+  sidesOf,
   type HalfEdge,
   type Point,
   type Side,
@@ -231,22 +232,26 @@ function bakeryEdges(sides: readonly Side[]): {
   return edges;
 }
 
-/** Ломаная тропы: от середины стороны к цели, между сторонами — прямая или дуга мимо центра. */
+/**
+ * Ломаная тропы со сторонами `sides`: от середины стороны к цели (кромка пекарни или постройка в центре), между
+ * сторонами — прямая или дуга мимо центра.
+ */
 function trailLines(
+  sides: readonly Side[],
   trail: TileShape['trails'][number],
   bakeryLines: readonly {
     readonly gap: readonly Side[];
     readonly line: readonly Point[];
   }[][],
 ): Point[][] {
-  const [first, second] = trail.sides;
+  const [first, second] = sides;
   if (first === undefined) {
     return [];
   }
-  if (trail.sides.length === 1) {
+  if (sides.length === 1) {
     const from = midpoint(first);
-    if (trail.bakery !== undefined && trail.bakery !== null) {
-      const edge = bakeryLines[trail.bakery]?.find(item =>
+    if (trail.bakeryIndex !== undefined && trail.bakeryIndex !== null) {
+      const edge = bakeryLines[trail.bakeryIndex]?.find(item =>
         item.gap.includes(first),
       );
       const target = edge?.line[CURVE_STEPS / 2] ?? CENTER;
@@ -254,13 +259,13 @@ function trailLines(
     }
     return [[from, CENTER]];
   }
-  if (trail.sides.length === 2 && second !== undefined) {
+  if (sides.length === 2 && second !== undefined) {
     const opposite = SIDES.indexOf(first) % 2 === SIDES.indexOf(second) % 2;
     return opposite
       ? [[midpoint(first), CENTER, midpoint(second)]]
       : [bezier(midpoint(first), CENTER, midpoint(second))];
   }
-  return trail.sides.map(side => [midpoint(side), CENTER]);
+  return sides.map(side => [midpoint(side), CENTER]);
 }
 
 /** Знаковая площадь многоугольника (в SVG положительна при обходе по часовой стрелке). */
@@ -337,11 +342,9 @@ function ownerOf(tile: TileShape, tags: readonly EdgeTag[]): TilePart | null {
     if (tag.kind !== 'border') {
       continue;
     }
-    const bakery = tile.bakeries.findIndex(item =>
-      item.sides.includes(tag.half.dir),
-    );
-    if (bakery >= 0) {
-      return {kind: 'BAKERY', index: bakery};
+    const edge = tile.edges[tag.half.dir];
+    if (edge.type === 'BAKERY') {
+      return {kind: 'BAKERY', index: edge.index};
     }
     const pasture = tile.pastures.findIndex(item =>
       item.halves.some(half => sameHalf(half, tag.half)),
@@ -495,13 +498,17 @@ function buildGraph(tile: TileLayout): {
     addPolyline(graph, [start, midpoint(side)], {kind: 'border', half: first});
     addPolyline(graph, [midpoint(side), end], {kind: 'border', half: second});
   });
-  const bakeryLines = tile.bakeries.map(bakery => bakeryEdges(bakery.sides));
+  const bakeryLines = tile.bakeries.map((_, index) =>
+    bakeryEdges(sidesOf(tile.edges, 'BAKERY', index)),
+  );
   bakeryLines.forEach(edges => {
     edges.forEach(edge => {
       addPolyline(graph, edge.line, {kind: 'bakery'});
     });
   });
-  const trailPaths = tile.trails.map(trail => trailLines(trail, bakeryLines));
+  const trailPaths = tile.trails.map((trail, index) =>
+    trailLines(sidesOf(tile.edges, 'TRAIL', index), trail, bakeryLines),
+  );
   trailPaths.forEach(lines => {
     lines.forEach(line => {
       addPolyline(graph, line, {kind: 'trail'});
@@ -512,13 +519,15 @@ function buildGraph(tile: TileLayout): {
 
 /**
  * Луга тайла, выведенные из пекарен и троп: грань графа, выходящая к краю плитки не стороной пекарни, — луг с её
- * полуребрами. Грань без края (замкнутая тропами) лугом не считается, как в `ownerOf`.
+ * полуребрами. Грань без края (замкнутая тропами) лугом не считается, как в `ownerOf`. Индексы лугов у рёбер
+ * `PASTURE` здесь не читаются.
  */
 export function pastureHalves(tile: TileLayout): TileShape['pastures'] {
-  const bakerySides = new Set(tile.bakeries.flatMap(bakery => bakery.sides));
   return faces(buildGraph(tile).graph).flatMap(face => {
     const halves = face.tags.flatMap(tag =>
-      tag.kind === 'border' && !bakerySides.has(tag.half.dir) ? [tag.half] : [],
+      tag.kind === 'border' && tile.edges[tag.half.dir].type !== 'BAKERY'
+        ? [tag.half]
+        : [],
     );
     return halves.length === 0 ? [] : [{halves}];
   });
@@ -527,10 +536,14 @@ export function pastureHalves(tile: TileLayout): TileShape['pastures'] {
 function buildGeometry(tile: TileShape, size: number): TileGeometry {
   const {graph, trailPaths} = buildGraph(tile);
 
-  const dairy = tile.dairy ? {center: CENTER, r: DAIRY_RADIUS} : null;
-  const garden = tile.garden ? {center: CENTER, r: GARDEN_RADIUS} : null;
-  const signs = tile.bakeries.flatMap(bakery => {
-    const side = bakery.sides[0];
+  const dairy = tile.structures.dairy
+    ? {center: CENTER, r: DAIRY_RADIUS}
+    : null;
+  const garden = tile.structures.garden
+    ? {center: CENTER, r: GARDEN_RADIUS}
+    : null;
+  const signs = tile.bakeries.flatMap((bakery, index) => {
+    const side = sidesOf(tile.edges, 'BAKERY', index)[0];
     if (!bakery.sign || side === undefined) {
       return [];
     }

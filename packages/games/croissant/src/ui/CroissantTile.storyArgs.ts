@@ -3,7 +3,13 @@ import {z} from 'zod';
 
 import {PALETTE} from '../lib/palette';
 import {pastureHalves} from '../lib/tileGeometry';
-import {SIDES, type EdgeKind, type Side, type TileShape} from '../lib/tiles';
+import {
+  SIDES,
+  sidesOf,
+  type Side,
+  type TileEdge,
+  type TileShape,
+} from '../lib/tiles';
 
 export type PlayerColor = keyof typeof PALETTE.confectioners;
 
@@ -179,15 +185,20 @@ export function buildTile(args: TileLayoutArgs): {
   const bakerySlots = SLOTS.filter(
     slot => SIDES_ARG.parse(args[SLOT_KEYS[slot].bakerySides]).length > 0,
   );
+  const bakerySides = bakerySlots.map(slot =>
+    sorted(SIDES_ARG.parse(args[SLOT_KEYS[slot].bakerySides])),
+  );
   const bakeries = bakerySlots.map(slot => ({
-    sides: sorted(SIDES_ARG.parse(args[SLOT_KEYS[slot].bakerySides])),
     sign: SIGN_ARG.parse(args[SLOT_KEYS[slot].bakerySign]),
   }));
   const trailSlots = SLOTS.filter(
     slot => SIDES_ARG.parse(args[SLOT_KEYS[slot].trailSides]).length > 0,
   );
-  const trails = trailSlots.map(slot => {
-    const sides = sorted(SIDES_ARG.parse(args[SLOT_KEYS[slot].trailSides]));
+  const trailSides = trailSlots.map(slot =>
+    sorted(SIDES_ARG.parse(args[SLOT_KEYS[slot].trailSides])),
+  );
+  const trails = trailSlots.map((slot, index) => {
+    const sides = trailSides[index] ?? [];
     const target = TARGET_ARG.parse(args[SLOT_KEYS[slot].trailTarget]);
     const name = `Тропа ${String(slot)}`;
     if (sides.length === 1 && target === 'none') {
@@ -208,39 +219,68 @@ export function buildTile(args: TileLayoutArgs): {
       );
     }
     return {
-      sides,
-      bakery: sides.length === 1 && bakery !== -1 ? bakery : null,
-      dairy: sides.length === 1 && target === 'dairy',
-      garden: sides.length === 1 && target === 'garden',
+      bakeryIndex: sides.length === 1 && bakery !== -1 ? bakery : null,
+      structure:
+        sides.length === 1 && (target === 'dairy' || target === 'garden'),
     };
   });
-  const edges = SIDES.map((side): EdgeKind => {
-    const inBakeries = bakeries.filter(item =>
-      item.sides.includes(side),
-    ).length;
-    const inTrails = trails.filter(item => item.sides.includes(side)).length;
+  // Сторона достаётся одному элементу: пекарне раньше тропы, меньшему слоту раньше большего.
+  const edgeAt = (side: Side): TileEdge => {
+    const inBakeries = bakerySides.filter(item => item.includes(side)).length;
+    const inTrails = trailSides.filter(item => item.includes(side)).length;
     if (inBakeries + inTrails > 1) {
       warnings.push(
         `Сторона ${SIDE_LABELS[side]} занята несколькими элементами`,
       );
     }
-    return inBakeries > 0 ? 'BAKERY' : inTrails > 0 ? 'TRAIL' : 'PASTURE';
-  });
+    const bakery = bakerySides.findIndex(item => item.includes(side));
+    if (bakery >= 0) {
+      return {type: 'BAKERY', index: bakery};
+    }
+    const trail = trailSides.findIndex(item => item.includes(side));
+    // Индекс луга известен только после вывода лугов — он проставляется ниже.
+    return trail >= 0
+      ? {type: 'TRAIL', index: trail}
+      : {type: 'PASTURE', index: 0};
+  };
   const elements = {
+    edges: {N: edgeAt('N'), E: edgeAt('E'), S: edgeAt('S'), W: edgeAt('W')},
     bakeries,
     trails,
-    dairy: center === 'dairy',
-    garden: center === 'garden',
+    structures: {dairy: center === 'dairy', garden: center === 'garden'},
   };
   const layout = {
     // tileGeometry кеширует геометрию по code: у каждого набора элементов — свой code.
     code: `story:${JSON.stringify(elements)}`,
     title: 'Тайл истории',
-    edges,
     ...elements,
   };
+  const pastures = pastureHalves(layout);
+  const pastureEdge = (side: Side): TileEdge => {
+    const edge = layout.edges[side];
+    return edge.type === 'PASTURE'
+      ? {
+          type: 'PASTURE',
+          index: Math.max(
+            0,
+            pastures.findIndex(item =>
+              item.halves.some(half => half.dir === side),
+            ),
+          ),
+        }
+      : edge;
+  };
   return {
-    shape: {...layout, pastures: pastureHalves(layout)},
+    shape: {
+      ...layout,
+      edges: {
+        N: pastureEdge('N'),
+        E: pastureEdge('E'),
+        S: pastureEdge('S'),
+        W: pastureEdge('W'),
+      },
+      pastures,
+    },
     warnings,
     bakerySlots,
     trailSlots,
@@ -252,33 +292,38 @@ function slotAt(index: number): Slot | undefined {
   return SLOTS.find(slot => slot === index + 1);
 }
 
-/** Цель тропы каталога → arg истории: пекарня по слоту, сыроварня, сад; у тропы на несколько сторон цели нет. */
-function targetOf(trail: TileShape['trails'][number]): TrailTarget {
-  if (trail.sides.length !== 1) {
+/**
+ * Цель тропы каталога → arg истории: пекарня по слоту или постройка тайла (сыроварня, сад); у тропы на несколько
+ * сторон цели нет.
+ */
+function targetOf(shape: TileShape, index: number): TrailTarget {
+  const trail = shape.trails[index];
+  if (
+    trail === undefined ||
+    sidesOf(shape.edges, 'TRAIL', index).length !== 1
+  ) {
     return 'none';
   }
-  if (trail.dairy) {
-    return 'dairy';
-  }
-  if (trail.garden) {
-    return 'garden';
+  if (trail.structure) {
+    return shape.structures.dairy
+      ? 'dairy'
+      : shape.structures.garden
+        ? 'garden'
+        : 'none';
   }
   const slot =
-    trail.bakery === null || trail.bakery === undefined
+    trail.bakeryIndex === null || trail.bakeryIndex === undefined
       ? undefined
-      : slotAt(trail.bakery);
+      : slotAt(trail.bakeryIndex);
   return slot === undefined ? 'none' : SLOT_KEYS[slot].bakery;
 }
 
 /** Args истории Tile для типа тайла из каталога: элементы по слотам, остальные слоты пустые. */
 export function tileArgsOf(shape: TileShape): TileLayoutArgs {
-  const sides = (slot: Slot) => shape.bakeries[slot - 1]?.sides ?? [];
+  const sides = (slot: Slot) => sidesOf(shape.edges, 'BAKERY', slot - 1);
   const sign = (slot: Slot) => shape.bakeries[slot - 1]?.sign ?? false;
-  const trailSides = (slot: Slot) => shape.trails[slot - 1]?.sides ?? [];
-  const target = (slot: Slot): TrailTarget => {
-    const trail = shape.trails[slot - 1];
-    return trail === undefined ? 'none' : targetOf(trail);
-  };
+  const trailSides = (slot: Slot) => sidesOf(shape.edges, 'TRAIL', slot - 1);
+  const target = (slot: Slot): TrailTarget => targetOf(shape, slot - 1);
   return {
     bakery1Sides: sides(1),
     bakery1Sign: sign(1),
@@ -296,7 +341,11 @@ export function tileArgsOf(shape: TileShape): TileLayoutArgs {
     trail3Target: target(3),
     trail4Sides: trailSides(4),
     trail4Target: target(4),
-    center: shape.dairy ? 'dairy' : shape.garden ? 'garden' : 'none',
+    center: shape.structures.dairy
+      ? 'dairy'
+      : shape.structures.garden
+        ? 'garden'
+        : 'none',
   };
 }
 

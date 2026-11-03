@@ -7,6 +7,6 @@
 import type {CroissantHalfEdgeDto} from './croissantHalfEdgeDto';
 
 export interface CroissantPastureDto {
-  bakeries: number[];
+  adjacentBakeries: number[];
   halves: CroissantHalfEdgeDto[];
 }
