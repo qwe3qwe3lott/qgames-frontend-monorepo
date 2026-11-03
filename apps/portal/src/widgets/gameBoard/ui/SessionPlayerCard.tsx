@@ -1,3 +1,4 @@
+import {useGetGame} from '@qgames/api/portal';
 import {
   PlayerCard,
   type PlayerCardProps,
@@ -52,11 +53,18 @@ function GameCard({
   // Тот же промис, что у доски: чанк игры грузится один раз.
   const module = use(loadGameModule(room.gameCode, load));
   const session = useSession(sessionId);
+  // Карточка игры уже в кеше: маршрут комнаты ждёт её в loader.
+  const assets = useGetGame(room.gameCode).data?.assets ?? null;
   if (session === undefined || module.PlayerCard === undefined) {
     return <PlayerCard {...card} />;
   }
   return (
-    <module.PlayerCard session={session} viewerId={viewerId} card={card} />
+    <module.PlayerCard
+      session={session}
+      viewerId={viewerId}
+      card={card}
+      assets={assets}
+    />
   );
 }
 

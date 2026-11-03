@@ -20,6 +20,13 @@ export function reasonLabel(reason: string): string {
   return reason;
 }
 
+/** Шаг ходящего: без ожидания кондитера он выкладывает тайл, с ожиданием (`pending`) — ставит кондитера. */
+export function turnActivity(confectionerStep: boolean): string {
+  return confectionerStep
+    ? 'выбирает, куда поставить кондитера'
+    : 'выбирает, куда положить тайл';
+}
+
 /** Подпись стороны тайла для легенды. */
 export const EDGE_LABELS = {
   BAKERY: 'Пекарня',

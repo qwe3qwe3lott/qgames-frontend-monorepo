@@ -4,9 +4,11 @@
  * OpenAPI definition
  * OpenAPI spec version: v0
  */
+import type {CroissantPlayerDtoColor} from './croissantPlayerDtoColor';
 import type {MoveOptionDto} from './moveOptionDto';
 
 export interface CroissantPlayerDto {
+  color: CroissantPlayerDtoColor;
   confectioners: number;
   crumbs: number;
   id: string;

@@ -57,6 +57,7 @@ export * from './croissantPastureDto';
 export * from './croissantPendingDto';
 export * from './croissantPlacedTileDto';
 export * from './croissantPlayerDto';
+export * from './croissantPlayerDtoColor';
 export * from './croissantSessionStateDto';
 export * from './croissantSessionStateDtoStage';
 export * from './croissantSettingsLimitsDto';

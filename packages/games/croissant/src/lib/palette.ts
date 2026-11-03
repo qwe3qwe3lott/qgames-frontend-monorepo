@@ -12,6 +12,16 @@ export const PALETTE = {
   gardenLine: '#3f6b33',
   sign: '#8c2f39',
   grid: '#8a8a8a66',
-  highlight: '#2563eb',
-  confectioners: ['#2563eb', '#dc2626', '#7c3aed', '#0f766e', '#b45309'],
+  /** Выбор участка для кондитера: не совпадает ни с одним цветом игрока. */
+  highlight: '#7c3aed',
+  /** Цвета игроков (`players[].color`): фишки кондитеров, рамка последнего тайла. */
+  confectioners: {
+    RED: '#dc2626',
+    YELLOW: '#facc15',
+    GREEN: '#16a34a',
+    BLUE: '#2563eb',
+    BLACK: '#1f2937',
+  },
+  /** Игрока нет в состоянии: фишка или тайл неизвестного игрока. */
+  unknownPlayer: '#6b7280',
 } as const;

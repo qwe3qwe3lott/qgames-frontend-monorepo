@@ -43,6 +43,8 @@ export interface GamePlayerCardProps {
   viewerId: string;
   /** Базовая карточка участника комнаты: имя, аватар, пометки и действия комнаты. */
   card: PlayerCardProps;
+  /** Статичные данные игры, как у доски (например, каталог тайлов для превью). */
+  assets: GameAssetsDto | null;
 }
 
 /**

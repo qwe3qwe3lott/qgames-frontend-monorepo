@@ -394,6 +394,7 @@ export type CroissantPendingDtoOutput = zod.output<typeof CroissantPendingDto>;
 
 export const CroissantPlacedTileDto = zod.object({
   id: zod.string(),
+  playerId: zod.uuid().nullish(),
   rotation: zod.int(),
   tile: zod.string(),
   x: zod.int(),
@@ -406,6 +407,7 @@ export type CroissantPlacedTileDtoOutput = zod.output<
 >;
 
 export const CroissantPlayerDto = zod.object({
+  color: zod.enum(['RED', 'YELLOW', 'GREEN', 'BLUE', 'BLACK']),
   confectioners: zod.int(),
   crumbs: zod.int(),
   id: zod.uuid(),

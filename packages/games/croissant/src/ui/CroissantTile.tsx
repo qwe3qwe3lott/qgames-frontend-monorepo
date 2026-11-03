@@ -3,6 +3,7 @@ import {useState, type KeyboardEvent} from 'react';
 
 import {SPOT_LABELS} from '../lib/labels';
 import {PALETTE} from '../lib/palette';
+import {colorOf} from '../lib/players';
 import {SIGN_SIZE, tileGeometry} from '../lib/tileGeometry';
 import {partKey, type TilePart, type TileShape} from '../lib/tiles';
 import {testIds} from './CroissantTile.testIds';
@@ -10,14 +11,10 @@ import {testIds} from './CroissantTile.testIds';
 /** Заливка части тайла на выборе кондитера: доступна, под курсором или выбрана. */
 const CHOICE_OPACITY = {idle: 0.12, active: 0.4} as const;
 
-/** Цвет фишки игрока: устойчив к порядку игроков в состоянии. */
-export function confectionerColor(playerId: string): string {
-  let hash = 0;
-  for (const char of playerId) {
-    hash = (hash * 31 + char.charCodeAt(0)) % 997;
-  }
-  return PALETTE.confectioners[hash % PALETTE.confectioners.length] ?? '#000';
-}
+/** Толщина рамки последнего выложенного тайла, доля стороны тайла. */
+const FRAME_WIDTH = 0.06;
+
+const NO_COLORS: ReadonlyMap<string, string> = new Map();
 
 /**
  * Шаг кондитера на этом тайле: какие части можно выбрать и какой участок выбран. Части сопоставлены участкам по
@@ -42,6 +39,10 @@ interface CroissantTileProps {
   readonly spots: readonly CroissantSpotDtoOutput[];
   /** Выбор участка для кондитера — только у тайла, который ходящий только что выложил. */
   readonly choice?: ConfectionerChoice | undefined;
+  /** Цвета игроков по id (`playerColors`): фишки кондитеров на тайле. */
+  readonly colors?: ReadonlyMap<string, string> | undefined;
+  /** Рамка цвета игрока: последний выложенный тайл. */
+  readonly frame?: string | undefined;
 }
 
 /** Нажатие Enter или пробела на части тайла — то же, что клик. */
@@ -66,6 +67,8 @@ export function CroissantTile({
   size,
   spots,
   choice,
+  colors = NO_COLORS,
+  frame,
 }: CroissantTileProps) {
   const geometry = tileGeometry(shape, size);
   const half = size / 2;
@@ -155,7 +158,7 @@ export function CroissantTile({
                 cx={anchor.x}
                 cy={anchor.y}
                 r={size * 0.09}
-                fill={confectionerColor(confectioner.playerId)}
+                fill={colorOf(colors, confectioner.playerId)}
                 stroke="white"
                 strokeWidth={1.2}
               />
@@ -176,6 +179,19 @@ export function CroissantTile({
         strokeWidth={1}
         pointerEvents="none"
       />
+      {frame === undefined ? null : (
+        <rect
+          x={(size * FRAME_WIDTH) / 2}
+          y={(size * FRAME_WIDTH) / 2}
+          width={size * (1 - FRAME_WIDTH)}
+          height={size * (1 - FRAME_WIDTH)}
+          fill="none"
+          stroke={frame}
+          strokeWidth={size * FRAME_WIDTH}
+          pointerEvents="none"
+          data-testid={testIds.lastTileFrame}
+        />
+      )}
     </svg>
   );
 }

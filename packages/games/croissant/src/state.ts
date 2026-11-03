@@ -21,7 +21,7 @@ export const PLACE_TILE = 'PLACE_TILE';
 /** Поставить кондитера на участок нового тайла: `data` — `{spotId}`. */
 export const PLACE_CONFECTIONER = 'PLACE_CONFECTIONER';
 
-/** Пропустить шаг кондитера (в том числе когда он не нужен). */
+/** Пропустить шаг кондитера. Когда ставить некуда или нечем, шага нет: сервер сам передаёт ход. */
 export const SKIP_CONFECTIONER = 'SKIP_CONFECTIONER';
 
 /** Состояние партии «Круассана» для зрителя: блоки core и поля игры. */
