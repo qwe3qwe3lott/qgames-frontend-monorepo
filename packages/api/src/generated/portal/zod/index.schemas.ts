@@ -301,6 +301,24 @@ export type CroissantAdvancedSettingsDtoOutput = zod.output<
   typeof CroissantAdvancedSettingsDto
 >;
 
+export const CroissantModuleTileDto = zod.object({
+  code: zod.string(),
+  count: zod.int().min(1),
+});
+
+export type CroissantModuleTileDto = zod.input<typeof CroissantModuleTileDto>;
+export type CroissantModuleTileDtoOutput = zod.output<
+  typeof CroissantModuleTileDto
+>;
+
+export const CroissantModuleDto = zod.object({
+  code: zod.string(),
+  tiles: zod.array(CroissantModuleTileDto),
+});
+
+export type CroissantModuleDto = zod.input<typeof CroissantModuleDto>;
+export type CroissantModuleDtoOutput = zod.output<typeof CroissantModuleDto>;
+
 export const CroissantBakeryDto = zod.object({
   sides: zod.array(zod.enum(['N', 'E', 'S', 'W'])),
   sign: zod.boolean(),
@@ -353,6 +371,7 @@ export type CroissantTileDtoOutput = zod.output<typeof CroissantTileDto>;
 
 export const CroissantAssetsDto = zod.object({
   gameCode: zod.enum(['croissant']),
+  modules: zod.array(CroissantModuleDto),
   tiles: zod.array(CroissantTileDto),
 });
 

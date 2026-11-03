@@ -1,11 +1,13 @@
+import {CroissantAssetsDto} from '@qgames/api/portal/zod';
 import {describe, expect, it} from 'vitest';
 
-import catalog from './catalog.fixture.json';
-import {tileGeometry, type TileFace} from './tileGeometry';
+import assets from './assets.fixture.json';
+import {pastureHalves, tileGeometry, type TileFace} from './tileGeometry';
 import {partKey, type HalfEdge, type Side, type TileShape} from './tiles';
 
-// Каталог — снимок `GET /api/games/croissant` → `assets.tiles`: геометрия проверяется на реальных типах тайлов.
-const TILES = catalog as TileShape[];
+// Каталог — снимок `GET /api/games/croissant` → `assets` (`pnpm assets:fetch`): геометрия проверяется на реальных
+// типах тайлов. Схема контракта сразу покажет устаревший формат снимка.
+const TILES: readonly TileShape[] = CroissantAssetsDto.parse(assets).tiles;
 
 const half = (dir: Side, value: number): HalfEdge => ({dir, half: value});
 const trail = (
@@ -165,6 +167,25 @@ describe('tileGeometry', () => {
         expect(face.anchor.y).toBeGreaterThan(0);
         expect(face.anchor.y).toBeLessThan(100);
       });
+    });
+  });
+
+  it('derives the same pastures as the server catalog', () => {
+    // Луг — множество полуребер, луга тайла — множество лугов: порядок не важен.
+    const normalize = (pastures: TileShape['pastures']) =>
+      pastures
+        .map(pasture =>
+          pasture.halves
+            .map(item => `${item.dir}${String(item.half)}`)
+            .sort()
+            .join(','),
+        )
+        .sort();
+    TILES.forEach(tile => {
+      expect({
+        code: tile.code,
+        pastures: normalize(pastureHalves(tile)),
+      }).toEqual({code: tile.code, pastures: normalize(tile.pastures)});
     });
   });
 });

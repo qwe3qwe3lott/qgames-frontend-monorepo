@@ -52,6 +52,8 @@ export * from './croissantBakeryDtoSidesItem';
 export * from './croissantConfectionerDto';
 export * from './croissantHalfEdgeDto';
 export * from './croissantHalfEdgeDtoDir';
+export * from './croissantModuleDto';
+export * from './croissantModuleTileDto';
 export * from './croissantMoveDataDto';
 export * from './croissantPastureDto';
 export * from './croissantPendingDto';

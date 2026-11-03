@@ -5,9 +5,11 @@
  * OpenAPI spec version: v0
  */
 import type {CroissantAssetsDtoGameCode} from './croissantAssetsDtoGameCode';
+import type {CroissantModuleDto} from './croissantModuleDto';
 import type {CroissantTileDto} from './croissantTileDto';
 
 export interface CroissantAssetsDto {
   gameCode: CroissantAssetsDtoGameCode;
+  modules: CroissantModuleDto[];
   tiles: CroissantTileDto[];
 }

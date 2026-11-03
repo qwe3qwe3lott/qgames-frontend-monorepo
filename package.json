@@ -8,7 +8,7 @@
   },
   "prettier": "@qgames/config/prettier",
   "scripts": {
-    "dev": "pnpm --parallel --filter \"./apps/*\" dev",
+    "dev": "pnpm --parallel --filter \"./apps/*\" --filter \"!@qgames/storybook\" dev",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint lint:styles --continue",

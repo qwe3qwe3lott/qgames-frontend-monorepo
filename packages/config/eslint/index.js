@@ -5,6 +5,7 @@ import queryPlugin from '@tanstack/eslint-plugin-query';
 import boundaries from 'eslint-plugin-boundaries';
 import checkFile from 'eslint-plugin-check-file';
 import reactHooks from 'eslint-plugin-react-hooks';
+import storybook from 'eslint-plugin-storybook';
 import {defineConfig} from 'eslint/config';
 import globals from 'globals';
 import gts from 'gts';
@@ -95,13 +96,15 @@ export function createConfig({
     },
     {
       // Имя файла — по главному экспорту: компонент PascalCase, остальное camelCase (CLAUDE.md §3).
-      // Роуты TanStack Router (имена = сегменты URL) и сгенерированное — вне правила.
+      // Роуты TanStack Router (имена = сегменты URL), сгенерированное и конфиг Storybook — вне правила.
       files: TS_FILES,
       ignores: [
         '**/routes/**',
         '**/generated/**',
         '**/*.config.ts',
         '**/*.d.ts',
+        // Папка конфига Storybook: имя с точкой задаёт сам Storybook.
+        '**/.storybook/**',
       ],
       plugins: {'check-file': checkFile},
       rules: {
@@ -124,6 +127,8 @@ export function createConfig({
           },
           reactHooks.configs.flat.recommended,
           ...queryPlugin.configs['flat/recommended'],
+          // Истории *.stories.tsx и конфиг .storybook/ (apps/storybook).
+          ...storybook.configs['flat/recommended'],
         ]
       : []),
     ...(fsd === undefined

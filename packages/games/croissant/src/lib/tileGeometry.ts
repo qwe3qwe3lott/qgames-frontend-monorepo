@@ -480,7 +480,14 @@ function pathOf(
   return closed ? `${body} Z` : body;
 }
 
-function buildGeometry(tile: TileShape, size: number): TileGeometry {
+/** Элементы тайла, из которых строится граф: без лугов (они выводятся из граней). */
+type TileLayout = Omit<TileShape, 'pastures'>;
+
+/** Плоский граф тайла: края плитки по полуребрам, кромки пекарен и тропы. */
+function buildGraph(tile: TileLayout): {
+  readonly graph: Graph;
+  readonly trailPaths: readonly Point[][][];
+} {
   const graph: Graph = {points: new Map(), adjacency: new Map()};
   SIDES.forEach(side => {
     const [start, end] = SIDE_CORNERS[side];
@@ -500,6 +507,25 @@ function buildGeometry(tile: TileShape, size: number): TileGeometry {
       addPolyline(graph, line, {kind: 'trail'});
     });
   });
+  return {graph, trailPaths};
+}
+
+/**
+ * Луга тайла, выведенные из пекарен и троп: грань графа, выходящая к краю плитки не стороной пекарни, — луг с её
+ * полуребрами. Грань без края (замкнутая тропами) лугом не считается, как в `ownerOf`.
+ */
+export function pastureHalves(tile: TileLayout): TileShape['pastures'] {
+  const bakerySides = new Set(tile.bakeries.flatMap(bakery => bakery.sides));
+  return faces(buildGraph(tile).graph).flatMap(face => {
+    const halves = face.tags.flatMap(tag =>
+      tag.kind === 'border' && !bakerySides.has(tag.half.dir) ? [tag.half] : [],
+    );
+    return halves.length === 0 ? [] : [{halves}];
+  });
+}
+
+function buildGeometry(tile: TileShape, size: number): TileGeometry {
+  const {graph, trailPaths} = buildGraph(tile);
 
   const dairy = tile.dairy ? {center: CENTER, r: DAIRY_RADIUS} : null;
   const garden = tile.garden ? {center: CENTER, r: GARDEN_RADIUS} : null;

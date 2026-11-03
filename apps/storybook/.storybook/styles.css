@@ -1,0 +1,5 @@
+@import '@qgames/ui/globals.css';
+
+/* Классы компонентов пакетов, у которых есть истории (как в apps/portal/src/app/styles/index.css). */
+@source "../../../packages/game-ui/src";
+@source "../../../packages/games";

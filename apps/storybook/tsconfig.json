@@ -1,0 +1,7 @@
+{
+  "extends": "@qgames/config/tsconfig/react.json",
+  "compilerOptions": {
+    "types": ["@rsbuild/core/types"]
+  },
+  "include": [".storybook/*.ts", "*.config.ts", "*.config.js"]
+}

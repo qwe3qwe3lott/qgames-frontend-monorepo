@@ -22,6 +22,7 @@
     "eslint-plugin-boundaries": "catalog:",
     "eslint-plugin-check-file": "catalog:",
     "eslint-plugin-react-hooks": "catalog:",
+    "eslint-plugin-storybook": "catalog:",
     "globals": "catalog:",
     "gts": "catalog:",
     "stylelint-config-standard": "catalog:",
